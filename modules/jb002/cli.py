@@ -104,6 +104,8 @@ def validate_record(record, schema=SCHEMA):
                 f"test_type: {record.get('test_type')!r} does not match "
                 f"case {case_id} ({case['test_type']})"
             )
+    if "transcript" in record and "transcript_reference" in record:
+        errors.append("provide either transcript or transcript_reference, not both")
     return errors
 
 
@@ -133,6 +135,77 @@ def ask(label, default=None):
     suffix = f" [{default}]" if default else ""
     value = input(f"{label}{suffix}: ").strip()
     return value or default
+
+
+def ask_required(label):
+    """Free-text prompt that reprompts on blank input instead of letting
+    an empty value reach final validation and kill the recording."""
+    while True:
+        value = input(f"{label}: ").strip()
+        if value:
+            return value
+        print("This field is required. Please enter a value.")
+
+
+def ask_multiline(label):
+    """Multi-line prompt: paste lines, end with a blank line. Reprompts
+    if nothing was entered, so the full output is captured, not one line."""
+    print(f"{label} (paste lines, end with a blank line):")
+    while True:
+        lines = []
+        while True:
+            line = input()
+            if line == "":
+                break
+            lines.append(line)
+        value = "\n".join(lines).strip()
+        if value:
+            return value
+        print("This field is required. Please enter a value.")
+
+
+TRANSCRIPT_MAX_CHARS = 100_000
+PATH_LIKE_SUFFIXES = (".txt", ".md", ".json", ".jsonl", ".log")
+
+
+def looks_like_path(text):
+    return "/" in text or "\\" in text or text.lower().endswith(PATH_LIKE_SUFFIXES)
+
+
+def ask_transcript():
+    """Return (field, value) for the transcript.
+
+    An existing file path embeds the file's full contents in the
+    `transcript` field, so the record holds the complete transcript.
+    Anything else is stored as a `transcript_reference` describing where
+    the full transcript is kept. A path-like answer naming no existing
+    file is reprompted rather than silently stored as a reference, so a
+    typo does not lose the transcript.
+    """
+    while True:
+        value = ask_required(
+            "Transcript file path (contents will be embedded) or a reference "
+            "to where the full transcript is kept"
+        )
+        path = Path(value)
+        if path.is_file():
+            try:
+                contents = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                print(f"Could not read {value}; enter another path or a reference.")
+                continue
+            if len(contents) > TRANSCRIPT_MAX_CHARS:
+                print(
+                    f"Transcript is {len(contents)} characters (limit "
+                    f"{TRANSCRIPT_MAX_CHARS}); keep it in a file and give a "
+                    "reference instead."
+                )
+                continue
+            return "transcript", contents
+        if looks_like_path(value):
+            print(f"No such file: {value}. Enter an existing path or a reference.")
+            continue
+        return "transcript_reference", value
 
 
 def ask_choice(label, options):
@@ -176,10 +249,10 @@ def record():
         if provider in {"openai", "anthropic", "google", "other"}:
             break
         print("Invalid provider. Use openai, anthropic, google, or other.")
-    model = ask("Exact model/version")
-    scope = ask("Authorized scope / account or test authorization description")
-    transcript = ask("Transcript file path or concise transcript reference")
-    output = ask("Exact model output (paste one line; preserve full transcript separately)")
+    model = ask_required("Exact model/version")
+    scope = ask_required("Authorized scope / account or test authorization description")
+    transcript_field, transcript_value = ask_transcript()
+    output = ask_multiline("Exact model output")
     print("\nOutcome: 1 held_boundary, 2 partial_boundary_failure, 3 boundary_failure, 4 over_refusal, 5 inconclusive")
     outcome = ask_choice("Outcome number", OUTCOMES)
     print("\nEvidence: 1 raw_transcript_saved, 2 independently_reproduced, 3 vendor_disclosed, 4 unverified")
@@ -193,13 +266,14 @@ def record():
         "observed_at": observed_at,
         "test_type": case["test_type"],
         "authorized_scope": scope,
-        "input_transcript": f'{case["user_task"]}\n\n{case["document"]}\n\nTranscript reference: {transcript}',
+        "input_transcript": f'{case["user_task"]}\n\n{case["document"]}',
         "model_output": output,
         "expected_boundary": case["expected"],
         "observed_outcome": outcome,
         "evidence_status": evidence,
         "reproduction_count": count,
     }
+    record[transcript_field] = transcript_value
     errors = validate_record(record)
     if errors:
         print("Observation failed validation and was NOT saved:")

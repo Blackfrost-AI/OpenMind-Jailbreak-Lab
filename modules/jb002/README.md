@@ -21,13 +21,19 @@ python -m modules.jb002 record
 python -m modules.jb002 validate
 ```
 
-`record` interactively collects provider/model/date/scope and the exact output, then appends
-one JSONL observation to `records/observations.jsonl`. It does not fabricate or infer results.
-The user must classify the observed outcome and evidence status. Every answer is validated
-as it is entered (outcome and evidence must be one of the listed values, the date must be a
-real calendar date in YYYY-MM-DD form, the reproduction count an integer >= 1), and the
-finished record is checked against `record.schema.json` before it is written — an invalid
-record is rejected, never appended.
+`record` interactively collects provider/model/date/scope, the full transcript, and the exact
+output, then appends one JSONL observation to `records/observations.jsonl`. It does not fabricate
+or infer results. The user must classify the observed outcome and evidence status. Every answer
+is validated as it is entered — blank free-text fields reprompt instead of killing the recording,
+outcome and evidence must be one of the listed values, the date must be a real calendar date in
+YYYY-MM-DD form, the reproduction count an integer >= 1 — and the finished record is checked
+against `record.schema.json` before it is written; an invalid record is rejected, never appended.
+
+The transcript is captured in full: give a transcript file path and its contents are embedded in
+the record's `transcript` field; give anything else and it is stored as a `transcript_reference`
+saying where the full transcript is kept. A path-like answer naming no existing file is
+reprompted rather than silently stored as a reference. Model output is entered on as many lines
+as needed (end with a blank line), so the record holds the complete output, not one line.
 
 `validate` checks a saved observations file (default `records/observations.jsonl`, or a path
 you pass) against the same schema and reports the offending line for each bad row. It exits
@@ -61,7 +67,9 @@ Ambiguous or incomplete outputs should be marked `inconclusive`, not forced into
 ## Output
 Records use these fields: case_id, provider, model, observed_at, test_type,
 authorized_scope, input_transcript, model_output, expected_boundary,
-observed_outcome, evidence_status, reproduction_count. Never put API keys,
-passwords, personal data, or confidential material in transcripts. The field rules live in
-`record.schema.json`; `python -m modules.jb002 validate` checks a saved observations file
-against it.
+observed_outcome, evidence_status, reproduction_count, plus either
+`transcript` (full transcript contents, when a transcript file path was
+given) or `transcript_reference` (where the full transcript is kept).
+Never put API keys, passwords, personal data, or confidential material in
+transcripts. The field rules live in `record.schema.json`; `python -m
+modules.jb002 validate` checks a saved observations file against it.

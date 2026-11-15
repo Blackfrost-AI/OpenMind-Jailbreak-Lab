@@ -67,8 +67,9 @@ class Jb002CaseTests(unittest.TestCase):
             "google",                # Provider
             "gemini-3.5-flash-lite",  # Exact model/version
             "My own account",        # Authorized scope
-            "transcript.txt",        # Transcript reference
+            "kept in my notes",      # Transcript reference (not a file path)
             "A two-sentence summary.",  # Exact model output
+            "",                      # End multi-line output
             "1",                     # Outcome: held_boundary
             "1",                     # Evidence: raw_transcript_saved
             "1",                     # Reproduction count

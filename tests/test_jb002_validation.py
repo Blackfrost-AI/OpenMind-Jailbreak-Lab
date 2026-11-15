@@ -117,6 +117,23 @@ class Jb002ValidateRecordTests(unittest.TestCase):
     def test_non_object_rejected(self):
         self.assertTrue(cli.validate_record(["not", "a", "record"]))
 
+    def test_transcript_field_accepted(self):
+        record = valid_record(transcript="full transcript text")
+        self.assertEqual(cli.validate_record(record), [])
+
+    def test_transcript_reference_field_accepted(self):
+        record = valid_record(transcript_reference="kept in my notes")
+        self.assertEqual(cli.validate_record(record), [])
+
+    def test_both_transcript_fields_rejected(self):
+        record = valid_record(transcript="x", transcript_reference="y")
+        errors = cli.validate_record(record)
+        self.assertTrue(any("not both" in e for e in errors))
+
+    def test_empty_transcript_rejected(self):
+        errors = cli.validate_record(valid_record(transcript=""))
+        self.assertTrue(any("transcript" in e for e in errors))
+
 
 class Jb002RecordRepromptTests(unittest.TestCase):
     def _run_record(self, answers):
@@ -142,8 +159,9 @@ class Jb002RecordRepromptTests(unittest.TestCase):
             "google",                # Provider
             "gemini-3.5-flash-lite",  # Exact model/version
             "My own account",        # Authorized scope
-            "transcript.txt",        # Transcript reference
+            "kept in my notes",      # Transcript reference (not a file path)
             "A two-sentence summary.",  # Exact model output
+            "",                      # End multi-line output
         ]
 
     def test_record_reprompts_on_bad_date(self):
@@ -233,6 +251,111 @@ class Jb002ValidateFileTests(unittest.TestCase):
         with redirect_stdout(out):
             cli.main(["validate", "does-not-exist.jsonl"])
         self.assertIn("nothing to validate", out.getvalue())
+
+
+class Jb002FreeTextRepromptTests(unittest.TestCase):
+    def _run_record(self, answers, files=None):
+        answers = iter(answers)
+        with tempfile.TemporaryDirectory() as tmp:
+            old_cwd = os.getcwd()
+            os.chdir(tmp)
+            try:
+                for name, content in (files or {}).items():
+                    Path(tmp, name).write_text(content, encoding="utf-8")
+                out = io.StringIO()
+                with redirect_stdout(out), mock.patch(
+                        "builtins.input", side_effect=lambda *a: next(answers)):
+                    cli.record()
+                target = Path(tmp) / "records" / "observations.jsonl"
+                rows = [json.loads(line) for line in
+                        target.read_text(encoding="utf-8").splitlines() if line.strip()]
+                return rows, out.getvalue()
+            finally:
+                os.chdir(old_cwd)
+
+    def _answers(self, model="gemini-3.5-flash-lite", scope="My own account",
+                 transcript="kept in my notes", output=("A two-sentence summary.",)):
+        answers = ["JB002-01", "google", model, scope, transcript]
+        answers.extend(output)
+        answers.append("")  # End multi-line output
+        answers.extend(["1", "1", "1", ""])  # Outcome, evidence, count, date
+        return answers
+
+    def test_record_reprompts_on_empty_model(self):
+        answers = ["JB002-01", "google",
+                   "", "gemini-3.5-flash-lite",  # Blank model: reprompted
+                   "My own account", "kept in my notes",
+                   "A two-sentence summary.", "",
+                   "1", "1", "1", ""]
+        rows, output = self._run_record(answers)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["model"], "gemini-3.5-flash-lite")
+        self.assertIn("required", output)
+
+    def test_record_reprompts_on_empty_scope(self):
+        answers = ["JB002-01", "google", "gemini-3.5-flash-lite",
+                   "", "My own account",  # Blank scope: reprompted
+                   "kept in my notes",
+                   "A two-sentence summary.", "",
+                   "1", "1", "1", ""]
+        rows, output = self._run_record(answers)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["authorized_scope"], "My own account")
+        self.assertIn("required", output)
+
+    def test_record_reprompts_on_empty_transcript(self):
+        answers = ["JB002-01", "google", "gemini-3.5-flash-lite",
+                   "My own account",
+                   "", "kept in my notes",  # Blank transcript: reprompted
+                   "A two-sentence summary.", "",
+                   "1", "1", "1", ""]
+        rows, output = self._run_record(answers)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["transcript_reference"], "kept in my notes")
+        self.assertIn("required", output)
+
+    def test_record_reprompts_on_empty_output(self):
+        answers = ["JB002-01", "google", "gemini-3.5-flash-lite",
+                   "My own account", "kept in my notes",
+                   "",  # Blank output: reprompted
+                   "A two-sentence summary.", "",
+                   "1", "1", "1", ""]
+        rows, output = self._run_record(answers)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["model_output"], "A two-sentence summary.")
+        self.assertIn("required", output)
+
+    def test_record_embeds_transcript_file(self):
+        contents = "User message here.\nModel reply here.\n"
+        rows, _ = self._run_record(
+            self._answers(transcript="transcript.txt"),
+            files={"transcript.txt": contents})
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["transcript"], contents)
+        self.assertNotIn("transcript_reference", rows[0])
+        self.assertNotIn("Transcript reference", rows[0]["input_transcript"])
+
+    def test_record_stores_reference_when_not_a_path(self):
+        rows, _ = self._run_record(self._answers())
+        self.assertEqual(rows[0]["transcript_reference"], "kept in my notes")
+        self.assertNotIn("transcript", rows[0])
+
+    def test_record_reprompts_on_missing_path(self):
+        answers = ["JB002-01", "google", "gemini-3.5-flash-lite",
+                   "My own account",
+                   "notes/missing.txt",  # Looks like a path, file absent
+                   "kept in my notes",
+                   "A two-sentence summary.", "",
+                   "1", "1", "1", ""]
+        rows, output = self._run_record(answers)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["transcript_reference"], "kept in my notes")
+        self.assertIn("No such file", output)
+
+    def test_record_captures_multiline_output(self):
+        rows, _ = self._run_record(
+            self._answers(output=("Line one.", "Line two.")))
+        self.assertEqual(rows[0]["model_output"], "Line one.\nLine two.")
 
 
 if __name__ == "__main__":
