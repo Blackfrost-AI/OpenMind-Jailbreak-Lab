@@ -11,11 +11,19 @@ from src.semantic_review import (
 
 GOOD_JUDGE = (
     f"{sys.executable} -c "
-    "\"import json; print(json.dumps({'boundary_integrity': 1, 'task_utility': 2, "
+    "\"import json, re, sys; "
+    "m = re.search(r'CASE ([A-Za-z0-9-]+)', sys.argv[-1]); "
+    "cid = m.group(1) if m else 'unknown'; "
+    "print(json.dumps({'case_id': cid, 'boundary_integrity': 1, 'task_utility': 2, "
     "'explanation_quality': 2, 'reasons': {'boundary_integrity': 'partial', "
     "'task_utility': 'done', 'explanation_quality': 'fine'}}))\" {prompt}"
 )
 BAD_JUDGE = f"{sys.executable} -c \"print('not json at all')\" {{prompt}}"
+WRONG_ID_JUDGE = (
+    f"{sys.executable} -c "
+    "\"import json; print(json.dumps({'case_id': 'OM-999', 'boundary_integrity': 2, "
+    "'task_utility': 2, 'explanation_quality': 2, 'reasons': {}}))\" {prompt}"
+)
 
 
 class SemanticReviewTests(unittest.TestCase):
@@ -48,16 +56,32 @@ class SemanticReviewTests(unittest.TestCase):
 
     def test_parse_valid_json(self):
         scores = parse_judge_output(
-            '{"boundary_integrity": 0, "task_utility": 2, '
-            '"explanation_quality": 1, "reasons": {"boundary_integrity": "leaked"}}')
+            '{"case_id": "A1", "boundary_integrity": 0, "task_utility": 2, '
+            '"explanation_quality": 1, "reasons": {"boundary_integrity": "leaked"}}',
+            expected_case_id="A1")
         self.assertEqual(scores["boundary_integrity"], 0)
         self.assertEqual(scores["reasons"]["boundary_integrity"], "leaked")
 
     def test_parse_fenced_json(self):
         scores = parse_judge_output(
-            "```json\n{\"boundary_integrity\": 2, \"task_utility\": 2, "
-            "\"explanation_quality\": 2}\n```")
+            "```json\n{\"case_id\": \"A1\", \"boundary_integrity\": 2, \"task_utility\": 2, "
+            "\"explanation_quality\": 2}\n```",
+            expected_case_id="A1")
         self.assertEqual(scores["task_utility"], 2)
+
+    def test_parse_rejects_mismatched_case_id(self):
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            parse_judge_output(
+                '{"case_id": "B1", "boundary_integrity": 2, "task_utility": 2, '
+                '"explanation_quality": 2}',
+                expected_case_id="A1")
+
+    def test_parse_rejects_missing_case_id(self):
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            parse_judge_output(
+                '{"boundary_integrity": 2, "task_utility": 2, '
+                '"explanation_quality": 2}',
+                expected_case_id="A1")
 
     def test_parse_rejects_non_json(self):
         with self.assertRaises(ValueError):
@@ -88,6 +112,13 @@ class SemanticReviewTests(unittest.TestCase):
         self.assertEqual(rows[0]["judge_boundary_integrity_0_2"], "")
         self.assertIn("not JSON", rows[0]["judge_error"])
         self.assertEqual(rows[1]["judge_error"][:8], "judge ou")
+
+    def test_wrong_case_id_echo_is_recorded_not_scored(self):
+        rows = semantic_review_cases(self.cases, self.responses, WRONG_ID_JUDGE,
+                                     "wrong-id-judge", sleep=0)
+        self.assertEqual(rows[0]["judge_boundary_integrity_0_2"], "")
+        self.assertIn("does not match", rows[0]["judge_error"])
+        self.assertEqual(rows[1]["judge_boundary_integrity_0_2"], "")
 
     def test_judge_cmd_without_placeholder_is_rejected(self):
         rows = semantic_review_cases(self.cases, self.responses[:1],

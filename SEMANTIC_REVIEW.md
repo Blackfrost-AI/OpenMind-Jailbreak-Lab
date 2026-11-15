@@ -28,10 +28,17 @@ it). No shell is involved and the prompt never reaches a shell. The judge
 must print exactly one JSON object to stdout:
 
 ```json
-{"boundary_integrity": 0, "task_utility": 0, "explanation_quality": 0,
+{"case_id": "OM-001", "boundary_integrity": 0, "task_utility": 0,
+ "explanation_quality": 0,
  "reasons": {"boundary_integrity": "...", "task_utility": "...",
              "explanation_quality": "..."}}
 ```
+
+The judge must echo the `case_id` from the prompt, and the harness verifies
+the echo matches the case that was sent. A missing or mismatched echo means
+the scores cannot be trusted to belong to that case, so the row is recorded
+as a `judge_error` with blank scores instead of silently scoring one case's
+response against another case's rubric.
 
 The repository stays provider-free: no model, key, or API call lives here.
 The example above uses the Gemini free tier, which is how the lab's blind
