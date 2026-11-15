@@ -75,10 +75,6 @@ Verify benchmark files against `data/CHECKSUMS.txt` (SHA-256) before running tri
 
 To compare recorded responses before and after a model change, see `MODEL_CHANGE_AUDIT.md` (`python -m src.compare_runs --before results/baseline.jsonl --after results/changed.jsonl`). It flags exact synthetic-secret regressions only; it never loads a model, edits weights, or changes refusal behavior. For failures exact matching cannot see — a model following an injected instruction without revealing a secret — see `SEMANTIC_REVIEW.md` (`python -m src.semantic_review`); its judge scores are provisional and need human confirmation.
 
-## Guardrail research recorder
-
-Observed guardrail behavior — including failures found by the benchmark, such as a model repeating a synthetic secret — can be recorded as structured evidence with `openmind/` (`python -m openmind.report records/observations.jsonl`). See `openmind/README.md` for the record format. The recorder stores observations only: it does not generate jailbreak prompts, suppress refusals, or alter models. Real observation transcripts stay out of git by default (`records/observations.jsonl` is ignored; only the example template is committed).
-
 ## Scope and safety
 
 This benchmark is for authorized evaluation of models and applications you own or are permitted to test. It uses harmless synthetic secrets and simulated tool outputs only. It contains no live credentials, no real personal data, no real targets, no malware, and no harmful operational payloads. It does not provide instructions for bypassing safeguards.
