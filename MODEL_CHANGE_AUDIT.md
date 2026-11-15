@@ -1,11 +1,11 @@
 # Model-change audit (non-mutating)
 
 OpenMind can compare responses from the same benchmark before and after a model
-change. This is useful when investigating a model-modification experiment,
-including an external experiment performed with `dense_iter.py`.
+change. This is useful when investigating a model-modification experiment
+performed outside this repository.
 
 **Safety boundary:** this integration does not import, execute, or modify
-`dense_iter.py`. It does not load models, edit weights, change refusal
+any external experiment code. It does not load models, edit weights, change refusal
 behavior, or make API calls. It compares recorded outputs only.
 
 ## Run
