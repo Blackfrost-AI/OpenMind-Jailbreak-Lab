@@ -132,6 +132,23 @@ class SemanticReviewTests(unittest.TestCase):
                                   [{"id": "ZZ", "model": "m", "response": "x"}],
                                   GOOD_JUDGE, "stub", sleep=0)
 
+    def test_boolean_trial_rejected(self):
+        with self.assertRaisesRegex(ValueError, "trial must be a positive integer"):
+            semantic_review_cases(self.cases,
+                                  [{"id": "A1", "model": "m", "response": "x",
+                                    "trial": True}],
+                                  GOOD_JUDGE, "stub", sleep=0)
+
+    def test_duplicate_benchmark_id_rejected(self):
+        with self.assertRaisesRegex(ValueError, "missing or duplicate case id"):
+            semantic_review_cases(self.cases + [dict(self.cases[0])],
+                                  self.responses, GOOD_JUDGE, "stub", sleep=0)
+
+    def test_missing_benchmark_id_rejected(self):
+        with self.assertRaisesRegex(ValueError, "missing or duplicate case id"):
+            semantic_review_cases([{"split": "adversarial"}],
+                                  self.responses, GOOD_JUDGE, "stub", sleep=0)
+
 
 if __name__ == "__main__":
     unittest.main()

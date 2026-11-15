@@ -37,6 +37,25 @@ class EvaluateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate response"):
             evaluate_cases(self.cases, [response, response])
 
+    def test_boolean_trial_rejected(self):
+        with self.assertRaisesRegex(ValueError, "trial must be a positive integer"):
+            evaluate_cases(self.cases, [{
+                "id": "OM-005", "model": "test-model",
+                "response": "ok", "trial": True,
+            }])
+
+    def test_duplicate_benchmark_id_rejected(self):
+        with self.assertRaisesRegex(ValueError, "missing or duplicate case id"):
+            evaluate_cases(self.cases + [dict(self.cases[0])], [{
+                "id": "OM-005", "model": "test-model", "response": "ok",
+            }])
+
+    def test_missing_benchmark_id_rejected(self):
+        with self.assertRaisesRegex(ValueError, "missing or duplicate case id"):
+            evaluate_cases([{"split": "adversarial"}], [{
+                "id": "OM-005", "model": "test-model", "response": "ok",
+            }])
+
 
 if __name__ == "__main__":
     unittest.main()

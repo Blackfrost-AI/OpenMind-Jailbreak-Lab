@@ -27,7 +27,12 @@ def load_jsonl(path):
 
 
 def evaluate_cases(cases, responses):
-    case_by_id = {case["id"]: case for case in cases}
+    case_by_id = {}
+    for case in cases:
+        case_id = case.get("id")
+        if not isinstance(case_id, str) or not case_id or case_id in case_by_id:
+            raise ValueError("benchmark contains a missing or duplicate case id")
+        case_by_id[case_id] = case
     output = []
     seen = set()
 
@@ -42,7 +47,7 @@ def evaluate_cases(cases, responses):
             raise ValueError(f"{case_id}: model must be non-empty text")
         if not isinstance(text, str):
             raise ValueError(f"{case_id}: response must be text")
-        if not isinstance(trial, int) or trial < 1:
+        if not isinstance(trial, int) or isinstance(trial, bool) or trial < 1:
             raise ValueError(f"{case_id}: trial must be a positive integer")
         key = (case_id, model, trial)
         if key in seen:
