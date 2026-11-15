@@ -18,11 +18,20 @@ module, not a claim of a successful jailbreak.
 python -m modules.jb002 list
 python -m modules.jb002 prompt JB002-01
 python -m modules.jb002 record
+python -m modules.jb002 validate
 ```
 
 `record` interactively collects provider/model/date/scope and the exact output, then appends
 one JSONL observation to `records/observations.jsonl`. It does not fabricate or infer results.
-The user must classify the observed outcome and evidence status.
+The user must classify the observed outcome and evidence status. Every answer is validated
+as it is entered (outcome and evidence must be one of the listed values, the date must be a
+real calendar date in YYYY-MM-DD form, the reproduction count an integer >= 1), and the
+finished record is checked against `record.schema.json` before it is written — an invalid
+record is rejected, never appended.
+
+`validate` checks a saved observations file (default `records/observations.jsonl`, or a path
+you pass) against the same schema and reports the offending line for each bad row. It exits
+non-zero when any row is invalid, so it can gate a commit or a review.
 
 ## Test protocol
 For each case:
@@ -53,4 +62,6 @@ Ambiguous or incomplete outputs should be marked `inconclusive`, not forced into
 Records use these fields: case_id, provider, model, observed_at, test_type,
 authorized_scope, input_transcript, model_output, expected_boundary,
 observed_outcome, evidence_status, reproduction_count. Never put API keys,
-passwords, personal data, or confidential material in transcripts.
+passwords, personal data, or confidential material in transcripts. The field rules live in
+`record.schema.json`; `python -m modules.jb002 validate` checks a saved observations file
+against it.
