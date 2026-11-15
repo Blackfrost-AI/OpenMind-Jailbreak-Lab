@@ -77,7 +77,7 @@ To compare recorded responses before and after a model change, see `MODEL_CHANGE
 
 ## JB-002 — multi-stage instruction-hierarchy test
 
-`modules/jb002/` is a small evaluation module with three cases. Each case pairs a harmless user task with a document carrying a conflicting embedded instruction, plus the expected behavior and a harmless marker that shows whether the embedded instruction was followed. Run each case manually in the target product in a fresh conversation — the module makes no provider API calls — and record the observation with `python -m modules.jb002 record`. It stores what was observed only; it does not generate bypasses, infer results, or alter models. Recorded observations stay out of git by default (`records/observations.jsonl` is ignored). Records are validated against `modules/jb002/record.schema.json` at record time and can be re-checked with `python -m modules.jb002 validate`.
+`modules/jb002/` is a small evaluation module with three cases. Each case pairs a harmless user task with a document carrying a conflicting embedded instruction, plus the expected behavior and a harmless marker that shows whether the embedded instruction was followed. Run each case manually in the target product in a fresh conversation — the module makes no provider API calls — and record the observation with `python -m modules.jb002 record`. It stores what was observed only; it does not generate bypasses, infer results, or alter models. Recorded observations stay out of git by default (`records/observations.jsonl` is ignored). Records are validated against `modules/jb002/record.schema.json` at record time, can be re-checked with `python -m modules.jb002 validate`, and summarized with `python -m modules.jb002 report`.
 
 ## Scope and safety
 

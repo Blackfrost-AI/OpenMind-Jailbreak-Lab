@@ -109,6 +109,23 @@ def validate_record(record, schema=SCHEMA):
     return errors
 
 
+def read_observations(path):
+    """Yield (line_no, row, errors) for each non-blank JSONL line.
+
+    row is None when the line is not valid JSON; errors lists every
+    problem with that line, each naming the line number.
+    """
+    for n, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            yield n, None, [f"line {n}: not valid JSON"]
+            continue
+        yield n, row, [f"line {n}: {e}" for e in validate_record(row)]
+
+
 def validate_file(path):
     """Validate every JSONL row in path against the schema.
 
@@ -117,18 +134,83 @@ def validate_file(path):
     """
     errors = []
     checked = 0
-    for n, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
-        if not line.strip():
-            continue
-        try:
-            row = json.loads(line)
-        except json.JSONDecodeError:
-            errors.append(f"line {n}: not valid JSON")
-            continue
-        checked += 1
-        for err in validate_record(row):
-            errors.append(f"line {n}: {err}")
+    for n, row, errs in read_observations(path):
+        if row is not None:
+            checked += 1
+        errors.extend(errs)
     return checked, errors
+
+
+def summarize(path):
+    """Summarize the observations in path.
+
+    Returns (summary, errors): summary counts only schema-valid rows;
+    errors lists every invalid line. The summary covers cases, providers,
+    outcomes, evidence statuses, total reproductions, and which cases
+    have no observations yet.
+    """
+    rows = []
+    errors = []
+    invalid = 0
+    for n, row, errs in read_observations(path):
+        if errs:
+            invalid += 1
+            errors.extend(errs)
+        elif row is not None:
+            rows.append(row)
+    by_case = {}
+    for row in rows:
+        entry = by_case.setdefault(row["case_id"], {"total": 0, "outcomes": {}})
+        entry["total"] += 1
+        entry["outcomes"][row["observed_outcome"]] = (
+            entry["outcomes"].get(row["observed_outcome"], 0) + 1
+        )
+    def counts(key):
+        result = {}
+        for row in rows:
+            result[row[key]] = result.get(row[key], 0) + 1
+        return result
+    return {
+        "total": len(rows),
+        "invalid_rows": invalid,
+        "total_reproductions": sum(r["reproduction_count"] for r in rows),
+        "cases_covered": sorted(by_case),
+        "cases_missing": [c["case_id"] for c in CASES if c["case_id"] not in by_case],
+        "by_case": by_case,
+        "by_provider": counts("provider"),
+        "by_test_type": counts("test_type"),
+        "by_outcome": counts("observed_outcome"),
+        "by_evidence": counts("evidence_status"),
+    }, errors
+
+
+def report(path, as_json=False):
+    """Print a summary of the observations in path (text or JSON)."""
+    summary, errors = summarize(path)
+    if as_json:
+        print(json.dumps(summary, indent=2))
+        return
+    print(f"JB-002 observations: {path}")
+    print(f"Valid observations: {summary['total']}"
+          + (f" ({summary['invalid_rows']} invalid row(s) skipped)" if errors else ""))
+    print(f"Cases covered: {', '.join(summary['cases_covered']) or 'none'}"
+          + (f" (missing: {', '.join(summary['cases_missing'])})" if summary["cases_missing"] else ""))
+    print(f"Total reproductions: {summary['total_reproductions']}")
+    print("\nBy case:")
+    for case_id in summary["cases_covered"]:
+        entry = summary["by_case"][case_id]
+        outcomes = ", ".join(f"{k} {v}" for k, v in sorted(entry["outcomes"].items()))
+        print(f"  {case_id}: {entry['total']} ({outcomes})")
+    for title, key in (("By provider", "by_provider"),
+                       ("By outcome", "by_outcome"),
+                       ("By evidence", "by_evidence")):
+        print(f"\n{title}:")
+        for name, count in sorted(summary[key].items()):
+            print(f"  {name}: {count}")
+    if errors:
+        print("\nInvalid rows (excluded from the counts above):")
+        for err in errors:
+            print(f"  - {err}")
 
 
 def ask(label, default=None):
@@ -297,6 +379,9 @@ def main(argv=None):
     sub.add_parser("record")
     validate = sub.add_parser("validate")
     validate.add_argument("path", nargs="?", default="records/observations.jsonl")
+    report_cmd = sub.add_parser("report")
+    report_cmd.add_argument("path", nargs="?", default="records/observations.jsonl")
+    report_cmd.add_argument("--json", action="store_true")
     args = p.parse_args(argv)
     if args.cmd == "list":
         list_cases()
@@ -316,6 +401,13 @@ def main(argv=None):
                 print(f"  - {err}")
             raise SystemExit(1)
         print(f"{checked} observation(s) checked, all valid.")
+        return
+    elif args.cmd == "report":
+        path = Path(args.path)
+        if not path.exists():
+            print(f"No observations file at {path}; nothing to report.")
+            return
+        report(path, as_json=args.json)
         return
 
 

@@ -19,6 +19,7 @@ python -m modules.jb002 list
 python -m modules.jb002 prompt JB002-01
 python -m modules.jb002 record
 python -m modules.jb002 validate
+python -m modules.jb002 report
 ```
 
 `record` interactively collects provider/model/date/scope, the full transcript, and the exact
@@ -38,6 +39,11 @@ as needed (end with a blank line), so the record holds the complete output, not 
 `validate` checks a saved observations file (default `records/observations.jsonl`, or a path
 you pass) against the same schema and reports the offending line for each bad row. It exits
 non-zero when any row is invalid, so it can gate a commit or a review.
+
+`report` summarizes a saved observations file (same default path, or one you pass): how many
+valid observations, which cases are covered and which are still missing, total reproductions,
+and counts by case, provider, outcome, and evidence status. Invalid rows are listed and
+excluded from the counts. Add `--json` for a machine-readable summary.
 
 ## Test protocol
 For each case:
