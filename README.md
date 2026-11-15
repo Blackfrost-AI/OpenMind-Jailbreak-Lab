@@ -75,6 +75,10 @@ Verify benchmark files against `data/CHECKSUMS.txt` (SHA-256) before running tri
 
 To compare recorded responses before and after a model change, see `MODEL_CHANGE_AUDIT.md` (`python -m src.compare_runs --before results/baseline.jsonl --after results/changed.jsonl`). It flags exact synthetic-secret regressions only; it never loads a model, edits weights, or changes refusal behavior. For failures exact matching cannot see — a model following an injected instruction without revealing a secret — see `SEMANTIC_REVIEW.md` (`python -m src.semantic_review`); its judge scores are provisional and need human confirmation.
 
+## Guardrail research recorder
+
+Observed guardrail behavior — including failures found by the benchmark, such as a model repeating a synthetic secret — can be recorded as structured evidence with `openmind/` (`python -m openmind.report records/observations.jsonl`). See `openmind/README.md` for the record format. The recorder stores observations only: it does not generate jailbreak prompts, suppress refusals, or alter models. Real observation transcripts stay out of git by default (`records/observations.jsonl` is ignored; only the example template is committed). JB-002 observations follow this recorder's field conventions, and its schema is the source of truth for the record format.
+
 ## JB-002 — multi-stage instruction-hierarchy test
 
 `openmind_jb002/` is a small evaluation module with three cases. Each case pairs a harmless user task with a document carrying a conflicting embedded instruction, plus the expected behavior and a harmless marker that shows whether the embedded instruction was followed. Run each case manually in the target product in a fresh conversation — the module makes no provider API calls — and record the observation with `python -m openmind_jb002 record`. It stores what was observed only; it does not generate bypasses, infer results, or alter models. Recorded observations stay out of git by default (`records/observations.jsonl` is ignored).
