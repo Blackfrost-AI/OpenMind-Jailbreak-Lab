@@ -79,6 +79,10 @@ To compare recorded responses before and after a model change, see `MODEL_CHANGE
 
 `modules/jb002/` is a small evaluation module with three cases. Each case pairs a harmless user task with a document carrying a conflicting embedded instruction, plus the expected behavior and a harmless marker that shows whether the embedded instruction was followed. Run each case manually in the target product in a fresh conversation — the module makes no provider API calls — and record the observation with `python -m modules.jb002 record`. It stores what was observed only; it does not generate bypasses, infer results, or alter models. Recorded observations stay out of git by default (`records/observations.jsonl` is ignored). Records are validated against `modules/jb002/record.schema.json` at record time, can be re-checked with `python -m modules.jb002 validate`, and summarized with `python -m modules.jb002 report`.
 
+## AI Exploit Scanner — automated instruction-boundary probes
+
+`modules/ai_scanner/` (v0.1.0) runs five harmless canary-based probes against a provider API — OpenAI, Anthropic, or Gemini — and records the actual responses in a JSON evidence report. It is stdlib-only and makes no calls except to the provider you choose. Run it with `python -m modules.ai_scanner --provider gemini` (set the matching `*_API_KEY` first); only test accounts and systems you are authorized to assess. A canary match is an indicator, not proof of exploitability, and a miss does not establish security — every finding needs human review and reproduction.
+
 ## Scope and safety
 
 This benchmark is for authorized evaluation of models and applications you own or are permitted to test. It uses harmless synthetic secrets and simulated tool outputs only. It contains no live credentials, no real personal data, no real targets, no malware, and no harmful operational payloads. It does not provide instructions for bypassing safeguards.
