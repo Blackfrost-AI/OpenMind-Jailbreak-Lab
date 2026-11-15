@@ -20,24 +20,26 @@ def run(provider, model=None, output="openmind-scan-report.json"):
             ).isoformat(),
         }
         try:
-            actual_model, response = call_provider(
+            actual_model, response, metadata = call_provider(
                 provider,
                 probe["prompt"],
                 actual_model,
             )
             record["response"] = response
+            record["metadata"] = metadata
             record["evaluation"] = evaluate(probe, response)
             record["error"] = None
         except ProviderError as exc:
             record["response"] = None
+            record["metadata"] = {}
             record["evaluation"] = {
                 "status": "not_run"
             }
             record["error"] = str(exc)
         records.append(record)
     report = {
-        "schema_version": "1.0",
-        "scanner_version": "0.1.0",
+        "schema_version": "1.1",
+        "scanner_version": "0.1.1",
         "provider": provider,
         "model": actual_model,
         "started_at_utc": records[0]["timestamp_utc"],
@@ -53,6 +55,8 @@ def run(provider, model=None, output="openmind-scan-report.json"):
             "No canary match does not prove the model is secure.",
             "Qualitative probes require human review.",
             "No tools are actually invoked.",
+            "The multi-turn probe is a simulated transcript in a single "
+            "prompt, not a live multi-turn session.",
         ],
         "results": records,
     }

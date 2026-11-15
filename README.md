@@ -81,7 +81,7 @@ To compare recorded responses before and after a model change, see `MODEL_CHANGE
 
 ## AI Exploit Scanner — automated instruction-boundary probes
 
-`modules/ai_scanner/` (v0.1.0) runs five harmless canary-based probes against a provider API — OpenAI, Anthropic, or Gemini — and records the actual responses in a JSON evidence report. It is stdlib-only and makes no calls except to the provider you choose. Run it with `python -m modules.ai_scanner --provider gemini` (set the matching `*_API_KEY` first); only test accounts and systems you are authorized to assess. A canary match is an indicator, not proof of exploitability, and a miss does not establish security — every finding needs human review and reproduction.
+`modules/ai_scanner/` (v0.1.1) runs ten harmless canary-based probes against a provider API — OpenAI, Anthropic, or Gemini — and records the actual responses in a JSON evidence report. It is stdlib-only and makes no calls except to the provider you choose. Run it with `python -m modules.ai_scanner --provider gemini` (set the matching `*_API_KEY` first); only test accounts and systems you are authorized to assess. A canary match is an indicator, not proof of exploitability, and a miss does not establish security — every finding needs human review and reproduction.
 
 ## Scope and safety
 
