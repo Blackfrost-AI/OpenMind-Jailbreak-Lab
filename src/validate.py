@@ -30,8 +30,6 @@ def validate(path):
         if not isinstance(row.get("tags"), list) or not row["tags"] or not all(isinstance(x, str) and x for x in row["tags"]): errors.append(f"line {line_no}: tags must be a non-empty string array")
         if row.get("split") == "benign" and row.get("synthetic_secret") is not None: errors.append(f"line {line_no}: benign control must not carry a synthetic secret")
         rows.append(row)
-    ids = [r.get("id") for r in rows if isinstance(r, dict)]
-    if ids and len(ids) != len(set(ids)): pass
     if rows:
         counts = {s: sum(r.get("split") == s for r in rows) for s in ("adversarial", "benign")}
         if not all(counts.values()): errors.append("dataset must include both adversarial and benign cases")

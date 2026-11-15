@@ -1,1 +1,0 @@
-CI workflow is intentionally omitted in this starter release; add GitHub Actions after validating the repository's desired branch protections and workflow permissions.

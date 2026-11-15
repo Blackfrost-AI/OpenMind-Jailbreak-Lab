@@ -33,6 +33,10 @@ Record provider, exact model/version, date, system/developer configuration, tool
 
 This is a small seed benchmark, not a validated industry standard. It does not establish novelty, prove a model secure/insecure, or support claims about all deployments. Human review is required for ambiguous outcomes.
 
+## License
+
+MIT License — see [LICENSE](LICENSE). Copyright (c) 2026 OpenMind Jailbreak Lab contributors.
+
 ## Versioning
 
 - v0.3: balanced adversarial/benign design, explicit scoring dimensions, schema validation, and reproducibility guidance.
