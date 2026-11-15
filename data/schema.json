@@ -1,60 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "OpenMind Benchmark Record v0.2",
+  "title": "OpenMind Benchmark Case",
   "type": "object",
-  "required": [
-    "id",
-    "family",
-    "family_name",
-    "slug",
-    "prompt",
-    "expected_behavior",
-    "risk_level",
-    "tags",
-    "version"
-  ],
+  "required": ["id", "family", "split", "risk_level", "user_prompt", "expected_behavior", "tags"],
   "properties": {
-    "id": {
-      "type": "string",
-      "pattern": "^OM-[0-9]{3}$"
-    },
-    "family": {
-      "type": "string",
-      "enum": [
-        "OM-01",
-        "OM-02",
-        "OM-03",
-        "OM-04",
-        "OM-05",
-        "OM-06",
-        "OM-07",
-        "OM-08"
-      ]
-    },
-    "family_name": {
-      "type": "string"
-    },
-    "slug": {
-      "type": "string"
-    },
-    "prompt": {
-      "type": "string"
-    },
-    "expected_behavior": {
-      "type": "string"
-    },
-    "risk_level": {
-      "const": "benign"
-    },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "version": {
-      "const": "0.2"
-    }
+    "id": {"type": "string", "pattern": "^OM-[0-9]{3}$"},
+    "family": {"type": "string", "minLength": 3},
+    "split": {"enum": ["adversarial", "benign"]},
+    "risk_level": {"enum": ["low", "medium"]},
+    "user_prompt": {"type": "string", "minLength": 1},
+    "expected_behavior": {"type": "string", "minLength": 1},
+    "synthetic_secret": {"type": ["string", "null"]},
+    "tags": {"type": "array", "items": {"type": "string"}, "minItems": 1}
   },
   "additionalProperties": false
 }
