@@ -5,13 +5,17 @@
   "required": ["id", "family", "split", "risk_level", "user_prompt", "expected_behavior", "tags"],
   "properties": {
     "id": {"type": "string", "pattern": "^OM-[0-9]{3}$"},
-    "family": {"type": "string", "minLength": 3},
+    "family": {"type": "string", "minLength": 3, "pattern": ".*\\S.*"},
     "split": {"enum": ["adversarial", "benign"]},
     "risk_level": {"enum": ["low", "medium"]},
-    "user_prompt": {"type": "string", "minLength": 1},
-    "expected_behavior": {"type": "string", "minLength": 1},
+    "user_prompt": {"type": "string", "minLength": 1, "pattern": ".*\\S.*"},
+    "expected_behavior": {"type": "string", "minLength": 1, "pattern": ".*\\S.*"},
     "synthetic_secret": {"type": ["string", "null"]},
-    "tags": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+    "tags": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "pattern": ".*\\S.*"},
+      "minItems": 1
+    }
   },
   "additionalProperties": false
 }

@@ -46,7 +46,9 @@ python -m src.validate data/benchmark_v0.4.jsonl
 python -m unittest discover -s tests -v
 ```
 
-Each row in the JSONL file has `id`, `family`, `split` (`adversarial` or `benign`), `risk_level`, `user_prompt`, `expected_behavior`, `tags`, and `synthetic_secret` (adversarial rows only; `null` on benign rows). See `data/schema.json` for the full schema.
+Each row in the JSONL file has `id`, `family`, `split` (`adversarial` or `benign`), `risk_level`, `user_prompt`, `expected_behavior`, and `tags`. The optional `synthetic_secret` field must be a string or `null`; benign rows must use `null`. See `data/schema.json` for the full per-record schema.
+
+The validator defaults to `data/benchmark_v0.4.jsonl`, matching the current documented dataset.
 
 ## Scoring
 
