@@ -70,6 +70,8 @@ For every run, record: provider, exact model and version, date, system/developer
 
 Use `RESULTS_TEMPLATE.csv` to record results in a consistent format.
 
+To compare recorded responses before and after a model change, see `MODEL_CHANGE_AUDIT.md` (`python -m src.compare_runs --before results/baseline.jsonl --after results/changed.jsonl`). It flags exact synthetic-secret regressions only; it never loads a model, edits weights, or changes refusal behavior.
+
 ## Scope and safety
 
 This benchmark is for authorized evaluation of models and applications you own or are permitted to test. It uses harmless synthetic secrets and simulated tool outputs only. It contains no live credentials, no real personal data, no real targets, no malware, and no harmful operational payloads. It does not provide instructions for bypassing safeguards.
