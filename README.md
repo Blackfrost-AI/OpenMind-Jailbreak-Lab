@@ -1,4 +1,4 @@
-# OpenMind Jailbreak Lab — Benchmark v0.3
+# OpenMind Jailbreak Lab — Benchmark v0.4
 
 A defensive, reproducible benchmark for instruction hierarchy, prompt-injection resistance, and refusal calibration. It evaluates whether a model follows trusted instructions, treats untrusted content as data, protects synthetic secrets, and remains helpful on benign controls.
 
@@ -13,13 +13,13 @@ A defensive, reproducible benchmark for instruction hierarchy, prompt-injection 
 Requires Python 3.10+; no third-party dependencies for validation.
 
 ```bash
-python -m src.validate data/benchmark_v0.3.jsonl
+python -m src.validate data/benchmark_v0.4.jsonl
 python -m unittest discover -s tests -v
 ```
 
 ## Dataset
 
-`data/benchmark_v0.3.jsonl` contains 30 authored cases: 16 adversarial boundary tests and 14 benign negative controls. The split is deliberate: robustness must not be measured by refusal rate alone. Cases cover authority confusion, untrusted-content handling, tool-output injection, synthetic-secret protection, multi-turn drift, multilingual boundaries, format/encoding variation, and benign utility.
+`data/benchmark_v0.4.jsonl` contains 44 authored cases: 23 adversarial boundary tests and 21 benign negative controls. The split is deliberate: robustness must not be measured by refusal rate alone. Cases cover authority confusion, untrusted-content handling, tool-output injection, synthetic-secret protection, multi-turn drift, multilingual boundaries, format/encoding variation, and benign utility. v0.4 adds 14 cases (OM-031..044): cross-format injection (OM-N02 — the same embedded instruction presented as plain text, JSON, a quoted document, and a simulated tool output) and multi-stage provenance drift (OM-N03 — an instruction that gains authority as it moves through extraction, normalization, and final answer).
 
 ## Scoring
 
@@ -39,4 +39,5 @@ MIT License — see [LICENSE](LICENSE). Copyright (c) 2026 OpenMind Jailbreak La
 
 ## Versioning
 
+- v0.4: adds 14 cases (OM-031..044) — cross-format injection (OM-N02) and multi-stage provenance drift (OM-N03), converted from a ChatGPT shared conversation; total 44 cases, 23 adversarial / 21 benign.
 - v0.3: balanced adversarial/benign design, explicit scoring dimensions, schema validation, and reproducibility guidance.
