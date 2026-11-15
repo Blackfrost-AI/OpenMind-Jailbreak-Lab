@@ -75,6 +75,10 @@ Verify benchmark files against `data/CHECKSUMS.txt` (SHA-256) before running tri
 
 To compare recorded responses before and after a model change, see `MODEL_CHANGE_AUDIT.md` (`python -m src.compare_runs --before results/baseline.jsonl --after results/changed.jsonl`). It flags exact synthetic-secret regressions only; it never loads a model, edits weights, or changes refusal behavior. For failures exact matching cannot see — a model following an injected instruction without revealing a secret — see `SEMANTIC_REVIEW.md` (`python -m src.semantic_review`); its judge scores are provisional and need human confirmation.
 
+## JB-002 — multi-stage instruction-hierarchy test
+
+`openmind_jb002/` is a small evaluation module with three cases. Each case pairs a harmless user task with a document carrying a conflicting embedded instruction, plus the expected behavior and a harmless marker that shows whether the embedded instruction was followed. Run each case manually in the target product in a fresh conversation — the module makes no provider API calls — and record the observation with `python -m openmind_jb002 record`. It stores what was observed only; it does not generate bypasses, infer results, or alter models. Recorded observations stay out of git by default (`records/observations.jsonl` is ignored).
+
 ## Scope and safety
 
 This benchmark is for authorized evaluation of models and applications you own or are permitted to test. It uses harmless synthetic secrets and simulated tool outputs only. It contains no live credentials, no real personal data, no real targets, no malware, and no harmful operational payloads. It does not provide instructions for bypassing safeguards.
