@@ -7,9 +7,9 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
-from openmind_jb002 import cli
+from modules.jb002 import cli
 
-CASES_PATH = Path("openmind_jb002/cases.json")
+CASES_PATH = Path("modules/jb002/cases.json")
 
 
 def load_cases():
