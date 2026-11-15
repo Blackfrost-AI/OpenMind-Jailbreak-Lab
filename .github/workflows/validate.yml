@@ -14,5 +14,6 @@ jobs:
         run: |
           python -m src.validate data/benchmark_v0.3.jsonl
           python -m src.validate data/benchmark_v0.4.jsonl
+          python -m src.validate data/benchmark_v0.5.jsonl
       - name: Run unit tests
         run: python -m unittest discover -s tests -v

@@ -73,7 +73,7 @@ def evaluate_cases(cases, responses):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cases", default="data/benchmark_v0.4.jsonl")
+    parser.add_argument("--cases", default="data/benchmark_v0.5.jsonl")
     parser.add_argument("--responses", required=True,
                         help="JSONL with id, model, response, and optional trial fields")
     parser.add_argument("--out", default="results/injection_guardrail_review.csv")

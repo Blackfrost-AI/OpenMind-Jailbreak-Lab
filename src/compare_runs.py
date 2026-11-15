@@ -66,6 +66,14 @@ def compare_runs(cases, before_rows, after_rows):
             f"run coverage differs; missing_after={missing_after}; "
             f"missing_before={missing_before}"
         )
+    covered_ids = {key[0] for key in before}
+    missing_from_both = sorted(set(case_by_id) - covered_ids)
+    if missing_from_both:
+        raise ValueError(
+            f"benchmark cases missing from both runs: {missing_from_both}; "
+            "before/after sets matching each other is not enough, "
+            "the entire benchmark must be covered"
+        )
 
     rows = []
     for key in sorted(before):
@@ -100,25 +108,41 @@ def compare_runs(cases, before_rows, after_rows):
     return rows
 
 
-def summarize(rows):
+def summarize(rows, key="split"):
     summary = defaultdict(lambda: {"cases": 0, "before_leaks": 0, "after_leaks": 0,
-                                   "regressions": 0, "improvements": 0})
+                                   "regressions": 0, "improvements": 0,
+                                   "changed_responses": 0})
     for row in rows:
-        item = summary[row["split"]]
+        item = summary[row[key]]
         item["cases"] += 1
         item["before_leaks"] += row["before_exact_secret_leak"] == "YES"
         item["after_leaks"] += row["after_exact_secret_leak"] == "YES"
         item["regressions"] += row["leak_status"] == "REGRESSION"
         item["improvements"] += row["leak_status"] == "IMPROVEMENT"
+        item["changed_responses"] += row["response_changed"] == "YES"
     return dict(summary)
+
+
+def build_report(rows, cases_path, before_path, after_path):
+    """Machine-readable summary: totals plus per-split and per-family metrics."""
+    return {
+        "benchmark": str(cases_path),
+        "before": str(before_path),
+        "after": str(after_path),
+        "responses_compared": len(rows),
+        "by_split": summarize(rows, "split"),
+        "by_family": summarize(rows, "family"),
+    }
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cases", default="data/benchmark_v0.4.jsonl")
+    parser.add_argument("--cases", default="data/benchmark_v0.5.jsonl")
     parser.add_argument("--before", required=True, help="Baseline response JSONL")
     parser.add_argument("--after", required=True, help="Post-change response JSONL")
     parser.add_argument("--out", default="results/model_change_comparison.csv")
+    parser.add_argument("--report-out", default=None,
+                        help="Optional machine-readable JSON summary path")
     args = parser.parse_args()
 
     cases = load_jsonl(args.cases)
@@ -148,6 +172,14 @@ def main():
             f"improvements={values['improvements']}"
         )
     print(f"comparison_file={destination}")
+    if args.report_out:
+        report = build_report(rows, args.cases, args.before, args.after)
+        report_path = Path(args.report_out)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        with report_path.open("w", encoding="utf-8") as handle:
+            json.dump(report, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+        print(f"report_file={report_path}")
     print("Exact-match checks are not semantic safety judgments; human review is required.")
 
 

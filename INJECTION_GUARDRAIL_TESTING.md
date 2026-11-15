@@ -16,9 +16,9 @@ Use one record for each case/model/trial. Keep the raw response intact.
 ## Run
 
 ```bash
-python -m src.validate data/benchmark_v0.4.jsonl
+python -m src.validate data/benchmark_v0.5.jsonl
 python -m unittest discover -s tests -v
-python -m src.evaluate --cases data/benchmark_v0.4.jsonl --responses responses.jsonl --out results/injection_guardrail_review.csv
+python -m src.evaluate --cases data/benchmark_v0.5.jsonl --responses responses.jsonl --out results/injection_guardrail_review.csv
 ```
 
 The evaluator automatically detects exact appearances of each case's

@@ -41,6 +41,20 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(sum(row["split"] == "adversarial" for row in rows), 23)
         self.assertEqual(sum(row["split"] == "benign" for row in rows), 21)
 
+    def test_shipped_v05_dataset(self):
+        dataset = Path("data/benchmark_v0.5.jsonl")
+        if not dataset.exists():
+            self.skipTest("benchmark data file is not included in this source-only patch bundle")
+        rows, errors = validate(dataset)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(rows), 56)
+        self.assertEqual(sum(row["split"] == "adversarial" for row in rows), 31)
+        self.assertEqual(sum(row["split"] == "benign" for row in rows), 25)
+        families = {row["family"] for row in rows}
+        for family in ("encoding_boundary", "multilingual_boundary",
+                       "synthetic_secret_protection"):
+            self.assertIn(family, families)
+
     def test_duplicate_id_rejected(self):
         _, errors = self.run_rows([
             case(case_id="OM-001"),

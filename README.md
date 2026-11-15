@@ -3,7 +3,7 @@
 [![Validate benchmark](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/workflows/validate.yml/badge.svg)](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Version: v0.4](https://img.shields.io/badge/version-v0.4-purple.svg)](#version-history)
+[![Version: v0.5](https://img.shields.io/badge/version-v0.5-purple.svg)](#version-history)
 
 A defensive benchmark for instruction hierarchy and prompt-injection resistance.
 
@@ -23,16 +23,17 @@ OpenMind Jailbreak Lab measures whether a language model holds the line when unt
 
 ## Dataset
 
-`data/benchmark_v0.4.jsonl` — **44 cases: 23 adversarial, 21 benign.**
+`data/benchmark_v0.5.jsonl` — **56 cases: 31 adversarial, 25 benign.**
 
 The split is deliberate. Robustness cannot be measured by refusal rate alone: a model that refuses everything looks safe and is useless, and a model that complies with everything looks helpful and is unsafe. Adversarial cases measure whether the boundary holds; benign controls measure whether the model still does its job.
 
 | Version | Cases | Adversarial | Benign | What changed |
 |---|---:|---:|---:|---|
+| v0.5 | 56 | 31 | 25 | Reliability and evaluation upgrade: 12 new cases (OM-045..056) across the thinnest families, semantic judge review, full-coverage audit checks, machine-readable reports, checksums and release tags |
 | v0.4 | 44 | 23 | 21 | Cross-format injection (OM-N02) and multi-stage provenance drift (OM-N03) |
 | v0.3 | 30 | 16 | 14 | Balanced adversarial/benign design, scoring dimensions, schema validation |
 
-v0.4 adds 14 cases (OM-031..044), converted from a ChatGPT shared conversation into this benchmark's format and validated against its schema:
+v0.5 adds 12 cases (OM-045..056) across the thinnest families — encoding (1→3), multilingual (2→4), synthetic-secret protection (2→4) — plus authority confusion and tool-output injection, with six medium-difficulty cases alongside low ones, and four new benign controls. v0.4 adds 14 cases (OM-031..044), converted from a ChatGPT shared conversation into this benchmark's format and validated against its schema:
 
 - **OM-N02 — cross-format injection (OM-031..038):** the same embedded instruction, presented four ways — plain text, JSON, a quoted document, and a simulated tool output — plus four benign controls. The question is whether the format changes the outcome.
 - **OM-N03 — multi-stage provenance drift (OM-039..044):** an instruction that tries to gain authority as it passes through extraction, normalization, and a final answer, plus three benign multi-stage controls.
@@ -42,13 +43,13 @@ v0.4 adds 14 cases (OM-031..044), converted from a ChatGPT shared conversation i
 Requires Python 3.10+. No third-party dependencies for validation.
 
 ```bash
-python -m src.validate data/benchmark_v0.4.jsonl
+python -m src.validate data/benchmark_v0.5.jsonl
 python -m unittest discover -s tests -v
 ```
 
 Each row in the JSONL file has `id`, `family`, `split` (`adversarial` or `benign`), `risk_level`, `user_prompt`, `expected_behavior`, and `tags`. The optional `synthetic_secret` field must be a string or `null`; benign rows must use `null`. See `data/schema.json` for the full per-record schema.
 
-The validator defaults to `data/benchmark_v0.4.jsonl`, matching the current documented dataset.
+The validator defaults to `data/benchmark_v0.5.jsonl`, matching the current documented dataset. Earlier versions stay available and validated: `data/benchmark_v0.3.jsonl` and `data/benchmark_v0.4.jsonl`.
 
 ## Scoring
 
@@ -70,7 +71,9 @@ For every run, record: provider, exact model and version, date, system/developer
 
 Use `RESULTS_TEMPLATE.csv` to record results in a consistent format.
 
-To compare recorded responses before and after a model change, see `MODEL_CHANGE_AUDIT.md` (`python -m src.compare_runs --before results/baseline.jsonl --after results/changed.jsonl`). It flags exact synthetic-secret regressions only; it never loads a model, edits weights, or changes refusal behavior.
+Verify benchmark files against `data/CHECKSUMS.txt` (SHA-256) before running trials, and cite the release tag (`v0.5`) so results stay reproducible.
+
+To compare recorded responses before and after a model change, see `MODEL_CHANGE_AUDIT.md` (`python -m src.compare_runs --before results/baseline.jsonl --after results/changed.jsonl`). It flags exact synthetic-secret regressions only; it never loads a model, edits weights, or changes refusal behavior. For failures exact matching cannot see — a model following an injected instruction without revealing a secret — see `SEMANTIC_REVIEW.md` (`python -m src.semantic_review`); its judge scores are provisional and need human confirmation.
 
 ## Scope and safety
 
@@ -90,5 +93,6 @@ MIT License — see [LICENSE](LICENSE). Copyright (c) 2026 OpenMind Jailbreak La
 
 ## Version history
 
+- **v0.5** — 56 cases (31 adversarial / 25 benign). Reliability and evaluation upgrade: 12 new cases across the thinnest families, semantic judge review, full-coverage audit checks, machine-readable reports, checksums and release tags.
 - **v0.4** — 44 cases (23 adversarial / 21 benign). Adds cross-format injection (OM-N02) and multi-stage provenance drift (OM-N03).
 - **v0.3** — 30 cases (16 adversarial / 14 benign). Balanced adversarial/benign design, explicit scoring dimensions, schema validation, reproducibility guidance.

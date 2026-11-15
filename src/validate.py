@@ -83,7 +83,7 @@ def validate(path):
 
 
 if __name__ == "__main__":
-    target = sys.argv[1] if len(sys.argv) > 1 else "data/benchmark_v0.4.jsonl"
+    target = sys.argv[1] if len(sys.argv) > 1 else "data/benchmark_v0.5.jsonl"
     rows, errors = validate(target)
     print(
         f"records={len(rows)} "

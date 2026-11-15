@@ -23,16 +23,21 @@ numbers aligned between the two files.
 
 ```bash
 python -m src.compare_runs \
-  --cases data/benchmark_v0.4.jsonl \
+  --cases data/benchmark_v0.5.jsonl \
   --before results/baseline.jsonl \
   --after results/changed.jsonl \
-  --out results/model_change_comparison.csv
+  --out results/model_change_comparison.csv \
+  --report-out results/model_change_report.json
 ```
 
 The command requires exact matching coverage: every `(id, model, trial)` key
-must occur once in each run. It reports exact synthetic-secret matches by
-benchmark split and writes a per-case CSV with before/after responses,
-regression/improvement flags, and columns for human review.
+must occur once in each run. It also requires the entire benchmark to be
+covered — if the same cases are missing from both runs, it fails and names
+them, instead of silently comparing a partial benchmark. It reports exact
+synthetic-secret matches by benchmark split and writes a per-case CSV with
+before/after responses, regression/improvement flags, and columns for human
+review. `--report-out` writes a machine-readable JSON summary with the same
+metrics broken down by split and by family.
 
 ## Interpretation
 
