@@ -2,32 +2,51 @@
 import argparse, json, os, sys
 from .cases import CASES
 from .runner import run_suite, write_report
+from .campaign import run_campaign
+from .openai_compatible import PRESET_BASE_URLS, call_openai_compatible
 
-def _adapter(provider, model):
+def _adapter(provider, model, base_url=None, api_key_env="OPENAI_COMPAT_API_KEY"):
+    if provider == "openai-compatible" or provider in PRESET_BASE_URLS:
+        resolved_url = base_url or PRESET_BASE_URLS.get(provider) or os.getenv("OPENAI_COMPAT_BASE_URL")
+        def compatible_call(messages):
+            return call_openai_compatible(
+                messages, model=model, base_url=resolved_url, api_key_env=api_key_env
+            )
+        return compatible_call
     try:
         from modules.ai_scanner.providers import call_provider_messages
     except ImportError as exc:
         raise RuntimeError("Could not import modules.ai_scanner.providers. Run this from the repository root or install the project.") from exc
     def call(messages):
-        # call_provider_messages returns (model, text, metadata);
-        # the runner's call contract is response text only.
-        return call_provider_messages(provider, messages, model=model)[1]
+        return call_provider_messages(provider, messages, model=model)
     return call
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="guardrail-lab", description="Authorized AI guardrail robustness tests")
-    parser.add_argument("--provider", choices=["openai", "anthropic", "gemini"])
+    parser.add_argument("--provider", choices=["openai", "anthropic", "gemini", "openai-compatible", *PRESET_BASE_URLS.keys()])
     parser.add_argument("--model", default=None)
+    parser.add_argument("--base-url", default=None, help="OpenAI-compatible API base URL (for local servers or hosted providers)")
+    parser.add_argument("--api-key-env", default="OPENAI_COMPAT_API_KEY", help="Environment variable holding the compatible endpoint API key; may be empty for local servers")
     parser.add_argument("--output", default="guardrail-report.json")
     parser.add_argument("--case", action="append", dest="case_ids", help="Case ID; repeat to select multiple. Default: all cases.")
     parser.add_argument("--list", action="store_true", help="List cases without making API calls")
+    parser.add_argument("--campaign", action="store_true", help="Run an automated, bounded adaptive campaign")
+    parser.add_argument("--budget", type=int, default=36, help="Maximum test requests (1-1000; default: 36); provider retries may add HTTP attempts")
+    parser.add_argument("--variants", type=int, choices=[1, 2, 3], default=3, help="Fixed safe prompt framings per flagged case (default: 3)")
+    parser.add_argument("--no-adaptive", action="store_true", help="Disable evidence-triggered follow-up variations")
+    parser.add_argument("--delay", type=float, default=0.0, help="Seconds between API calls")
+    parser.add_argument("--max-seconds", type=float, default=None, help="Stop scheduling new requests after this many seconds; cannot interrupt an in-flight API request")
     args = parser.parse_args(argv)
     if args.list:
         for case in CASES:
             print(f"{case.case_id}\t{case.category}")
         return 0
     if not args.provider:
-        parser.error("--provider is required")
+        parser.error("--provider is required unless --list is used")
+    if args.provider in ("openai-compatible", *PRESET_BASE_URLS.keys()) and not (args.base_url or PRESET_BASE_URLS.get(args.provider) or os.getenv("OPENAI_COMPAT_BASE_URL")):
+        parser.error("Set --base-url or OPENAI_COMPAT_BASE_URL for this provider")
+    if args.provider in ("openai-compatible", *PRESET_BASE_URLS.keys()) and not (args.model or os.getenv("OPENAI_COMPAT_MODEL")):
+        parser.error("Set --model or OPENAI_COMPAT_MODEL for this provider")
     if args.provider == "openai" and not os.getenv("OPENAI_API_KEY"):
         parser.error("OPENAI_API_KEY is not set")
     if args.provider == "anthropic" and not os.getenv("ANTHROPIC_API_KEY"):
@@ -35,9 +54,18 @@ def main(argv=None):
     if args.provider == "gemini" and not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
         parser.error("GEMINI_API_KEY or GOOGLE_API_KEY is not set")
     try:
-        report = run_suite(_adapter(args.provider, args.model), provider=args.provider, model=args.model, case_ids=args.case_ids)
+        adapter = _adapter(args.provider, args.model, args.base_url, args.api_key_env)
+        if args.campaign:
+            report = run_campaign(
+                adapter, provider=args.provider, model=args.model,
+                budget=args.budget, variants=args.variants,
+                adaptive=not args.no_adaptive, delay_seconds=args.delay,
+                max_seconds=args.max_seconds, case_ids=args.case_ids,
+            )
+        else:
+            report = run_suite(adapter, provider=args.provider, model=args.model, case_ids=args.case_ids)
         write_report(report, args.output)
-    except (RuntimeError, KeyError) as exc:
+    except (RuntimeError, KeyError, ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(report["summary"], indent=2))

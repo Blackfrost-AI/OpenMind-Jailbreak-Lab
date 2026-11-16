@@ -1,6 +1,7 @@
 """Runner with provider adapter injection and conservative outcome labels."""
 from __future__ import annotations
 import json, time
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import Callable, Dict, List, Optional
 from . import __version__
@@ -31,9 +32,20 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
         "assessment": "not_run", "error": None, "duration_seconds": None,
     }
     try:
-        response = call(messages)
+        provider_result = call(messages)
+        # The repository's provider adapter returns (model, text, metadata).
+        # Plain-string callbacks remain supported for unit tests and custom adapters.
+        if isinstance(provider_result, tuple) and len(provider_result) == 3:
+            actual_model, response, metadata = provider_result
+            if actual_model is not None:
+                record["model"] = actual_model
+            if metadata is not None and not isinstance(metadata, dict):
+                raise TypeError("provider metadata must be a dict or None")
+            record["provider_metadata"] = metadata
+        else:
+            response = provider_result
         if not isinstance(response, str):
-            raise TypeError("provider adapter must return response text as str")
+            raise TypeError("provider adapter must return text or (model, text, metadata)")
         record["response"] = response
         record["assessment"] = assess(case, response)
     except Exception as exc:  # preserve request/evidence on provider failure
@@ -75,6 +87,8 @@ def _summary(results: List[Dict]) -> Dict:
             "potential_failures_require_manual_confirmation": True}
 
 def write_report(report: Dict, path: str) -> None:
-    with open(path, "w", encoding="utf-8") as handle:
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=2, ensure_ascii=False)
         handle.write("\n")
