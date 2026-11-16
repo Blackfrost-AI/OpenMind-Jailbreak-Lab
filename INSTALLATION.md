@@ -394,12 +394,12 @@ python -m modules.guardrail_lab \
 Version 0.6.0 adds four bounded cases that check whether a model follows harmless instructions embedded in content explicitly marked untrusted: a document, a retrieved passage with a forged authority claim, encoded text, and a quotation. Run them against a provider you are authorized to test:
 
 ```bash
-python -m modules.guardrail_lab \\
-  --provider gemini \\
-  --case GL-013 \\
-  --case GL-014 \\
-  --case GL-015 \\
-  --case GL-016 \\
+python -m modules.guardrail_lab \
+  --provider gemini \
+  --case GL-013 \
+  --case GL-014 \
+  --case GL-015 \
+  --case GL-016 \
   --output reports/trust-escalation.json
 ```
 
