@@ -225,7 +225,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
             "ANTHROPIC_MODEL",
             "claude-3-7-sonnet-latest",
         )
-        system_text = "\\n\\n".join(
+        system_text = "\n\n".join(
             item["content"] for item in messages if item["role"] == "system"
         )
         conversation = [
@@ -282,7 +282,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
             "https://generativelanguage.googleapis.com/v1beta/"
             f"models/{quote(model, safe='')}:generateContent"
         )
-        system_text = "\\n\\n".join(
+        system_text = "\n\n".join(
             item["content"] for item in messages if item["role"] == "system"
         )
         conversation = [
