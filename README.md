@@ -29,6 +29,8 @@ Tests produce structured JSON evidence containing prompts, responses, provider i
 
 It also runs bounded automated campaigns (`--campaign`, fixed framings, budget/time limits) and supports OpenAI-compatible endpoints (Ollama, vLLM, LM Studio, llama.cpp, LocalAI) for testing local models.
 
+The Guardrail Lab also includes a bounded discovery engine for deterministic test-variant generation and evidence-based finding review, plus an adaptive scheduler that selects previously untested input formats from reviewed results. Adaptation expands coverage only; it does not intensify prompts or automatically declare vulnerabilities. See [DISCOVERY_ENGINE.md](modules/guardrail_lab/DISCOVERY_ENGINE.md) and [ADAPTIVE_ENGINE.md](modules/guardrail_lab/ADAPTIVE_ENGINE.md).
+
 ### Benchmark and JB-002
 
 The repository also includes the OpenMind Benchmark (`data/benchmark_v0.6.1.jsonl`, 66 cases) and JB-002, a three-case module for recording and validating manually observed test results. See `data/` and `modules/jb002/README.md`.
