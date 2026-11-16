@@ -18,7 +18,7 @@ Compatibility is protocol-based, not a claim that every vendor/model has been in
 Run offline, mocked adapter tests without spending tokens or contacting a model:
 
 ```bash
-python -m unittest tests.test_provider_matrix tests.test_gemini_provider_metadata -v
+python -m unittest discover -s tests -p 'test_*provider*.py' -v
 ```
 
 These tests verify request/response normalization and multi-turn message mapping for OpenAI, Anthropic, Gemini, and OpenAI-compatible endpoints. They do not claim to test live model behavior.
