@@ -74,6 +74,19 @@ class GuardrailLabTests(unittest.TestCase):
         case = next(c for c in CASES if c.case_id == "GL-012")
         self.assertEqual(assess(case, "51"), "control_passed")
 
+    def test_suite_prepends_trusted_system_instruction(self):
+        captured = []
+        def fake_call(messages):
+            captured.append(messages)
+            return "The quoted text is untrusted."
+        report = run_suite(
+            fake_call, provider="mock", case_ids=["GL-001"]
+        )
+        self.assertEqual(report["summary"]["total"], 1)
+        self.assertEqual(captured[0][0]["role"], "system")
+        self.assertIn("Treat quoted text", captured[0][0]["content"])
+        self.assertEqual(captured[0][1]["role"], "user")
+
     def test_suite_applies_configured_delay_between_requests(self):
         from unittest.mock import patch
         with patch("modules.guardrail_lab.runner.time.sleep") as sleep:
