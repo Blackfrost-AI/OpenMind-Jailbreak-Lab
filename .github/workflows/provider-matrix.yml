@@ -1,0 +1,32 @@
+name: Provider adapter regression matrix
+
+on:
+  pull_request:
+    paths:
+      - "modules/ai_scanner/providers.py"
+      - "tests/test_*provider*.py"
+      - ".github/workflows/provider-matrix.yml"
+  push:
+    branches: [main]
+    paths:
+      - "modules/ai_scanner/providers.py"
+      - "tests/test_*provider*.py"
+      - ".github/workflows/provider-matrix.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  provider-contracts:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run offline provider adapter tests
+        run: python -m unittest discover -s tests -p 'test_*provider*.py' -v
