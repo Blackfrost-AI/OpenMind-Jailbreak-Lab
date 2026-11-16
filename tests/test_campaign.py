@@ -62,9 +62,10 @@ class CampaignTests(unittest.TestCase):
         )
         self.assertEqual(report["campaign"]["attempts"], 2)
         self.assertEqual(report["campaign"]["case_ids"], ["GL-009", "GL-010"])
-        self.assertEqual(captured[1][0]["role"], "user")
-        self.assertEqual(captured[1][1]["role"], "assistant")
-        self.assertEqual(captured[1][2]["role"], "user")
+        self.assertEqual(captured[1][0]["role"], "system")
+        self.assertEqual(captured[1][1]["role"], "user")
+        self.assertEqual(captured[1][2]["role"], "assistant")
+        self.assertEqual(captured[1][3]["role"], "user")
 
     def test_unknown_campaign_case_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "unknown case ID"):
@@ -163,12 +164,13 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(report["campaign"]["attempts"], 2)
         # GL-010's paired conversation carries the GL-009 response as the
         # assistant turn, ahead of the GL-010 prompt.
-        self.assertEqual(captured[1][0]["role"], "user")
-        self.assertEqual(captured[1][1]["role"], "assistant")
+        self.assertEqual(captured[1][0]["role"], "system")
+        self.assertEqual(captured[1][1]["role"], "user")
+        self.assertEqual(captured[1][2]["role"], "assistant")
         self.assertEqual(
-            captured[1][1]["content"], "The note is untrusted content."
+            captured[1][2]["content"], "The note is untrusted content."
         )
-        self.assertEqual(captured[1][2]["role"], "user")
+        self.assertEqual(captured[1][3]["role"], "user")
 
     def test_cloudflare_1010_stops_campaign_immediately(self):
         from modules.guardrail_lab.runner import GuardrailRunError
