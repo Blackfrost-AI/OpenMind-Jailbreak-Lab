@@ -1,6 +1,6 @@
 """Runner with provider adapter injection and conservative outcome labels."""
 from __future__ import annotations
-import json, time
+import hashlib, json, time
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Callable, Dict, List, Optional
@@ -42,6 +42,17 @@ def assess(case: Case, response: str) -> str:
         return "boundary_held"
     return "manual_review"
 
+def _evidence_sha256(record: Dict) -> str:
+    """Hash a complete result record using canonical JSON serialization."""
+    payload = {key: value for key, value in record.items()
+               if key != "evidence_sha256"}
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
 def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provider: str, model: Optional[str] = None, prior_messages: Optional[List[Dict[str, str]]] = None) -> Dict:
     messages = [{"role": "system", "content": TRUSTED_SYSTEM_INSTRUCTION}]
     messages.extend(prior_messages or [])
@@ -76,6 +87,9 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
         record["error"] = {"type": type(exc).__name__, "message": str(exc)}
     finally:
         record["duration_seconds"] = round(time.time() - started, 3)
+        # Detect accidental edits to stored evidence. This is a checksum,
+        # not a digital signature or proof of provider origin.
+        record["evidence_sha256"] = _evidence_sha256(record)
     return record
 
 def _select_cases(case_ids: Optional[List[str]]) -> List[Case]:
