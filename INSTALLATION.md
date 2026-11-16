@@ -356,7 +356,7 @@ Not every OpenAI-compatible service implements the same features. Compatibility 
 
 ---
 
-## 8. Run your first AI Scanner test
+## 9. Run your first AI Scanner test
 
 Example using Gemini:
 
@@ -386,7 +386,7 @@ Reports are written to the paths specified by --output.
 
 ---
 
-## 9. Run Guardrail Lab
+## 10. Run Guardrail Lab
 
 Run the default test suite:
 
@@ -483,7 +483,7 @@ They are not unrestricted prompt-generation systems.
 
 ---
 
-## 10. Review reports
+## 11. Review reports
 
 Reports use JSON format.
 
@@ -515,7 +515,7 @@ Reports may contain sensitive testing information. Review them before sharing pu
 
 ---
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 Python command not found
 
@@ -592,7 +592,7 @@ Review the failing test and traceback before changing project files.
 
 ---
 
-## 12. Security and responsible use
+## 13. Security and responsible use
 
 OpenMind is intended for authorized AI security research and defensive testing.
 
@@ -609,7 +609,7 @@ A successful test run does not constitute a security certification or prove that
 
 ---
 
-## 13. Additional documentation
+## 14. Additional documentation
 
 For further information, consult:
 
