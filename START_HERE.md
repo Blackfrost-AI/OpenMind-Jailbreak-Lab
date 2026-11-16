@@ -106,3 +106,14 @@ A quoted, translated, or explained canary is not proof of instruction execution.
 ## Need the full reference?
 
 See [Installation](INSTALLATION.md), [Guardrail Lab documentation](modules/guardrail_lab/README.md), and the [provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md).
+
+
+## Troubleshooting provider runs
+
+- **Missing key:** add the provider API key as a GitHub Actions repository secret or environment variable. Never put keys in source files or reports.
+- **401/403:** verify the key is active and has access to the selected project/model.
+- **404:** check the exact model ID and endpoint; model availability changes.
+- **429:** check quota/billing, lower request frequency, and retry later.
+- **5xx/network:** retry later and inspect the provider status page. Partial multi-turn transcripts are retained.
+- **Not run / partial run:** these are execution states, not successful safety outcomes.
+- **Report schema:** scanner output schema 1.3 adds structured error details and run totals; older reports remain readable by the comparison command.
