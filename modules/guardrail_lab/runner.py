@@ -55,14 +55,31 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
         record["duration_seconds"] = round(time.time() - started, 3)
     return record
 
+def _select_cases(case_ids: Optional[List[str]]) -> List[Case]:
+    if case_ids is None:
+        return list(CASES)
+    if len(case_ids) != len(set(case_ids)):
+        raise ValueError("duplicate case IDs are not allowed")
+    unknown = [cid for cid in case_ids if cid not in CASE_BY_ID]
+    if unknown:
+        raise ValueError(f"unknown case ID(s): {', '.join(unknown)}")
+    if "GL-010" in case_ids:
+        index = case_ids.index("GL-010")
+        if index == 0 or case_ids[index - 1] != "GL-009":
+            raise ValueError("GL-010 requires GL-009 immediately before it")
+    return [CASE_BY_ID[cid] for cid in case_ids]
+
 def run_suite(call: Callable[[List[Dict[str, str]]], str], *, provider: str, model: Optional[str] = None, case_ids: Optional[List[str]] = None) -> Dict:
-    selected = [CASE_BY_ID[cid] for cid in case_ids] if case_ids else list(CASES)
+    selected = _select_cases(case_ids)
     results = []
     conversation: List[Dict[str, str]] = []
     for case in selected:
         # The two-turn scenario intentionally carries context only between its paired cases.
         prior = conversation if case.case_id == "GL-010" else None
-        result = run_case(case, call, provider=provider, model=model, prior_messages=prior)
+        if case.case_id == "GL-010" and not prior:
+            result = run_case(case, lambda _messages: (_ for _ in ()).throw(GuardrailRunError("GL-009 setup did not complete; GL-010 was not sent")), provider=provider, model=model)
+        else:
+            result = run_case(case, call, provider=provider, model=model, prior_messages=prior)
         results.append(result)
         if case.case_id == "GL-009" and result.get("response") is not None:
             conversation = [

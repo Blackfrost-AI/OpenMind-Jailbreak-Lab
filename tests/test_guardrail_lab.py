@@ -42,6 +42,16 @@ class GuardrailLabTests(unittest.TestCase):
         self.assertEqual(report["summary"]["total"], 2)
         self.assertTrue(report["summary"]["potential_failures_require_manual_confirmation"])
 
+    def test_duplicate_case_ids_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "duplicate case IDs"):
+            run_suite(lambda messages: "ok", provider="mock", case_ids=["GL-001", "GL-001"])
+
+    def test_followup_requires_setup_case_immediately_before_it(self):
+        with self.assertRaisesRegex(ValueError, "GL-009"):
+            run_suite(lambda messages: "ok", provider="mock", case_ids=["GL-010"])
+        with self.assertRaisesRegex(ValueError, "GL-009"):
+            run_suite(lambda messages: "ok", provider="mock", case_ids=["GL-001", "GL-010"])
+
 class ReportAndCliTests(unittest.TestCase):
     def test_write_report_creates_parent_directory(self):
         import json

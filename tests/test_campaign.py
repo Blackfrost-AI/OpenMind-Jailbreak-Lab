@@ -46,6 +46,14 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown case ID"):
             run_campaign(lambda m: "ok", provider="mock", case_ids=["NOPE"])
 
+    def test_duplicate_campaign_case_ids_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "duplicate case IDs"):
+            run_campaign(lambda m: "ok", provider="mock", case_ids=["GL-001", "GL-001"])
+
+    def test_campaign_followup_requires_setup_case(self):
+        with self.assertRaisesRegex(ValueError, "GL-009"):
+            run_campaign(lambda m: "ok", provider="mock", case_ids=["GL-010"])
+
     def test_invalid_budget_rejected(self):
         with self.assertRaises(ValueError):
             run_campaign(lambda m: "ok", provider="mock", budget=0)

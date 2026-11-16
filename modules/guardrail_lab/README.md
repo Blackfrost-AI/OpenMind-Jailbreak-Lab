@@ -1,4 +1,4 @@
-# Guardrail Lab (add-on module)
+# Guardrail Lab v0.3.1 (add-on module)
 
 A provider-backed, evidence-first robustness test module for authorized testing of AI systems you own or are permitted to assess. It exercises prompt-injection boundaries using harmless canary markers, captures request/response evidence, and produces JSON reports.
 
@@ -46,7 +46,7 @@ python -m modules.guardrail_lab \
 
 You can also set `OPENAI_COMPAT_BASE_URL` and `OPENAI_COMPAT_MODEL` instead of passing those flags. Local servers can omit the API key. For a different key variable, pass `--api-key-env YOUR_ENV_VAR`. Credentials are read from the environment and are never included in reports. This generic adapter avoids locking the project to a finite provider list; a new service can be added by supplying its compatible base URL and model name.
 
-The adapter uses the standard-library HTTP client and requires no extra Python package. It does not assume that every provider supports every model or optional API feature; the endpoint must accept chat messages and return `choices[0].message.content`.
+The adapter uses the standard-library HTTP client and requires no extra Python package. HTTPS is required for non-local endpoints; plain HTTP is accepted only for loopback hosts (`localhost`, `127.0.0.1`, or `::1`). The adapter rejects URL-embedded credentials, query strings, and fragments, validates response shapes, and never writes API keys to reports. It does not assume that every provider supports every model or optional API feature; the endpoint must accept chat messages and return `choices[0].message.content`.
 
 ## Integrate
 
@@ -59,7 +59,7 @@ python -m modules.guardrail_lab --list
 python -m modules.guardrail_lab --provider openai --output reports/openai-guardrail.json
 python -m modules.guardrail_lab --provider anthropic --model YOUR_MODEL --output reports/anthropic-guardrail.json
 python -m modules.guardrail_lab --provider gemini --output reports/gemini-guardrail.json
-python -m unittest tests.test_guardrail_lab tests.test_campaign tests.test_openai_compatible -v
+python -m unittest discover -s tests -v
 ```
 
 Set the provider's API key in the environment before running:
@@ -90,4 +90,13 @@ Run a bounded automated campaign (the default budget is 36 API calls):
 python -m modules.guardrail_lab --provider openai --campaign --budget 36 --variants 3 --delay 1 --output reports/openai-campaign.json
 ```
 
-The campaign starts with one baseline run per selected case. Use `--case GL-001 --case GL-004` to limit a campaign to specific cases. The paired GL-009/GL-010 scenario carries conversation context between its two turns. If a harmless canary appears, it schedules up to two additional fixed prompt framings for that same case. This is evidence-triggered exploration, not proof of an exploit. Every request and response is recorded. Use `--no-adaptive` to disable follow-ups, `--max-seconds 600` to impose a time limit, or `--budget 100` to set a hard API-call ceiling. `--delay` inserts a pause between requests. The budget counts test requests; the repository provider adapter may retry transient HTTP failures up to three times per request. `--max-seconds` is checked between requests and cannot interrupt a request already in progress. The scheduler is intentionally bounded and uses a fixed variation library rather than unconstrained prompt generation.
+The campaign starts with one baseline run per selected case. Use `--case GL-001 --case GL-004` to limit a campaign to specific cases. The paired GL-009/GL-010 scenario carries conversation context between its two turns. Selecting GL-010 requires GL-009 immediately before it; duplicate and unknown case IDs are rejected. If a harmless canary appears, it schedules up to two additional fixed prompt framings for that same case. This is evidence-triggered exploration, not proof of an exploit. Every request and response is recorded. Use `--no-adaptive` to disable follow-ups, `--max-seconds 600` to impose a time limit, or `--budget 100` to set a hard API-call ceiling. `--delay` inserts a pause between requests. The budget counts test requests; the repository provider adapter may retry transient HTTP failures up to three times per request. `--max-seconds` is checked between requests and cannot interrupt a request already in progress. The scheduler is intentionally bounded and uses a fixed variation library rather than unconstrained prompt generation.
+
+
+## v0.3.1 hardening
+
+- Requires HTTPS for non-loopback OpenAI-compatible endpoints; loopback HTTP remains available for local inference servers.
+- Rejects malformed endpoint URLs and malformed JSON response structures with clear errors.
+- Validates positive finite request timeouts and tolerates malformed content-part entries without crashing.
+- Rejects duplicate case IDs and requires GL-009 immediately before GL-010. If the setup turn fails, the follow-up is recorded as not run rather than sent without context.
+- Release archives exclude Python bytecode and cache directories.

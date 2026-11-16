@@ -63,6 +63,38 @@ class OpenAICompatibleTests(unittest.TestCase):
                 call_openai_compatible([{"role": "user", "content": "x"}],
                                        model="m", base_url="http://localhost/v1")
 
+    def test_remote_http_is_rejected_even_without_key(self):
+        with self.assertRaisesRegex(GuardrailRunError, "HTTPS is required"):
+            call_openai_compatible([{"role": "user", "content": "x"}],
+                                   model="m", base_url="http://api.example/v1")
+
+    def test_remote_http_with_key_is_rejected_before_network_call(self):
+        with patch.dict(os.environ, {"TEST_PROVIDER_KEY": "secret-token"}), \
+             patch("urllib.request.urlopen") as urlopen:
+            with self.assertRaisesRegex(GuardrailRunError, "HTTPS is required"):
+                call_openai_compatible([{"role": "user", "content": "x"}],
+                                       model="m", base_url="http://api.example/v1",
+                                       api_key_env="TEST_PROVIDER_KEY")
+            urlopen.assert_not_called()
+
+    def test_non_object_json_response_is_rejected(self):
+        with patch("urllib.request.urlopen", return_value=FakeResponse(["unexpected"])):
+            with self.assertRaisesRegex(GuardrailRunError, "JSON object"):
+                call_openai_compatible([{"role": "user", "content": "x"}],
+                                       model="m", base_url="http://localhost/v1")
+
+    def test_malformed_content_parts_are_handled_safely(self):
+        response = {"choices": [{"message": {"content": [None, {"type": "text", "text": 7}, {"type": "text", "text": "safe"}]}}]}
+        with patch("urllib.request.urlopen", return_value=FakeResponse(response)):
+            _, text, _ = call_openai_compatible([{"role": "user", "content": "x"}],
+                                                model="m", base_url="http://localhost/v1")
+        self.assertEqual(text, "safe")
+
+    def test_invalid_timeout_is_rejected(self):
+        with self.assertRaisesRegex(GuardrailRunError, "timeout"):
+            call_openai_compatible([{"role": "user", "content": "x"}],
+                                   model="m", base_url="http://localhost/v1", timeout=0)
+
     def test_content_part_array_is_supported(self):
         response = {"choices": [{"message": {"content": [
             {"type": "text", "text": "one"}, {"type": "image", "text": "ignored"},

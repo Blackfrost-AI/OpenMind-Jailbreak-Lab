@@ -11,6 +11,9 @@ import os
 import time
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
+import math
+import ipaddress
 from typing import Dict, List, Optional, Tuple
 
 from .runner import GuardrailRunError
@@ -25,11 +28,28 @@ PRESET_BASE_URLS = {
 }
 
 
-def _chat_url(base_url: str) -> str:
+def _chat_url(base_url: str, *, has_api_key: bool = False) -> str:
     value = base_url.strip().rstrip("/")
     if not value:
         raise GuardrailRunError("OpenAI-compatible base URL cannot be empty")
-    if value.endswith("/chat/completions"):
+    parsed = urlsplit(value)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise GuardrailRunError("base URL must be an absolute http(s) URL")
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise GuardrailRunError("base URL must not contain credentials, query parameters, or a fragment")
+    host = parsed.hostname.casefold()
+    is_loopback = host == "localhost"
+    if not is_loopback:
+        try:
+            is_loopback = ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            is_loopback = False
+    if parsed.scheme != "https" and not is_loopback:
+        raise GuardrailRunError("HTTPS is required for non-local endpoints; plain HTTP is allowed only on loopback")
+    if has_api_key and parsed.scheme != "https" and not is_loopback:
+        raise GuardrailRunError("refusing to send an API key over non-HTTPS transport")
+    path = parsed.path.rstrip("/")
+    if path.endswith("/chat/completions"):
         return value
     return value + "/chat/completions"
 
@@ -63,13 +83,16 @@ def call_openai_compatible(
     if not chosen_url:
         raise GuardrailRunError("Set a base URL with --base-url or OPENAI_COMPAT_BASE_URL")
 
+    if not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+        raise GuardrailRunError("timeout must be a finite positive number")
     api_key = os.getenv(api_key_env) if api_key_env else None
+    endpoint = _chat_url(chosen_url, has_api_key=bool(api_key))
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
     payload = json.dumps({"model": chosen_model, "messages": messages}).encode("utf-8")
-    request = urllib.request.Request(_chat_url(chosen_url), data=payload,
+    request = urllib.request.Request(endpoint, data=payload,
                                      headers=headers, method="POST")
     started = time.monotonic()
     try:
@@ -83,23 +106,35 @@ def call_openai_compatible(
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise GuardrailRunError(f"Compatible endpoint returned invalid JSON: {exc}") from exc
 
-    try:
-        choices = body["choices"]
-        content = choices[0]["message"]["content"]
-    except (KeyError, IndexError, TypeError) as exc:
-        raise GuardrailRunError("Compatible endpoint response lacks choices[0].message.content") from exc
+    if not isinstance(body, dict):
+        raise GuardrailRunError("Compatible endpoint response must be a JSON object")
+    choices = body.get("choices")
+    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+        raise GuardrailRunError("Compatible endpoint response lacks choices[0] as a valid object")
+    message = choices[0].get("message")
+    if not isinstance(message, dict) or "content" not in message:
+        raise GuardrailRunError("Compatible endpoint response lacks choices[0].message.content")
+    content = message["content"]
     if isinstance(content, list):
         # Some compatible servers return content-part arrays.
-        content = "\n".join(part.get("text", "") for part in content
-                             if isinstance(part, dict) and part.get("type") == "text")
+        text_parts = []
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "text":
+                part_text = part.get("text")
+                if isinstance(part_text, str):
+                    text_parts.append(part_text)
+        content = "\n".join(text_parts)
     if not isinstance(content, str):
         raise GuardrailRunError("Compatible endpoint returned non-text message content")
 
     actual_model = body.get("model") or chosen_model
+    usage = body.get("usage")
+    if usage is not None and not isinstance(usage, (dict, list, str, int, float, bool)):
+        usage = str(usage)
     metadata = {
-        "request_id": body.get("id"),
-        "finish_reason": choices[0].get("finish_reason"),
-        "usage": body.get("usage"),
+        "request_id": body.get("id") if isinstance(body.get("id"), (str, int)) else None,
+        "finish_reason": choices[0].get("finish_reason") if isinstance(choices[0].get("finish_reason"), (str, int, float, bool)) else None,
+        "usage": usage,
         "endpoint_type": "openai-compatible",
         "latency_seconds": round(time.monotonic() - started, 3),
     }

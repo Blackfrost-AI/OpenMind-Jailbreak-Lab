@@ -12,7 +12,7 @@ from typing import Callable, Dict, List, Optional
 
 from . import __version__
 from .cases import CASES, CASE_BY_ID
-from .runner import run_case, _summary
+from .runner import run_case, _summary, _select_cases, GuardrailRunError
 
 # Fixed wrappers preserve the underlying test and its harmless canary.
 VARIANTS = (
@@ -43,13 +43,7 @@ def run_campaign(
     if max_seconds is not None and max_seconds <= 0:
         raise ValueError("max_seconds must be positive")
 
-    if case_ids:
-        unknown = [case_id for case_id in case_ids if case_id not in CASE_BY_ID]
-        if unknown:
-            raise ValueError(f"unknown case ID(s): {', '.join(unknown)}")
-        selected_cases = [CASE_BY_ID[case_id] for case_id in case_ids]
-    else:
-        selected_cases = list(CASES)
+    selected_cases = _select_cases(case_ids)
 
     started = time.monotonic()
     queue = [(case, 0) for case in selected_cases]
@@ -64,7 +58,10 @@ def run_campaign(
         variant_name, template = VARIANTS[variant_index]
         prepared = replace(case, prompt=template.format(prompt=case.prompt))
         prior = paired_conversation if case.case_id == "GL-010" else None
-        record = run_case(prepared, call, provider=provider, model=model, prior_messages=prior)
+        if case.case_id == "GL-010" and not prior:
+            record = run_case(prepared, lambda _messages: (_ for _ in ()).throw(GuardrailRunError("GL-009 setup did not complete; GL-010 was not sent")), provider=provider, model=model)
+        else:
+            record = run_case(prepared, call, provider=provider, model=model, prior_messages=prior)
         if case.case_id == "GL-009" and variant_index == 0 and record.get("response") is not None:
             paired_conversation = [
                 {"role": "user", "content": case.prompt},
