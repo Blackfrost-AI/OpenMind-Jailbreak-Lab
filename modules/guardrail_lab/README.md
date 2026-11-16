@@ -1,5 +1,5 @@
 # OpenMind Guardrail Lab
-**Version:** 0.4.1
+**Version:** 0.4.2
 **Purpose:** authorized, evidence-first testing of AI instruction-boundary and guardrail behavior.
 OpenMind Guardrail Lab is a small Python test harness for checking how an AI model handles untrusted instructions embedded in quoted text, documents, retrieval content, and simulated tool output. It can run individual test cases or a bounded automated campaign, then save structured JSON evidence for review and regression testing.
 Use it only with models and services you own or are explicitly authorized to assess.
@@ -95,7 +95,7 @@ Useful options:
 |---|---|
 | `--campaign` | Run the bounded adaptive campaign rather than a single baseline suite. |
 | `--budget N` | Maximum number of test requests (1–1000; default 36). Provider retries may add HTTP attempts. |
-| `--variants N` | Number of fixed safe follow-up framings (1–3; default 3). |
+| `--variants N` | Number of fixed safe follow-up framings (1–6; default 3). |
 | `--no-adaptive` | Disable evidence-triggered follow-up variations. |
 | `--delay SECONDS` | Pause between requests. |
 | `--max-seconds N` | Stop scheduling requests after the time limit; an in-flight request is not interrupted. |
@@ -121,7 +121,10 @@ Run the tests from the package/repository root:
 ```bash
 python -m unittest discover -s tests -v
 ```
-The v0.4.1 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+The v0.4.2 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+## Version 0.4.2
+- The campaign's finite-number check now survives huge integers (`10**10000` raised an uncaught OverflowError from `math.isfinite`); the same hardening applies to the OpenAI-compatible adapter's `--timeout` validation, which also rejected booleans cleanly now (`True` previously passed as a 1-second timeout).
+- Module README corrected: the variants option documents 1–6 framings (was still 1–3 after the 0.4.0 expansion).
 ## Version 0.4.1
 - Campaign `--delay` and `--max-seconds` now reject booleans and non-numeric values with a clean ValueError; a boolean previously slipped through (`True` behaves as 1) and a string raised an unexpected TypeError from `math.isfinite`.
 ## Version 0.4.0

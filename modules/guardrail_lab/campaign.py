@@ -52,11 +52,12 @@ VARIANTS = (
 
 def _is_finite_number(value):
     """Accept finite numeric values, but reject booleans."""
-    return (
-        isinstance(value, (int, float))
-        and not isinstance(value, bool)
-        and math.isfinite(value)
-    )
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
 
 
 def run_campaign(

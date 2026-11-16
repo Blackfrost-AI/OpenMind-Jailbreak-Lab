@@ -32,6 +32,16 @@ BACKOFF_BASE_SECONDS = 2.0
 BACKOFF_MAX_SECONDS = 60.0
 
 
+def _is_finite_number(value):
+    """Return whether value is finite, excluding booleans."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
+
+
 def _sleep_before_retry(attempt, headers):
     """Backoff before a retry: honor Retry-After when the server sent
     one, otherwise exponential backoff, capped. A negative, NaN, or
@@ -106,7 +116,7 @@ def call_openai_compatible(
     if not chosen_url:
         raise GuardrailRunError("Set a base URL with --base-url or OPENAI_COMPAT_BASE_URL")
 
-    if not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+    if not _is_finite_number(timeout) or timeout <= 0:
         raise GuardrailRunError("timeout must be a finite positive number")
     api_key = os.getenv(api_key_env) if api_key_env else None
     endpoint = _chat_url(chosen_url, has_api_key=bool(api_key))

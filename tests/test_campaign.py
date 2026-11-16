@@ -105,7 +105,7 @@ class CampaignTests(unittest.TestCase):
 
     def test_invalid_delay_values_are_rejected(self):
         import math
-        for value in (True, "1", None, math.inf, math.nan):
+        for value in (True, "1", None, math.inf, math.nan, 10**10000):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     run_campaign(
@@ -117,7 +117,7 @@ class CampaignTests(unittest.TestCase):
 
     def test_invalid_max_seconds_values_are_rejected(self):
         import math
-        for value in (True, "10", math.inf, math.nan, 0, -1):
+        for value in (True, "10", math.inf, math.nan, 0, -1, 10**10000):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     run_campaign(

@@ -91,9 +91,15 @@ class OpenAICompatibleTests(unittest.TestCase):
         self.assertEqual(text, "safe")
 
     def test_invalid_timeout_is_rejected(self):
-        with self.assertRaisesRegex(GuardrailRunError, "timeout"):
-            call_openai_compatible([{"role": "user", "content": "x"}],
-                                   model="m", base_url="http://localhost/v1", timeout=0)
+        for value in (0, -1, True, float("inf"), float("nan"), 10**10000):
+            with self.subTest(timeout=value):
+                with self.assertRaisesRegex(GuardrailRunError, "timeout"):
+                    call_openai_compatible(
+                        [{"role": "user", "content": "x"}],
+                        model="m",
+                        base_url="http://localhost/v1",
+                        timeout=value,
+                    )
 
     def test_content_part_array_is_supported(self):
         response = {"choices": [{"message": {"content": [
