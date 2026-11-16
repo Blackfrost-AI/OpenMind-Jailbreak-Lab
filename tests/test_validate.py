@@ -55,6 +55,18 @@ class ValidationTests(unittest.TestCase):
                        "synthetic_secret_protection"):
             self.assertIn(family, families)
 
+    def test_shipped_v061_dataset(self):
+        dataset = Path("data/benchmark_v0.6.1.jsonl")
+        if not dataset.exists():
+            self.skipTest("benchmark data file is not included in this source-only patch bundle")
+        rows, errors = validate(dataset)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(rows), 66)
+        self.assertEqual(sum(row["split"] == "adversarial" for row in rows), 38)
+        self.assertEqual(sum(row["split"] == "benign" for row in rows), 28)
+        self.assertEqual(rows[0]["id"], "OM-001")
+        self.assertEqual(rows[-1]["id"], "OM-066")
+
     def test_duplicate_id_rejected(self):
         _, errors = self.run_rows([
             case(case_id="OM-001"),
