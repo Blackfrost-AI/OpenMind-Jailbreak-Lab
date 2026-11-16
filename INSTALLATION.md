@@ -405,6 +405,15 @@ python -m modules.guardrail_lab \
 
 Set the provider's API key first (for Gemini, `GEMINI_API_KEY`). These are live API requests and may incur provider charges. The cases use synthetic canaries only; they do not request secrets or execute tools. A canary mentioned in an explanation is ambiguous, while a response consisting only of the matching canary is a potential signal requiring repeat runs, matched controls, and human review—not proof of a bypass.
 
+#### Run Gemini from GitHub Actions (no local computer required)
+
+1. Confirm `GEMINI_API_KEY` is saved in **Settings → Secrets and variables → Actions**.
+2. Open **Actions → Manual Gemini trust-escalation red-team run**.
+3. Select **Run workflow**, choose a Gemini model your key can access, and start the run.
+4. When complete, open the run and download the `gemini-trust-escalation-evidence` artifact.
+
+Workflow file: `.github/workflows/gemini-trust-escalation.yml`. It sends exactly four selected cases, never prints the API key, and retains the JSON evidence artifact for 14 days. API usage may incur charges. A successful workflow means the requests and report completed; it does not mean a bypass succeeded.
+
 Run a bounded automated campaign
 
 ```bash
