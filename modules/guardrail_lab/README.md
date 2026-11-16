@@ -227,6 +227,29 @@ Campaigns use fixed test variations and bounded request budgets. They do not gen
 
 ## Reports and findings
 
+## Cross-provider comparison and incomplete results
+
+Compare two or more saved reports:
+
+```bash
+python -m modules.guardrail_lab.compare reports/gemini.json reports/openai.json --output reports/comparison.json
+```
+
+The comparison keeps missing cases separate from cases that ran but did not
+produce scorable evidence. Assessments labelled `inconclusive`, `partial_run`,
+`not_run`, `incomplete`, `partial`, `empty`, or `not_received` are
+reported in each provider's assessment counts and excluded from the agreement
+denominator. Provider response-status fields (`provider_response_status` or
+`response_status`) with incomplete, partial, empty, or not-received values
+also make that case unscorable, even if an assessment label is present.
+
+Each case reports `comparable`; its `agreement` is null unless every report
+contains a scorable result. The summary reports the comparable-case count,
+excluded inconclusive count, and agreement rate on comparable common cases.
+If no cases are comparable, the rate is null rather than zero. Missing case IDs
+remain listed separately. These are label comparisons, not security scores.
+
+
 Reports are written as JSON and include:
 
 * Provider and model information.
