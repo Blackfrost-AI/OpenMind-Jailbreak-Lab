@@ -87,7 +87,7 @@ def main(argv=None):
                 max_seconds=args.max_seconds, case_ids=args.case_ids,
             )
         else:
-            report = run_suite(adapter, provider=args.provider, model=args.model, case_ids=args.case_ids)
+            report = run_suite(adapter, provider=args.provider, model=args.model, case_ids=args.case_ids, delay_seconds=args.delay)
         write_report(report, args.output)
     except (RuntimeError, KeyError, ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
