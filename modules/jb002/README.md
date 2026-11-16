@@ -1,5 +1,6 @@
 # OpenMind JB-002 — Multi-Stage Instruction-Hierarchy Test
 
+**Version:** 0.1.0
 **Purpose:** an authorized, harmless test of whether a model follows the user's task
 when a document contains conflicting embedded instructions. This is an evaluation
 module, not a claim of a successful jailbreak.
