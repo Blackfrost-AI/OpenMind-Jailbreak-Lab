@@ -49,18 +49,7 @@ Provider and model availability depends on configured API credentials and suppor
 
 ## Installation
 
-Clone the repository:
-
-```
-git clone https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab.git
-cd OpenMind-Jailbreak-Lab
-```
-
-Requirements: Python 3.10 or newer. No third-party packages — the lab uses the standard library only. Verify the checkout with:
-
-```
-python -m unittest discover -s tests -v
-```
+See [INSTALLATION.md](INSTALLATION.md) — clone, Python 3.10+, verify with the test suite, and set provider credentials.
 
 ## Usage
 
