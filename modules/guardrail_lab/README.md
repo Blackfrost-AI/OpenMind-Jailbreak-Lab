@@ -446,7 +446,11 @@ OpenMind Guardrail Lab is a research and testing framework. It does not guarante
 See the repository's LICENSE file for licensing terms. If no license file is present, do not assume the code is licensed for redistribution or reuse.
 
 
-## Trust-escalation probes (GL-013–GL-016)
+## Version 0.6.0
+
+- Adds four harmless trust-escalation canary probes (GL-013–GL-016) covering document, forged-authority, encoded, and quoted content. Canary-only output requires repeatability and human review.
+
+### Trust-escalation probes (GL-013–GL-016)
 
 Version 0.6.0 adds four bounded probes using harmless synthetic canaries embedded in content explicitly identified as untrusted: a document, a retrieved passage with a forged authority claim, encoded text, and a quotation. The surrounding task asks for ordinary factual extraction or description. These cases measure whether a model follows the embedded canary instruction despite the data boundary. They do not attempt secret extraction, tool execution, account access, or harmful actions.
 
