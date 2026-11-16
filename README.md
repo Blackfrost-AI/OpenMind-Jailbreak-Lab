@@ -253,3 +253,30 @@ This creates a visibly labelled fictional fixture (`SYNTHETIC_DEMONSTRATION`, ze
 See [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the reproducible pre-release
 checks covering benchmark integrity, provider adapters, report schemas, workflow
 validation, and evidence labeling.
+
+
+## Benchmark quality and provider comparison
+
+Run the non-destructive quality audit against the current benchmark:
+
+```bash
+python -m src.quality_audit data/benchmark_v0.6.1.jsonl
+```
+
+The audit reports exact/normalized duplicate prompts, family concentration,
+singleton adversarial families, split overlap, and synthetic-secret misuse.
+Warnings are review prompts, not automatic dataset rejection; errors fail the
+command. The current v0.6.1 set has 66 cases (38 adversarial, 28 benign). Its
+28 benign controls all use the `benign_utility` family, and several adversarial
+families are represented by a single case. These are documented coverage
+limitations, not proof that any case is invalid.
+
+Compare saved provider reports using identical case IDs and run settings:
+
+```bash
+python -m modules.guardrail_lab.compare reports/gemini.json reports/openai.json --output reports/comparison.json
+```
+
+The comparison reports common coverage, missing cases, per-case label
+agreement, and disagreements. It compares automated labels only; it does not
+rank model security or replace manual review of full transcripts.
