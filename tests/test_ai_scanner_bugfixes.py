@@ -107,7 +107,7 @@ class MultiturnPartialPreservationTests(unittest.TestCase):
             if len(messages) == 1:
                 return ("gemini-3.5-flash-lite",
                         "The release is on track.", {"request_id": "r1"})
-            raise ProviderError("HTTP 429: slow down")
+            raise ProviderError("HTTP 429: slow down", category="rate_limit", code="rate_limited", http_status=429, retryable=True)
 
         with tempfile.TemporaryDirectory() as tmp:
             record = self._run_with_message_fake(tmp, fake_messages)
