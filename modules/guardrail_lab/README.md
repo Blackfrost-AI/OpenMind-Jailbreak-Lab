@@ -1,6 +1,6 @@
 # OpenMind Guardrail Lab
 
-**Version:** 0.5.7
+**Version:** 0.5.8
 **Purpose:** Authorized, evidence-first AI guardrail and instruction-boundary vulnerability research.
 
 OpenMind Guardrail Lab is a Python testing framework for evaluating how AI models handle untrusted instructions, prompt injection, context manipulation, and instruction-boundary conflicts.
@@ -281,6 +281,8 @@ modules/
   guardrail_lab/
     __init__.py
     __main__.py
+    adaptive.py
+    ADAPTIVE_ENGINE.md
     campaign.py
     cases.py
     cli.py
@@ -289,6 +291,7 @@ modules/
     openai_compatible.py
     runner.py
 tests/
+  test_adaptive.py
   test_guardrail_lab.py
   test_campaign.py
   test_discovery.py
@@ -300,6 +303,22 @@ See [DISCOVERY_ENGINE.md](DISCOVERY_ENGINE.md) for the bounded discovery
 engine: deterministic test-variant generation, a provider-adapter hook with
 a pre-checked request budget, and severity ranking of human-confirmed
 findings only.
+
+See [ADAPTIVE_ENGINE.md](ADAPTIVE_ENGINE.md) for the adaptive scheduler:
+it picks previously untested fixed envelopes per case, ordered by the
+latest reviewed assessment, with duplicate prevention and a request
+budget — coverage only, never payload intensity, and it never declares
+a bypass.
+
+## Version 0.5.8
+
+- New adaptive scheduler (`adaptive.py`, see
+  [ADAPTIVE_ENGINE.md](ADAPTIVE_ENGINE.md)): plans the next untested
+  fixed-envelope variants per seed case from reviewed history,
+  prioritized by the latest assessment, with duplicate-variant
+  prevention and a request-budget check. It adapts coverage only — it
+  never intensifies prompts, removes safety framing, calls a provider,
+  or labels a result a vulnerability.
 
 ## Version 0.5.7
 
