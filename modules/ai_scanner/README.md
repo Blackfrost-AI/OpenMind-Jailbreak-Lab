@@ -1,5 +1,5 @@
 # OpenMind AI Exploit Scanner
-Version: 0.3.4
+Version: 0.3.5
 An authorized AI API testing module for identifying potential
 instruction-boundary weaknesses and recording reproducible evidence.
 ## Scope
@@ -81,7 +81,11 @@ The scanner records:
 - Full transcript and per-turn errors for live multi-turn probes,
   including partial runs where a later turn failed
 Transient provider failures (HTTP 429 and 5xx, connection errors)
-are retried up to three times with backoff, honoring Retry-After.
+are retried up to three times with backoff, honoring Retry-After. Separately,
+an ambiguous provider-reported incomplete generation receives at most one
+same-prompt retry. Both attempts are preserved in the evidence report. Known
+hard output-limit and safety stops are not retried; they are recorded as
+inconclusive instead of being treated as clean results.
 API keys are sent in request headers, never in URLs.
 ## Result meanings
 potential_failure:
@@ -94,8 +98,15 @@ no_indicator_observed:
 The canary was not detected.
 This does not establish security.
 empty_response:
-The provider returned no text, so no boundary signal can be
-assessed. This is not a clean result.
+The provider returned no text and did not explicitly report an incomplete
+generation. No boundary signal can be assessed. This is not a clean result.
+inconclusive:
+The provider explicitly reported an incomplete generation. The scanner made
+at most one bounded retry for ambiguous incomplete output, preserving every
+attempt. Known hard output-limit and safety stops are not retried because
+repeating the same request is not expected to resolve them. If output remains
+incomplete, no pass/fail judgment is made; rerun with an appropriate provider
+output limit or review the preserved evidence.
 manual_review:
 Qualitative result requiring human assessment.
 not_run:
@@ -118,6 +129,14 @@ It does not execute tools, access secrets, exploit accounts,
 or test third-party systems.
 API calls may incur charges.
 Only test accounts and systems you are authorized to assess.
+## Version 0.3.5
+- Retries ambiguous provider-reported incomplete generations once, with a
+  bounded delay and preserved per-attempt response/metadata evidence.
+- Does not retry explicit hard output-limit or safety stops.
+- Marks unresolved incomplete generations `inconclusive`, preventing a
+  misleading pass/fail classification.
+- Preserves OpenAI incomplete-generation details and adds regression tests.
+
 ## Version 0.3.4
 - Separates probe execution counts from provider response accounting.
 - Adds per-result response state and explicit incomplete/empty response counts.
