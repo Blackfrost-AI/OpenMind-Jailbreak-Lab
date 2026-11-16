@@ -197,6 +197,26 @@ class OpenAICompatibleTests(unittest.TestCase):
             compat.call_args.kwargs["base_url"],
             "https://openrouter.ai/api/v1",
         )
+        self.assertEqual(
+            compat.call_args.kwargs["api_key_env"],
+            "OPENROUTER_API_KEY",
+        )
+
+    def test_preset_key_env_override_wins(self):
+        from modules.guardrail_lab.cli import _adapter
+
+        with patch(
+            "modules.guardrail_lab.cli.call_openai_compatible",
+            return_value=("m", "ok", {}),
+        ) as compat:
+            call = _adapter(
+                "deepseek", "deepseek-chat", api_key_env="MY_DEEPSEEK_KEY"
+            )
+            call([{"role": "user", "content": "x"}])
+        self.assertEqual(
+            compat.call_args.kwargs["api_key_env"],
+            "MY_DEEPSEEK_KEY",
+        )
 
 
 if __name__ == "__main__":

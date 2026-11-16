@@ -26,7 +26,7 @@ PRESET_BASE_URLS = {
     "llama-cpp": "http://localhost:8080/v1",
     "localai": "http://localhost:8080/v1",
     # Hosted OpenAI-compatible providers. Each needs its own API key
-    # in OPENAI_COMPAT_API_KEY (or --api-key-env) and a --model.
+    # (see PRESET_API_KEY_ENVS) and a --model.
     "deepseek": "https://api.deepseek.com/v1",
     "glm": "https://open.bigmodel.cn/api/paas/v4",
     "moonshot": "https://api.moonshot.ai/v1",
@@ -34,6 +34,15 @@ PRESET_BASE_URLS = {
     "openrouter": "https://openrouter.ai/api/v1",
     "groq": "https://api.groq.com/openai/v1",
     "together": "https://api.together.xyz/v1",
+}
+PRESET_API_KEY_ENVS = {
+    "deepseek": "DEEPSEEK_API_KEY",
+    "glm": "ZHIPUAI_API_KEY",
+    "moonshot": "MOONSHOT_API_KEY",
+    "nvidia": "NVIDIA_API_KEY",
+    "openrouter": "OPENROUTER_API_KEY",
+    "groq": "GROQ_API_KEY",
+    "together": "TOGETHER_API_KEY",
 }
 
 MAX_ATTEMPTS = 3

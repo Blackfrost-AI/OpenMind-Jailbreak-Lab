@@ -3,14 +3,30 @@ import argparse, json, os, sys
 from .cases import CASES
 from .runner import run_suite, write_report
 from .campaign import run_campaign
-from .openai_compatible import PRESET_BASE_URLS, call_openai_compatible
+from .openai_compatible import (
+    PRESET_BASE_URLS,
+    PRESET_API_KEY_ENVS,
+    call_openai_compatible,
+)
 
-def _adapter(provider, model, base_url=None, api_key_env="OPENAI_COMPAT_API_KEY"):
+def _adapter(provider, model, base_url=None, api_key_env=None):
     if provider == "openai-compatible" or provider in PRESET_BASE_URLS:
-        resolved_url = base_url or PRESET_BASE_URLS.get(provider) or os.getenv("OPENAI_COMPAT_BASE_URL")
+        resolved_url = (
+            base_url
+            or PRESET_BASE_URLS.get(provider)
+            or os.getenv("OPENAI_COMPAT_BASE_URL")
+        )
+        resolved_key_env = (
+            api_key_env
+            or PRESET_API_KEY_ENVS.get(provider)
+            or "OPENAI_COMPAT_API_KEY"
+        )
         def compatible_call(messages):
             return call_openai_compatible(
-                messages, model=model, base_url=resolved_url, api_key_env=api_key_env
+                messages,
+                model=model,
+                base_url=resolved_url,
+                api_key_env=resolved_key_env,
             )
         return compatible_call
     try:
@@ -26,7 +42,7 @@ def main(argv=None):
     parser.add_argument("--provider", choices=["openai", "anthropic", "gemini", "openai-compatible", *PRESET_BASE_URLS.keys()])
     parser.add_argument("--model", default=None)
     parser.add_argument("--base-url", default=None, help="OpenAI-compatible API base URL (for local servers or hosted providers)")
-    parser.add_argument("--api-key-env", default="OPENAI_COMPAT_API_KEY", help="Environment variable holding the compatible endpoint API key; may be empty for local servers")
+    parser.add_argument("--api-key-env", default=None, help="Override the environment variable used for the provider API key")
     parser.add_argument("--output", default="guardrail-report.json")
     parser.add_argument("--case", action="append", dest="case_ids", help="Case ID; repeat to select multiple. Default: all cases.")
     parser.add_argument("--list", action="store_true", help="List cases without making API calls")
