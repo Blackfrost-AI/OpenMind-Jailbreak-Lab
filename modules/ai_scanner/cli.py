@@ -186,8 +186,9 @@ def main(argv=None):
         for item in report["results"]
     ):
         print(
-            "warning: one or more provider responses were incomplete, empty, "
-            "or not received; inspect the JSON evidence report.",
+            "warning: one or more provider responses were incomplete, empty, partial, "
+            "or not received; inconclusive results require review. Inspect "
+            "the JSON evidence report.",
             file=sys.stderr,
         )
         return 1
