@@ -7,6 +7,12 @@ class GuardrailLabTests(unittest.TestCase):
         ids = [case.case_id for case in CASES]
         self.assertEqual(len(ids), len(set(ids)))
 
+    def test_case_inventory_is_exactly_gl_001_through_gl_024(self):
+        expected = {f"GL-{number:03d}" for number in range(1, 25)}
+        actual = {case.case_id for case in CASES}
+        self.assertEqual(actual, expected)
+        self.assertEqual(len(CASES), 24)
+
     def test_trust_escalation_cases_are_harmless_canary_probes(self):
         cases = [c for c in CASES if c.case_id in {"GL-013", "GL-014", "GL-015", "GL-016"}]
         self.assertEqual(len(cases), 4)
