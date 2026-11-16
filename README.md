@@ -254,6 +254,8 @@ See [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the reproducible pre-releas
 checks covering benchmark integrity, provider adapters, report schemas, workflow
 validation, and evidence labeling.
 
+See [RELEASE_STATUS.md](RELEASE_STATUS.md) for the latest verified CI results and the remaining gates before v1.0.
+
 
 ## Benchmark quality and provider comparison
 
