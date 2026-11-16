@@ -51,7 +51,7 @@ jobs:
           expected = {f"GL-{n:03d}" for n in range(1, 25)}
           results = report.get("results", [])
           actual = {item.get("case_id") for item in results}
-          if actual != expected or len(results) != 16:
+          if actual != expected or len(results) != 24:
               raise SystemExit(
                   f"Expected 24 unique cases; got {len(results)} results: {sorted(actual)}"
               )
