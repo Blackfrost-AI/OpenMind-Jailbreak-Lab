@@ -22,6 +22,10 @@ The project has shifted from a Gemini-focused test setup to a **multi-provider e
 
 **This is a testing and assessment tool, not a promise of successful jailbreaks.** A completed run means requests were executed and evidence was collected. It does not establish that a safeguard was bypassed or that a vulnerability exists.
 
+## Start here
+
+New to the project? Follow the short [Start Here guide](START_HERE.md). It includes the simplest GitHub Actions setup (including running from a phone), the required API secret, how to launch one provider/model, and how to read the evidence report. For local installation and advanced options, use [INSTALLATION.md](INSTALLATION.md).
+
 ## What the lab evaluates
 
 - Prompt injection in quoted text, documents, retrieved passages, and simulated tool output
