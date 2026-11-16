@@ -1,0 +1,129 @@
+name: Manual multi-provider red-team suite
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "Provider adapter to test"
+        required: true
+        type: choice
+        options:
+          - openai
+          - anthropic
+          - gemini
+          - deepseek
+          - glm
+          - moonshot
+          - nvidia
+          - openrouter
+          - groq
+          - together
+          - openai-compatible
+      model:
+        description: "Exact model identifier for the selected provider"
+        required: true
+        type: string
+      base_url:
+        description: "Optional custom OpenAI-compatible base URL (for openai-compatible or self-hosted endpoints)"
+        required: false
+        type: string
+      budget:
+        description: "Maximum requests for this run (1-16)"
+        required: true
+        default: "16"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openmind-multi-provider-${{ inputs.provider }}
+  cancel-in-progress: false
+
+jobs:
+  red-team:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate request budget
+        env:
+          BUDGET: ${{ inputs.budget }}
+        run: |
+          case "$BUDGET" in
+            ''|*[!0-9]*) echo "Budget must be an integer from 1 to 16"; exit 2 ;;
+          esac
+          if [ "$BUDGET" -lt 1 ] || [ "$BUDGET" -gt 16 ]; then
+            echo "Budget must be an integer from 1 to 16"; exit 2
+          fi
+      - name: Configure selected provider credentials
+        env:
+          PROVIDER: ${{ inputs.provider }}
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GLM_KEY: ${{ secrets.ZHIPUAI_API_KEY }}
+          MOONSHOT_KEY: ${{ secrets.MOONSHOT_API_KEY }}
+          NVIDIA_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GROQ_KEY: ${{ secrets.GROQ_API_KEY }}
+          TOGETHER_KEY: ${{ secrets.TOGETHER_API_KEY }}
+        run: |
+          case "$PROVIDER" in
+            openai) test -n "$OPENAI_KEY" || { echo "Missing OPENAI_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$OPENAI_KEY"; echo "OPENAI_API_KEY=$OPENAI_KEY" >> "$GITHUB_ENV" ;;
+            anthropic) test -n "$ANTHROPIC_KEY" || { echo "Missing ANTHROPIC_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$ANTHROPIC_KEY"; echo "ANTHROPIC_API_KEY=$ANTHROPIC_KEY" >> "$GITHUB_ENV" ;;
+            gemini) test -n "$GEMINI_KEY" || { echo "Missing GEMINI_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$GEMINI_KEY"; echo "GEMINI_API_KEY=$GEMINI_KEY" >> "$GITHUB_ENV" ;;
+            deepseek) test -n "$DEEPSEEK_KEY" || { echo "Missing DEEPSEEK_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$DEEPSEEK_KEY"; echo "DEEPSEEK_API_KEY=$DEEPSEEK_KEY" >> "$GITHUB_ENV" ;;
+            glm) test -n "$GLM_KEY" || { echo "Missing ZHIPUAI_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$GLM_KEY"; echo "ZHIPUAI_API_KEY=$GLM_KEY" >> "$GITHUB_ENV" ;;
+            moonshot) test -n "$MOONSHOT_KEY" || { echo "Missing MOONSHOT_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$MOONSHOT_KEY"; echo "MOONSHOT_API_KEY=$MOONSHOT_KEY" >> "$GITHUB_ENV" ;;
+            nvidia) test -n "$NVIDIA_KEY" || { echo "Missing NVIDIA_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$NVIDIA_KEY"; echo "NVIDIA_API_KEY=$NVIDIA_KEY" >> "$GITHUB_ENV" ;;
+            openrouter) test -n "$OPENROUTER_KEY" || { echo "Missing OPENROUTER_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$OPENROUTER_KEY"; echo "OPENROUTER_API_KEY=$OPENROUTER_KEY" >> "$GITHUB_ENV" ;;
+            groq) test -n "$GROQ_KEY" || { echo "Missing GROQ_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$GROQ_KEY"; echo "GROQ_API_KEY=$GROQ_KEY" >> "$GITHUB_ENV" ;;
+            together) test -n "$TOGETHER_KEY" || { echo "Missing TOGETHER_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$TOGETHER_KEY"; echo "TOGETHER_API_KEY=$TOGETHER_KEY" >> "$GITHUB_ENV" ;;
+            openai-compatible) echo "OPENAI-compatible endpoint selected; configure its key as OPENAI_COMPAT_API_KEY or via OPENAI_COMPAT_API_KEY Actions secret." ;;
+          esac
+      - name: Run selected provider suite
+        env:
+          PROVIDER: ${{ inputs.provider }}
+          MODEL: ${{ inputs.model }}
+          BASE_URL: ${{ inputs.base_url }}
+          BUDGET: ${{ inputs.budget }}
+          OPENAI_COMPAT_API_KEY: ${{ secrets.OPENAI_COMPAT_API_KEY }}
+        run: |
+          mkdir -p reports
+          if [ -n "$OPENAI_COMPAT_API_KEY" ]; then
+            echo "::add-mask::$OPENAI_COMPAT_API_KEY"
+            export OPENAI_COMPAT_API_KEY
+          fi
+          ARGS=(--provider "$PROVIDER" --model "$MODEL" --campaign --budget "$BUDGET" --variants 1 --no-adaptive --delay 1 --max-seconds 1200 --output "reports/$PROVIDER-red-team.json")
+          if [ -n "$BASE_URL" ]; then ARGS+=(--base-url "$BASE_URL"); fi
+          python -m modules.guardrail_lab "${ARGS[@]}"
+      - name: Validate and summarize evidence
+        if: success()
+        env:
+          PROVIDER: ${{ inputs.provider }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path("reports") / f"{os.environ['PROVIDER']}-red-team.json"
+          report = json.loads(p.read_text())
+          results = report.get("results", [])
+          if not results:
+              raise SystemExit("Evidence report contains no results")
+          if any(not item.get("case_id") for item in results):
+              raise SystemExit("A result is missing its case ID")
+          print(json.dumps({"provider": report.get("provider"), "model": report.get("model"), "result_count": len(results), "summary": report.get("summary", {})}, indent=2))
+          PY
+      - name: Upload evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openmind-${{ inputs.provider }}-red-team-evidence
+          path: reports/*-red-team.json
+          if-no-files-found: ignore
+          retention-days: 14
