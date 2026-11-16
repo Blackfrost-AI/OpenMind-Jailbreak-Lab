@@ -479,3 +479,15 @@ python -m modules.guardrail_lab.demo --output reports/synthetic-demo.json
 ```
 
 The report sets `report_type` to `SYNTHETIC_DEMONSTRATION`, records `provider_calls: 0`, uses `SIMULATED_PROVIDER` / `SIMULATED_MODEL`, and always reports `confirmed_live_findings: 0`. Its example candidate is a fabricated fixture for demonstrating report rendering and triage only. It is not a model result, cannot be ranked as a confirmed finding, and must not be presented as live evidence. Live findings still require an authorized provider run, replay, and human review.
+
+
+### Evidence integrity checksums
+
+Every Guardrail Lab case result includes `evidence_sha256`, a SHA-256 checksum
+of the complete result record (all fields except the checksum itself), using
+canonical JSON serialization with sorted keys, compact separators, and UTF-8.
+Recomputing it detects accidental or later edits to prompts, responses,
+metadata, labels, or errors. It is not a digital signature, does not establish
+who produced a report, and cannot prove that a provider generated the recorded
+response. Preserve the original artifact and use trusted storage or signed
+releases when authenticity is required.
