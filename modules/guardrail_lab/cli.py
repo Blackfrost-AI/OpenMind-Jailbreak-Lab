@@ -9,7 +9,7 @@ from .openai_compatible import (
     call_openai_compatible,
 )
 
-def _adapter(provider, model, base_url=None, api_key_env=None):
+def _adapter(provider, model, base_url=None, api_key_env=None, max_tokens=None):
     if provider == "openai-compatible" or provider in PRESET_BASE_URLS:
         resolved_url = (
             base_url
@@ -27,6 +27,7 @@ def _adapter(provider, model, base_url=None, api_key_env=None):
                 model=model,
                 base_url=resolved_url,
                 api_key_env=resolved_key_env,
+                max_tokens=max_tokens,
             )
         return compatible_call
     try:
@@ -52,6 +53,7 @@ def main(argv=None):
     parser.add_argument("--no-adaptive", action="store_true", help="Disable evidence-triggered follow-up variations")
     parser.add_argument("--delay", type=float, default=0.0, help="Seconds between API calls")
     parser.add_argument("--max-seconds", type=float, default=None, help="Stop scheduling new requests after this many seconds; cannot interrupt an in-flight API request")
+    parser.add_argument("--max-tokens", type=int, default=None, help="Cap the model's maximum output tokens per request (OpenAI-compatible providers only; omit to leave unset)")
     args = parser.parse_args(argv)
     if args.list:
         for case in CASES:
@@ -73,8 +75,10 @@ def main(argv=None):
         key_env = args.api_key_env or PRESET_API_KEY_ENVS[args.provider]
         if not os.getenv(key_env):
             parser.error(f"{key_env} is not set")
+    if args.max_tokens is not None and args.max_tokens <= 0:
+        parser.error("--max-tokens must be a positive integer")
     try:
-        adapter = _adapter(args.provider, args.model, args.base_url, args.api_key_env)
+        adapter = _adapter(args.provider, args.model, args.base_url, args.api_key_env, max_tokens=args.max_tokens)
         if args.campaign:
             report = run_campaign(
                 adapter, provider=args.provider, model=args.model,

@@ -36,6 +36,33 @@ class OpenAICompatibleTests(unittest.TestCase):
         self.assertEqual(text, "The content is untrusted.")
         self.assertEqual(metadata["request_id"], "req-1")
 
+    def test_max_tokens_is_sent_when_set_and_omitted_when_not(self):
+        response = {"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
+        with patch("urllib.request.urlopen", return_value=FakeResponse(response)) as urlopen:
+            call_openai_compatible(
+                [{"role": "user", "content": "test"}], model="model-x",
+                base_url="https://provider.example/v1",
+                api_key_env="NONEXISTENT_TEST_KEY", max_tokens=2048,
+            )
+        request = urlopen.call_args.args[0]
+        self.assertEqual(json.loads(request.data)["max_tokens"], 2048)
+        with patch("urllib.request.urlopen", return_value=FakeResponse(response)) as urlopen:
+            call_openai_compatible(
+                [{"role": "user", "content": "test"}], model="model-x",
+                base_url="https://provider.example/v1",
+                api_key_env="NONEXISTENT_TEST_KEY",
+            )
+        request = urlopen.call_args.args[0]
+        self.assertNotIn("max_tokens", json.loads(request.data))
+
+    def test_invalid_max_tokens_is_rejected(self):
+        for bad in (0, -1, True, "2048", 1.5):
+            with self.assertRaisesRegex(GuardrailRunError, "max_tokens"):
+                call_openai_compatible(
+                    [{"role": "user", "content": "x"}], model="m",
+                    base_url="http://localhost/v1", max_tokens=bad,
+                )
+
     def test_hosted_endpoint_uses_env_key_and_full_url_is_preserved(self):
         response = {"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
         with patch.dict(os.environ, {"TEST_PROVIDER_KEY": "secret-token"}), \

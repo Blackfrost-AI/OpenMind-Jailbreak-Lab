@@ -113,12 +113,18 @@ def call_openai_compatible(
     base_url: Optional[str] = None,
     api_key_env: str = "OPENAI_COMPAT_API_KEY",
     timeout: float = 90.0,
+    max_tokens: Optional[int] = None,
 ) -> Tuple[str, str, Dict]:
     """Call an OpenAI Chat Completions-compatible endpoint.
 
     Local endpoints may omit an API key. Hosted endpoints should set the
     environment variable named by api_key_env. The key is only sent in the
     Authorization header and is never written to evidence reports.
+
+    When max_tokens is set it is sent in the request payload. Some hosted
+    providers price a request against the full requested output ceiling
+    (when omitted they assume the model's maximum), so capping it keeps
+    low-balance accounts usable.
     """
     if not isinstance(messages, list) or not messages:
         raise GuardrailRunError("messages must be a non-empty list")
@@ -137,13 +143,20 @@ def call_openai_compatible(
 
     if not _is_finite_number(timeout) or timeout <= 0:
         raise GuardrailRunError("timeout must be a finite positive number")
+    if max_tokens is not None and (
+            isinstance(max_tokens, bool) or not isinstance(max_tokens, int)
+            or max_tokens <= 0):
+        raise GuardrailRunError("max_tokens must be a positive integer")
     api_key = os.getenv(api_key_env) if api_key_env else None
     endpoint = _chat_url(chosen_url, has_api_key=bool(api_key))
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
-    payload = json.dumps({"model": chosen_model, "messages": messages}).encode("utf-8")
+    payload_data = {"model": chosen_model, "messages": messages}
+    if max_tokens is not None:
+        payload_data["max_tokens"] = max_tokens
+    payload = json.dumps(payload_data).encode("utf-8")
     request = urllib.request.Request(endpoint, data=payload,
                                      headers=headers, method="POST")
     started = time.monotonic()

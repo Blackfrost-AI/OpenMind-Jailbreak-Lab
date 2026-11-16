@@ -149,6 +149,34 @@ class ReportAndCliTests(unittest.TestCase):
             compat.call_args.kwargs["api_key_env"], "OPENAI_COMPAT_API_KEY"
         )
 
+    def test_max_tokens_flows_to_compatible_adapter(self):
+        import os
+        from unittest import mock
+        from modules.guardrail_lab.cli import main
+
+        with mock.patch.dict(os.environ, {}, clear=True), mock.patch(
+            "modules.guardrail_lab.cli.call_openai_compatible",
+            return_value=("llama3.1", "ok", {}),
+        ) as compat:
+            code = main([
+                "--provider", "ollama", "--model", "llama3.1",
+                "--case", "GL-011", "--max-tokens", "2048",
+                "--output", "/tmp/ok3.json",
+            ])
+        self.assertEqual(code, 0)
+        self.assertEqual(compat.call_args.kwargs["max_tokens"], 2048)
+
+    def test_max_tokens_zero_is_rejected(self):
+        from modules.guardrail_lab.cli import main
+
+        with self.assertRaises(SystemExit) as ctx:
+            main([
+                "--provider", "ollama", "--model", "llama3.1",
+                "--case", "GL-011", "--max-tokens", "0",
+                "--output", "/tmp/nope3.json",
+            ])
+        self.assertEqual(ctx.exception.code, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

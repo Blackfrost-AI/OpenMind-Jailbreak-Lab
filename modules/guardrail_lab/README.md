@@ -1,6 +1,6 @@
 # OpenMind Guardrail Lab
 
-**Version:** 0.5.5
+**Version:** 0.5.6
 **Purpose:** Authorized, evidence-first AI guardrail and instruction-boundary vulnerability research.
 
 OpenMind Guardrail Lab is a Python testing framework for evaluating how AI models handle untrusted instructions, prompt injection, context manipulation, and instruction-boundary conflicts.
@@ -210,6 +210,7 @@ python -m modules.guardrail_lab \
 | --no-adaptive | Disables evidence-triggered follow-ups |
 | --delay | Delay between requests |
 | --max-seconds | Maximum campaign scheduling time |
+| --max-tokens | Caps the model's maximum output tokens per request (OpenAI-compatible providers only) |
 | --case | Select individual test cases |
 | --output | Report destination |
 
@@ -291,6 +292,15 @@ tests/
   test_openai_compatible.py
   test_provider_presets.py
 ```
+
+## Version 0.5.6
+
+- New `--max-tokens` option caps the model's maximum output tokens per
+  request (OpenAI-compatible providers only). Some hosted providers price
+  a request against the full requested output ceiling and reject it when
+  the balance cannot cover the model's maximum, even for short answers;
+  capping it (for example `--max-tokens 2048`) keeps low-balance
+  accounts usable. Unset by default, so existing runs are unchanged.
 
 ## Version 0.5.5
 
