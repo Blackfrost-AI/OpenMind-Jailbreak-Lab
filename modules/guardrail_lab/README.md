@@ -1,5 +1,5 @@
 # OpenMind Guardrail Lab
-**Version:** 0.5.1
+**Version:** 0.5.2
 **Purpose:** authorized, evidence-first testing of AI instruction-boundary and guardrail behavior.
 OpenMind Guardrail Lab is a small Python test harness for checking how an AI model handles untrusted instructions embedded in quoted text, documents, retrieval content, and simulated tool output. It can run individual test cases or a bounded automated campaign, then save structured JSON evidence for review and regression testing.
 Use it only with models and services you own or are explicitly authorized to assess.
@@ -164,6 +164,12 @@ Run the tests from the package/repository root:
 python -m unittest discover -s tests -v
 ```
 The v0.5.1 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+## Version 0.5.2
+- A hosted preset now fails fast when its API-key environment
+  variable is not set (for example, `DEEPSEEK_API_KEY`), instead of
+  sending unauthenticated requests that each record a `partial_run`.
+  This matches the existing fail-fast checks for the OpenAI, Anthropic,
+  and Gemini providers. Local presets still need no key.
 ## Version 0.5.1
 - Each hosted preset now reads its API key from its own environment
   variable by default (`DEEPSEEK_API_KEY`, `ZHIPUAI_API_KEY`,

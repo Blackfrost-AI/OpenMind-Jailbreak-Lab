@@ -69,6 +69,10 @@ def main(argv=None):
         parser.error("ANTHROPIC_API_KEY is not set")
     if args.provider == "gemini" and not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
         parser.error("GEMINI_API_KEY or GOOGLE_API_KEY is not set")
+    if args.provider in PRESET_API_KEY_ENVS:
+        key_env = args.api_key_env or PRESET_API_KEY_ENVS[args.provider]
+        if not os.getenv(key_env):
+            parser.error(f"{key_env} is not set")
     try:
         adapter = _adapter(args.provider, args.model, args.base_url, args.api_key_env)
         if args.campaign:

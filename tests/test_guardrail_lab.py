@@ -75,6 +75,70 @@ class ReportAndCliTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertIn("GL-001", output.getvalue())
 
+    def test_hosted_preset_fails_fast_without_its_key(self):
+        import os
+        from unittest import mock
+        from modules.guardrail_lab.cli import main
+
+        env = {
+            k: v for k, v in os.environ.items()
+            if k not in ("DEEPSEEK_API_KEY", "OPENAI_COMPAT_API_KEY")
+        }
+        with mock.patch.dict(os.environ, env, clear=True), mock.patch(
+            "urllib.request.urlopen"
+        ) as urlopen:
+            with self.assertRaises(SystemExit) as ctx:
+                main([
+                    "--provider", "deepseek", "--model", "deepseek-chat",
+                    "--case", "GL-011", "--output", "/tmp/nope.json",
+                ])
+        self.assertEqual(ctx.exception.code, 2)
+        urlopen.assert_not_called()
+
+    def test_hosted_preset_accepts_override_key_env(self):
+        import os
+        from unittest import mock
+        from modules.guardrail_lab.cli import main
+
+        env = dict(os.environ)
+        env.pop("DEEPSEEK_API_KEY", None)
+        env["MY_DEEPSEEK_KEY"] = "test-key"
+        with mock.patch.dict(os.environ, env, clear=True), mock.patch(
+            "modules.guardrail_lab.cli.call_openai_compatible",
+            return_value=("deepseek-chat", "ok", {}),
+        ) as compat:
+            code = main([
+                "--provider", "deepseek", "--model", "deepseek-chat",
+                "--api-key-env", "MY_DEEPSEEK_KEY",
+                "--case", "GL-011", "--output", "/tmp/ok.json",
+            ])
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            compat.call_args.kwargs["api_key_env"], "MY_DEEPSEEK_KEY"
+        )
+
+    def test_local_preset_needs_no_key(self):
+        import os
+        from unittest import mock
+        from modules.guardrail_lab.cli import main
+
+        env = {
+            k: v for k, v in os.environ.items()
+            if k not in ("OPENAI_COMPAT_API_KEY",)
+        }
+        with mock.patch.dict(os.environ, env, clear=True), mock.patch(
+            "modules.guardrail_lab.cli.call_openai_compatible",
+            return_value=("llama3.1", "ok", {}),
+        ) as compat:
+            code = main([
+                "--provider", "ollama", "--model", "llama3.1",
+                "--case", "GL-011", "--output", "/tmp/ok2.json",
+            ])
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            compat.call_args.kwargs["api_key_env"], "OPENAI_COMPAT_API_KEY"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
