@@ -318,19 +318,20 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
                         if isinstance(rating, dict)
                     )
         prompt_feedback = body.get("promptFeedback")
-        metadata = _present({
+        metadata = _with_latency(_present({
             "request_id": body.get("responseId"),
             "model_version": body.get("modelVersion"),
             "usage": body.get("usageMetadata"),
+            "finish_reason": finish,
             "prompt_feedback": prompt_feedback
                 if isinstance(prompt_feedback, dict) else None,
             "safety_ratings": safety_ratings,
-        })
-        # Keep the legacy finish_reason key even when Gemini blocks the
-        # prompt before producing candidates; callers distinguish None
-        # from a missing metadata field.
+        }), started)
+        # Keep finish_reason present even when None: a blocked prompt has
+        # no candidates, so None here (with prompt_feedback set) is the
+        # signal that distinguishes a block from a clean pass. _present
+        # above drops None-valued keys, so restore it explicitly.
         metadata["finish_reason"] = finish
-        metadata = _with_latency(metadata, started)
         return model, text, metadata
     # OPENAI-COMPATIBLE (DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter,
     # Groq, Together, local servers, and any /v1/chat/completions host)

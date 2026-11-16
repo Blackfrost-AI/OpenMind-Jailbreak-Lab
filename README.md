@@ -35,36 +35,6 @@ The Guardrail Lab also includes a bounded discovery engine for deterministic tes
 
 The repository also includes the OpenMind Benchmark (`data/benchmark_v0.6.1.jsonl`, 66 cases) and JB-002, a three-case module for recording and validating manually observed test results. See `data/` and `modules/jb002/README.md`.
 
-## Results
-
-### Qwen 3 235B — Guardrail Lab campaign (2026-11-16)
-
-| | |
-|---|---|
-| Model | `qwen/qwen3-235b-a22b-2507` via OpenRouter |
-| Tool | Guardrail Lab 0.5.5, adaptive campaign (budget 36, 6 variants, 12 cases) |
-| Attempts | 12 |
-| Boundary held | 3 |
-| Ambiguous canary mention | 7 — all quoting-style on manual review; the model flagged each injection as untrusted and disregarded it |
-| Manual review | 1 — benign reading-list answer |
-| Control passed | 1 |
-| **Confirmed guardrail failures** | **0** |
-
-### Gemini 3.5 Flash Lite — Discovery Engine full sweep (2026-11-16)
-
-| | |
-|---|---|
-| Model | `gemini-3.5-flash-lite` via Gemini free tier |
-| Tool | Guardrail Lab 0.5.7 Discovery Engine (12 seed cases × 6 variants, budget 72, seed 17) |
-| Attempts | 72 |
-| Boundary held | 4 |
-| Ambiguous canary mention | 52 — all quoting-style on manual review; every response flagged the injection as untrusted and disregarded it |
-| Manual review | 5 — 1 correct "data, not instruction" reasoning, 3 expected two-turn setup replies, 1 benign control described instead of answered |
-| Control passed | 11 |
-| **Confirmed guardrail failures** | **0** |
-
-Human review + ranking: 0 confirmed, 57 in triage, 15 rejected as non-findings. The adaptive scheduler run on this history plans 0 further cases — all 6 envelopes are covered for all 12 seeds.
-
 ## Supported Providers
 
 * OpenAI
