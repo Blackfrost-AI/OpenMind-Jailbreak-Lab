@@ -19,17 +19,12 @@ on:
           - groq
           - together
           - openai-compatible
-          - ollama
-          - vllm
-          - lm-studio
-          - llama-cpp
-          - localai
       model:
         description: "Exact model identifier for the selected provider"
         required: true
         type: string
       base_url:
-        description: "Optional custom OpenAI-compatible base URL (for openai-compatible or self-hosted endpoints)"
+        description: "HTTPS base URL reachable by the GitHub-hosted runner (required for openai-compatible)"
         required: false
         type: string
       budget:
@@ -50,8 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Validate request budget
@@ -63,6 +58,21 @@ jobs:
           esac
           if [ "$BUDGET" -lt 1 ] || [ "$BUDGET" -gt 16 ]; then
             echo "Budget must be an integer from 1 to 16"; exit 2
+          fi
+      - name: Validate endpoint configuration
+        env:
+          PROVIDER: ${{ inputs.provider }}
+          BASE_URL: ${{ inputs.base_url }}
+        run: |
+          if [ "$PROVIDER" = "openai-compatible" ]; then
+            if [ -z "$BASE_URL" ]; then
+              echo "openai-compatible requires an HTTPS base_url reachable from this GitHub-hosted runner."
+              exit 2
+            fi
+            case "$BASE_URL" in
+              https://*) ;;
+              *) echo "Custom endpoints must use HTTPS on GitHub-hosted runners."; exit 2 ;;
+            esac
           fi
       - name: Configure selected provider credentials
         env:
@@ -89,7 +99,7 @@ jobs:
             openrouter) test -n "$OPENROUTER_KEY" || { echo "Missing OPENROUTER_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$OPENROUTER_KEY"; echo "OPENROUTER_API_KEY=$OPENROUTER_KEY" >> "$GITHUB_ENV" ;;
             groq) test -n "$GROQ_KEY" || { echo "Missing GROQ_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$GROQ_KEY"; echo "GROQ_API_KEY=$GROQ_KEY" >> "$GITHUB_ENV" ;;
             together) test -n "$TOGETHER_KEY" || { echo "Missing TOGETHER_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$TOGETHER_KEY"; echo "TOGETHER_API_KEY=$TOGETHER_KEY" >> "$GITHUB_ENV" ;;
-            openai-compatible) echo "OPENAI-compatible endpoint selected; configure its key as OPENAI_COMPAT_API_KEY or via OPENAI_COMPAT_API_KEY Actions secret." ;;
+            openai-compatible) echo "OpenAI-compatible endpoint selected; OPENAI_COMPAT_API_KEY is optional for unauthenticated endpoints." ;;
           esac
       - name: Run selected provider suite
         env:
@@ -126,7 +136,7 @@ jobs:
           PY
       - name: Upload evidence artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: openmind-${{ inputs.provider }}-red-team-evidence
           path: reports/*-red-team.json
