@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.jpg" alt="OpenMind Jailbreak Lab logo" width="480">
+</p>
+
 # OpenMind Jailbreak Lab
 
 An AI security research lab for testing guardrails, prompt-injection defenses, model behavior, and potential vulnerabilities across AI services.
