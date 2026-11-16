@@ -74,7 +74,7 @@ def main(argv=None) -> int:
     report = build_demo_report()
     destination = Path(args.output)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    destination.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report["summary"], indent=2))
     print(f"Synthetic demonstration written to {destination}; provider_calls=0")
     return 0
