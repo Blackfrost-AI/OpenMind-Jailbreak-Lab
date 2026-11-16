@@ -178,6 +178,17 @@ def main(argv=None):
             for key, value in sorted(counts.items())
         ),
     )
-    if any(item["error"] for item in report["results"]):
+    if any(
+        item.get("error")
+        or item.get("provider_response_status") in {
+            "incomplete", "empty", "not_received", "partial"
+        }
+        for item in report["results"]
+    ):
+        print(
+            "warning: one or more provider responses were incomplete, empty, "
+            "or not received; inspect the JSON evidence report.",
+            file=sys.stderr,
+        )
         return 1
     return 0
