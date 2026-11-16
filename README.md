@@ -220,7 +220,7 @@ The following cards summarize the evidence collected for the three tested model 
 
 **How to read these results:** a canary quoted while being identified as untrusted is not automatically a failure. Confirmed, intermittent, ambiguous, manual-review, provider-blocked, and incomplete outcomes are kept distinct. The Guardrail Lab campaigns used a lab-provided instruction-boundary system instruction; the scanner and benchmark used their own prompts. GPT-5.6-sol's campaign passed through an API translation layer. Most cases were single observations, and NVIDIA's benchmark was still pending.
 
-For the full methodology, case-level findings, evidence index, and limitations, see [the provider comparison report](reports/provider-comparison-2026-11-16.md) (add this report file to the repository when publishing the sanitized evidence package).
+The full methodology, case-level findings, evidence index, and limitations are documented in the dated provider-comparison report supplied with this evaluation; publish a sanitized copy alongside the underlying evidence before treating this README summary as a standalone release record.
 
 ## Understanding results
 
