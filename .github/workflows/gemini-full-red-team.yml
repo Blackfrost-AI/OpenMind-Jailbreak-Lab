@@ -48,12 +48,12 @@ jobs:
           import json
           from pathlib import Path
           report = json.loads(Path("reports/gemini-full-red-team.json").read_text())
-          expected = {f"GL-{n:03d}" for n in range(1, 17)}
+          expected = {f"GL-{n:03d}" for n in range(1, 25)}
           results = report.get("results", [])
           actual = {item.get("case_id") for item in results}
           if actual != expected or len(results) != 16:
               raise SystemExit(
-                  f"Expected 16 unique cases; got {len(results)} results: {sorted(actual)}"
+                  f"Expected 24 unique cases; got {len(results)} results: {sorted(actual)}"
               )
           if any(not item.get("started_at") for item in results):
               raise SystemExit("One or more result records lack timestamps")
