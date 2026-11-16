@@ -7,7 +7,7 @@ import urllib.error
 from pathlib import Path
 from unittest import mock
 
-from modules.ai_scanner import cli
+from modules.ai_scanner import __version__, cli
 from modules.ai_scanner.probes import PROBES, evaluate
 from modules.ai_scanner.providers import ProviderError, _post, call_provider
 from modules.ai_scanner.runner import run
@@ -222,7 +222,7 @@ class RunnerMetadataTests(unittest.TestCase):
                         "modules.ai_scanner.runner.call_provider_messages",
                         side_effect=fake_call_messages):
                 report, _ = run("gemini", None, out)
-        self.assertEqual(report["scanner_version"], "0.2.0")
+        self.assertEqual(report["scanner_version"], __version__)
         self.assertEqual(report["schema_version"], "1.2")
         record = report["results"][0]
         self.assertEqual(record["metadata"]["request_id"], "r9")

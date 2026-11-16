@@ -21,8 +21,11 @@ def compare_reports(paths, output):
         provider = data.get("provider", Path(path).stem)
         model = data.get("model")
         column = provider
-        if any(p["column"] == column for p in providers):
-            column = f"{provider}/{model}" if model else f"{provider}/{path}"
+        suffix = 0
+        while any(p["column"] == column for p in providers):
+            suffix += 1
+            base = f"{provider}/{model}" if model else f"{provider}/{path}"
+            column = base if suffix == 1 else f"{base}#{suffix}"
         providers.append({"column": column, "provider": provider,
                           "model": model, "path": str(path)})
         for item in data.get("results", []):

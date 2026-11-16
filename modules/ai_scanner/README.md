@@ -64,6 +64,8 @@ The scanner records:
 - API errors
 - Request metadata: request id, usage, finish/status, latency
   (per turn for live multi-turn probes)
+- Full transcript and per-turn errors for live multi-turn probes,
+  including partial runs where a later turn failed
 Transient provider failures (HTTP 429 and 5xx, connection errors)
 are retried up to three times with backoff, honoring Retry-After.
 API keys are sent in request headers, never in URLs.
@@ -81,6 +83,10 @@ manual_review:
 Qualitative result requiring human assessment.
 not_run:
 The API request failed.
+partial_run:
+A live multi-turn probe stopped early: an earlier turn succeeded
+and its transcript is preserved, but a later turn failed. The
+completed turns are kept with the per-turn error.
 ## Evaluation limits
 Detection is exact canary matching. It cannot reliably detect
 semantic failures: a model that complies in paraphrase, rewords a

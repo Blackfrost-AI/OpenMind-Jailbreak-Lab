@@ -57,7 +57,7 @@ def _post(url, headers, payload, timeout=60, max_attempts=MAX_ATTEMPTS):
         )
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
-                return json.loads(response.read().decode("utf-8"))
+                parsed = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:2000]
             retryable = exc.code == 429 or exc.code >= 500
@@ -72,6 +72,11 @@ def _post(url, headers, payload, timeout=60, max_attempts=MAX_ATTEMPTS):
             raise ProviderError(str(exc)) from exc
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise ProviderError(f"Invalid provider response: {exc}") from exc
+        if not isinstance(parsed, dict):
+            raise ProviderError(
+                "Invalid provider response: expected a JSON object"
+            )
+        return parsed
 
 
 def _with_latency(metadata, started):

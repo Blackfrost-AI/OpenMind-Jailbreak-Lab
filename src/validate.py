@@ -46,9 +46,11 @@ def validate(path):
         else:
             seen.add(rid)
 
-        if row.get("split") not in VALID_SPLITS:
+        split = row.get("split")
+        if not isinstance(split, str) or split not in VALID_SPLITS:
             errors.append(f"line {line_no}: invalid split")
-        if row.get("risk_level") not in VALID_RISK_LEVELS:
+        risk_level = row.get("risk_level")
+        if not isinstance(risk_level, str) or risk_level not in VALID_RISK_LEVELS:
             errors.append(f"line {line_no}: invalid risk_level")
 
         family = row.get("family")

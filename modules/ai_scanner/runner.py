@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 import json
+from . import __version__
 from .probes import PROBES, evaluate
 from .providers import call_provider, call_provider_messages, ProviderError
 
@@ -11,19 +12,26 @@ def _run_multiturn(provider, probe, model):
     carrying the real conversation so far.
 
     Returns (model, final_response, final_metadata, extra) where extra
-    holds the full transcript and the per-turn responses and metadata.
-    Stops early if a turn returns no text.
+    holds the full transcript and the per-turn responses, metadata, and
+    errors. A failed turn stops the session but its error and every
+    completed turn are preserved in extra instead of being discarded.
     """
     history = []
     turn_responses = []
     turn_metadata = []
+    turn_errors = []
     response = ""
     metadata = {}
     for turn in probe["turns"]:
         history.append({"role": "user", "content": turn})
-        model, response, metadata = call_provider_messages(
-            provider, list(history), model,
-        )
+        try:
+            model, response, metadata = call_provider_messages(
+                provider, list(history), model,
+            )
+        except ProviderError as exc:
+            turn_errors.append(str(exc))
+            break
+        turn_errors.append(None)
         turn_responses.append(response)
         turn_metadata.append(metadata)
         history.append({"role": "assistant", "content": response})
@@ -33,6 +41,7 @@ def _run_multiturn(provider, probe, model):
         "transcript": history,
         "turn_responses": turn_responses,
         "turn_metadata": turn_metadata,
+        "turn_errors": turn_errors,
     }
     return model, response, metadata, extra
 
@@ -57,6 +66,35 @@ def run(provider, model=None, output="openmind-scan-report.json"):
                 record["prompt"] = probe["turns"]
                 record["turns"] = probe["turns"]
                 record.update(extra)
+                failed = next(
+                    (i for i, err in enumerate(extra["turn_errors"])
+                     if err is not None),
+                    None,
+                )
+                if failed is None:
+                    record["response"] = response
+                    record["metadata"] = metadata
+                    record["evaluation"] = evaluate(probe, response)
+                    record["error"] = None
+                else:
+                    record["response"] = None
+                    record["metadata"] = (
+                        extra["turn_metadata"][-1]
+                        if extra["turn_metadata"] else {}
+                    )
+                    record["error"] = extra["turn_errors"][failed]
+                    if failed == 0:
+                        record["evaluation"] = {"status": "not_run"}
+                    else:
+                        record["evaluation"] = {
+                            "status": "partial_run",
+                            "matched_canaries": [],
+                            "note": (
+                                f"Turn {failed + 1} failed after {failed} "
+                                "completed turn(s); partial transcript "
+                                "preserved."
+                            ),
+                        }
             else:
                 record["prompt"] = probe["prompt"]
                 actual_model, response, metadata = call_provider(
@@ -64,10 +102,10 @@ def run(provider, model=None, output="openmind-scan-report.json"):
                     probe["prompt"],
                     actual_model,
                 )
-            record["response"] = response
-            record["metadata"] = metadata
-            record["evaluation"] = evaluate(probe, response)
-            record["error"] = None
+                record["response"] = response
+                record["metadata"] = metadata
+                record["evaluation"] = evaluate(probe, response)
+                record["error"] = None
         except ProviderError as exc:
             record["response"] = None
             record["metadata"] = {}
@@ -78,7 +116,7 @@ def run(provider, model=None, output="openmind-scan-report.json"):
         records.append(record)
     report = {
         "schema_version": "1.2",
-        "scanner_version": "0.2.0",
+        "scanner_version": __version__,
         "provider": provider,
         "model": actual_model,
         "started_at_utc": records[0]["timestamp_utc"],
