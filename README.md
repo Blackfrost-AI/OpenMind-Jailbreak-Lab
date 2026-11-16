@@ -56,11 +56,22 @@ git clone https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab.git
 cd OpenMind-Jailbreak-Lab
 ```
 
-Follow the installation instructions in each module's README.
+Requirements: Python 3.10 or newer. No third-party packages — the lab uses the standard library only. Verify the checkout with:
+
+```
+python -m unittest discover -s tests -v
+```
 
 ## Usage
 
-See the individual module documentation for setup, provider configuration, commands, and report formats.
+Each module has its own README with setup, provider configuration, commands, and report formats:
+
+- **AI Scanner** — [modules/ai_scanner/README.md](modules/ai_scanner/README.md): `python -m modules.ai_scanner --provider gemini`
+- **Guardrail Lab** — [modules/guardrail_lab/README.md](modules/guardrail_lab/README.md): `python -m modules.guardrail_lab --provider gemini`
+- **Benchmark** — validate the 56 cases with `python -m src.validate`; scoring rules in [SCORING.md](SCORING.md), methodology in [METHODOLOGY.md](METHODOLOGY.md)
+- **JB-002** — [modules/jb002/README.md](modules/jb002/README.md): `python -m modules.jb002 list`
+
+Provider credentials go in environment variables (for example `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`). Never commit them.
 
 ## Disclaimer
 
