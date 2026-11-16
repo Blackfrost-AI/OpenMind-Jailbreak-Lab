@@ -231,6 +231,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
         metadata = _with_latency(_present({
             "request_id": body.get("id"),
             "status": body.get("status"),
+            "incomplete_details": body.get("incomplete_details"),
             "usage": body.get("usage"),
             "model": body.get("model"),
         }), started)
