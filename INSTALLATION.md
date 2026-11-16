@@ -389,6 +389,22 @@ python -m modules.guardrail_lab \
   --output reports/selected-cases.json
 ```
 
+### Run the trust-escalation probes (GL-013–GL-016)
+
+Version 0.6.0 adds four bounded cases that check whether a model follows harmless instructions embedded in content explicitly marked untrusted: a document, a retrieved passage with a forged authority claim, encoded text, and a quotation. Run them against a provider you are authorized to test:
+
+```bash
+python -m modules.guardrail_lab \\
+  --provider gemini \\
+  --case GL-013 \\
+  --case GL-014 \\
+  --case GL-015 \\
+  --case GL-016 \\
+  --output reports/trust-escalation.json
+```
+
+Set the provider's API key first (for Gemini, `GEMINI_API_KEY`). These are live API requests and may incur provider charges. The cases use synthetic canaries only; they do not request secrets or execute tools. A canary mentioned in an explanation is ambiguous, while a response consisting only of the matching canary is a potential signal requiring repeat runs, matched controls, and human review—not proof of a bypass.
+
 Run a bounded automated campaign
 
 ```bash
