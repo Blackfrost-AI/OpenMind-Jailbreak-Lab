@@ -23,6 +23,38 @@ class ProviderMatrixContractTests(unittest.TestCase):
             )
         return result, post
 
+    def test_missing_provider_keys_have_stable_error_codes(self):
+        cases = [("openai", {}, "missing_api_key"),
+                 ("anthropic", {}, "missing_api_key"),
+                 ("gemini", {}, "missing_api_key")]
+        for provider, env, code in cases:
+            with self.subTest(provider=provider), patch.dict(os.environ, env, clear=True):
+                with self.assertRaises(providers.ProviderError) as caught:
+                    providers.call_provider_messages(provider, MESSAGES, model="test")
+                self.assertEqual(caught.exception.category, "configuration")
+                self.assertEqual(caught.exception.code, code)
+
+    def test_http_errors_have_stable_classification(self):
+        import io
+        import urllib.error
+        cases = [(401, "authentication", "invalid_or_unauthorized_credentials", False),
+                 (404, "model_or_endpoint", "model_or_endpoint_not_found", False),
+                 (429, "rate_limit", "rate_limited", True),
+                 (503, "provider_service", "provider_server_error", True)]
+        for status, category, code, retryable in cases:
+            with self.subTest(status=status):
+                error = urllib.error.HTTPError("https://provider.example", status,
+                    "failure", {}, io.BytesIO(b'{"error":"test"}'))
+                with patch("modules.ai_scanner.providers.urllib.request.urlopen",
+                           side_effect=error), patch(
+                    "modules.ai_scanner.providers._sleep_before_retry"):
+                    with self.assertRaises(providers.ProviderError) as caught:
+                        providers._post("https://provider.example", {}, {}, max_attempts=1)
+                self.assertEqual(caught.exception.category, category)
+                self.assertEqual(caught.exception.code, code)
+                self.assertEqual(caught.exception.http_status, status)
+                self.assertEqual(caught.exception.retryable, retryable)
+
     def test_openai_responses_api_contract(self):
         (model, text, metadata), post = self._call(
             "openai",
