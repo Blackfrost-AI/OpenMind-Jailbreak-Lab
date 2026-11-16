@@ -414,6 +414,10 @@ Set the provider's API key first (for Gemini, `GEMINI_API_KEY`). These are live 
 
 Workflow file: `.github/workflows/gemini-trust-escalation.yml`. It sends exactly four selected cases, never prints the API key, and retains the JSON evidence artifact for 14 days. API usage may incur charges. A successful workflow means the requests and report completed; it does not mean a bypass succeeded.
 
+#### Run the complete 16-case Gemini suite
+
+For a broader live assessment, open **Actions → Manual Gemini full red-team suite**, select **Run workflow**, and choose a model available to your key. This runs GL-001 through GL-016 and uploads `openmind-gemini-full-red-team-evidence` for 14 days. It uses the same `GEMINI_API_KEY` repository secret. This makes 16 live model requests and may incur charges. A completed workflow confirms test execution and evidence capture, not a successful bypass.
+
 Run a bounded automated campaign
 
 ```bash
