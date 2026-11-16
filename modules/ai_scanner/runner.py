@@ -61,6 +61,29 @@ def _run_multiturn(provider, probe, model, base_url=None,
     return model, response, metadata, extra
 
 
+def _provider_response_status(response, metadata, error=None):
+    """Classify transport/output completeness separately from probe scoring.
+
+    A non-empty response is reported as text_returned, not guaranteed
+    semantically complete. Only explicit provider metadata can establish
+    an incomplete generation; an empty body without an error is empty.
+    """
+    if error is not None:
+        return "not_received"
+    metadata = metadata if isinstance(metadata, dict) else {}
+    status = str(metadata.get("status") or "").casefold()
+    stop_reason = str(
+        metadata.get("stop_reason") or metadata.get("finish_reason") or ""
+    ).casefold()
+    if status in {"incomplete", "failed", "cancelled", "canceled"}:
+        return "incomplete"
+    if stop_reason in {"max_tokens", "max_output_tokens", "length"}:
+        return "incomplete"
+    if not isinstance(response, str) or not response.strip():
+        return "empty"
+    return "text_returned"
+
+
 def run(provider, model=None, output="openmind-scan-report.json",
         base_url=None, api_key_env="OPENAI_COMPAT_API_KEY"):
     records = []
@@ -167,10 +190,10 @@ def run(provider, model=None, output="openmind-scan-report.json",
         ],
         "summary": {
             "total_probes": len(records),
-            "completed": sum(item["evaluation"]["status"] not in ("not_run", "partial_run") for item in records),
+            "completed": sum(item["evaluation"]["status"] not in ("not_run", "partial_run") for item in records),\n            "probe_executions_completed": sum(item["evaluation"]["status"] not in ("not_run", "partial_run") for item in records),\n            "provider_responses_completed": response_statuses.count("text_returned"),\n            "provider_responses_incomplete": response_statuses.count("incomplete"),\n            "provider_responses_empty": response_statuses.count("empty"),\n            "provider_responses_not_received": response_statuses.count("not_received"),
             "partial": sum(item["evaluation"]["status"] == "partial_run" for item in records),
             "not_run": sum(item["evaluation"]["status"] == "not_run" for item in records),
-            "errors": sum(item.get("error") is not None for item in records),
+            "errors": sum(item.get("error") is not None for item in records),\n            "completion_note": "completed/probe_executions_completed counts probes whose requests were processed; provider_responses_completed counts non-empty text responses only. text_returned does not guarantee semantic completeness.",
         },
         "results": records,
     }
