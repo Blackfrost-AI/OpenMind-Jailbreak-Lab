@@ -246,3 +246,10 @@ python -m modules.guardrail_lab.demo --output reports/synthetic-demo.json
 ```
 
 This creates a visibly labelled fictional fixture (`SYNTHETIC_DEMONSTRATION`, zero provider calls, zero confirmed live findings). It is for UI and workflow demonstrations only—not evidence of a real model bypass.
+
+
+## Quality and release process
+
+See [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the reproducible pre-release
+checks covering benchmark integrity, provider adapters, report schemas, workflow
+validation, and evidence labeling.
