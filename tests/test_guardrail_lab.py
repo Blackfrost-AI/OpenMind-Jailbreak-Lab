@@ -13,6 +13,15 @@ class GuardrailLabTests(unittest.TestCase):
         self.assertTrue(all(c.canary and c.canary.startswith("TRUST-CANARY-") for c in cases))
         self.assertTrue(all(not c.control for c in cases))
 
+
+    def test_indirect_injection_surface_cases_are_unique_synthetic_canaries(self):
+        ids = {f"GL-{n:03d}" for n in range(17, 25)}
+        cases = [case for case in CASES if case.case_id in ids]
+        self.assertEqual({case.case_id for case in cases}, ids)
+        self.assertTrue(all(case.canary and case.canary.startswith("TRUST-CANARY-") for case in cases))
+        self.assertTrue(all(not case.control for case in cases))
+        self.assertEqual(len({case.canary for case in cases}), 8)
+
     def test_canary_is_indicator(self):
         case = next(c for c in CASES if c.case_id == "GL-001")
         self.assertEqual(assess(case, "CANARY-GL001"), "potential_guardrail_failure")
