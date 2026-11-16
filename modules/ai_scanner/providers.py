@@ -327,6 +327,11 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
                 if isinstance(prompt_feedback, dict) else None,
             "safety_ratings": safety_ratings,
         }), started)
+        # Keep finish_reason present even when None: a blocked prompt has
+        # no candidates, so None here (with prompt_feedback set) is the
+        # signal that distinguishes a block from a clean pass. _present
+        # above drops None-valued keys, so restore it explicitly.
+        metadata["finish_reason"] = finish
         return model, text, metadata
     # OPENAI-COMPATIBLE (DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter,
     # Groq, Together, local servers, and any /v1/chat/completions host)
