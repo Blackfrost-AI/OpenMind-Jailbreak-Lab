@@ -27,6 +27,8 @@ A real API-backed adversarial testing module designed to evaluate:
 
 Tests produce structured JSON evidence containing prompts, responses, provider information, errors, and assessment results.
 
+The current suite includes four trust-escalation probes (`GL-013`–`GL-016`) for untrusted documents, forged authority claims, encoded content, and quoted text. They use harmless synthetic canaries; canary mentions require transcript review and are not automatically counted as confirmed bypasses. See the [Guardrail Lab guide](modules/guardrail_lab/README.md#trust-escalation-probes-gl-013gl-016) for the run command.
+
 It also runs bounded automated campaigns (`--campaign`, fixed framings, budget/time limits) and supports OpenAI-compatible endpoints (Ollama, vLLM, LM Studio, llama.cpp, LocalAI) for testing local models.
 
 The Guardrail Lab also includes a bounded discovery engine for deterministic test-variant generation and evidence-based finding review, plus an adaptive scheduler that selects previously untested input formats from reviewed results. Adaptation expands coverage only; it does not intensify prompts or automatically declare vulnerabilities. See [DISCOVERY_ENGINE.md](modules/guardrail_lab/DISCOVERY_ENGINE.md) and [ADAPTIVE_ENGINE.md](modules/guardrail_lab/ADAPTIVE_ENGINE.md).
