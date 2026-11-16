@@ -83,11 +83,15 @@ def _select_cases(case_ids: Optional[List[str]]) -> List[Case]:
             raise ValueError("GL-010 requires GL-009 immediately before it")
     return [CASE_BY_ID[cid] for cid in case_ids]
 
-def run_suite(call: Callable[[List[Dict[str, str]]], str], *, provider: str, model: Optional[str] = None, case_ids: Optional[List[str]] = None) -> Dict:
+def run_suite(call: Callable[[List[Dict[str, str]]], str], *, provider: str, model: Optional[str] = None, case_ids: Optional[List[str]] = None, delay_seconds: float = 0.0) -> Dict:
+    if delay_seconds < 0:
+        raise ValueError("delay_seconds must be non-negative")
     selected = _select_cases(case_ids)
     results = []
     conversation: List[Dict[str, str]] = []
-    for case in selected:
+    for index, case in enumerate(selected):
+        if index and delay_seconds:
+            time.sleep(delay_seconds)
         # The two-turn scenario intentionally carries context only between its paired cases.
         prior = conversation if case.case_id == "GL-010" else None
         if case.case_id == "GL-010" and not prior:
