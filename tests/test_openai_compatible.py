@@ -256,6 +256,32 @@ class OpenAICompatibleTests(unittest.TestCase):
             "MY_DEEPSEEK_KEY",
         )
 
+    def test_cloudflare_1010_is_not_retried(self):
+        import io
+        import urllib.error
+        def blocked(request, timeout=90.0):
+            raise urllib.error.HTTPError(
+                request.full_url,
+                403,
+                "Cloudflare block",
+                {},
+                io.BytesIO(b"error code: 1010"),
+            )
+        with patch(
+            "urllib.request.urlopen",
+            side_effect=blocked,
+        ) as urlopen, patch("time.sleep") as sleep:
+            with self.assertRaisesRegex(
+                GuardrailRunError, "1010"
+            ):
+                call_openai_compatible(
+                    [{"role": "user", "content": "test"}],
+                    model="test-model",
+                    base_url="http://localhost:11434/v1",
+                )
+        self.assertEqual(urlopen.call_count, 1)
+        sleep.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

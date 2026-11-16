@@ -1,6 +1,6 @@
 # OpenMind Guardrail Lab
 
-**Version:** 0.5.4
+**Version:** 0.5.5
 **Purpose:** Authorized, evidence-first AI guardrail and instruction-boundary vulnerability research.
 
 OpenMind Guardrail Lab is a Python testing framework for evaluating how AI models handle untrusted instructions, prompt injection, context manipulation, and instruction-boundary conflicts.
@@ -291,6 +291,15 @@ tests/
   test_openai_compatible.py
   test_provider_presets.py
 ```
+
+## Version 0.5.5
+
+- A campaign now stops at the first Cloudflare 1010 access block
+  (HTTP 403) instead of sending the remaining cases into a known
+  block. The report records `halted`, `halt_reason`, and
+  `not_run_case_ids` for the cases that were never sent. Other
+  provider errors do not trigger the halt, and the adapter still
+  never retries HTTP 403.
 
 ## Version 0.5.4
 

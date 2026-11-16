@@ -170,5 +170,48 @@ class CampaignTests(unittest.TestCase):
         )
         self.assertEqual(captured[1][2]["role"], "user")
 
+    def test_cloudflare_1010_stops_campaign_immediately(self):
+        from modules.guardrail_lab.runner import GuardrailRunError
+        calls = []
+        def blocked_provider(messages):
+            calls.append(messages)
+            raise GuardrailRunError(
+                "Compatible endpoint HTTP 403: error code: 1010"
+            )
+        report = run_campaign(
+            blocked_provider,
+            provider="openrouter",
+            budget=36,
+            adaptive=True,
+            case_ids=["GL-001", "GL-002", "GL-003"],
+        )
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(report["campaign"]["attempts"], 1)
+        self.assertTrue(report["campaign"]["halted"])
+        self.assertEqual(
+            report["campaign"]["not_run_case_ids"],
+            ["GL-002", "GL-003"],
+        )
+        self.assertEqual(
+            report["results"][0]["assessment"],
+            "partial_run",
+        )
+
+    def test_other_provider_errors_do_not_trigger_1010_circuit(self):
+        from modules.guardrail_lab.runner import GuardrailRunError
+        calls = []
+        def failing_provider(messages):
+            calls.append(messages)
+            raise GuardrailRunError("Temporary connection failure")
+        report = run_campaign(
+            failing_provider,
+            provider="mock",
+            budget=2,
+            adaptive=False,
+            case_ids=["GL-001", "GL-002"],
+        )
+        self.assertEqual(len(calls), 2)
+        self.assertFalse(report["campaign"]["halted"])
+
 if __name__ == "__main__":
     unittest.main()

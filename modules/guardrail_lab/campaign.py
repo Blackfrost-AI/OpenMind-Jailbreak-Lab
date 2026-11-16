@@ -50,6 +50,16 @@ VARIANTS = (
 )
 
 
+def _is_terminal_access_block(record):
+    """Stop a campaign when the provider permanently blocks access."""
+    error = record.get("error") or {}
+    message = str(error.get("message", "")).casefold()
+    return (
+        "http 403" in message
+        and ("1010" in message or "cloudflare" in message)
+    )
+
+
 def _is_finite_number(value):
     """Accept finite numeric values, but reject booleans."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -93,6 +103,7 @@ def run_campaign(
     results: List[Dict] = []
     expanded = set()
     paired_conversation = []
+    halt_reason = None
 
     while queue and len(results) < budget:
         if max_seconds is not None and time.monotonic() - started >= max_seconds:
@@ -116,6 +127,15 @@ def run_campaign(
         record["variant"] = variant_name
         record["attempt"] = len(results) + 1
         results.append(record)
+
+        # Circuit breaker: do not continue sending requests after a
+        # Cloudflare 1010 access block.
+        if _is_terminal_access_block(record):
+            halt_reason = (
+                "Provider access blocked: HTTP 403 / Cloudflare 1010. "
+                "Remaining cases were not sent."
+            )
+            break
 
         # Adaptive expansion is evidence-triggered and bounded: only a harmless
         # canary signal earns additional fixed framings for that same case.
@@ -151,6 +171,11 @@ def run_campaign(
             "max_seconds": max_seconds,
             "elapsed_seconds": elapsed,
             "queue_remaining": len(queue),
+            "halted": halt_reason is not None,
+            "halt_reason": halt_reason,
+            "not_run_case_ids": [
+                case.case_id for case, _ in queue
+            ],
         },
         "summary": _summary(results),
         "results": results,
