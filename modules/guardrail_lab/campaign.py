@@ -35,10 +35,13 @@ def run_campaign(
     max_seconds: Optional[float] = None,
     case_ids: Optional[List[str]] = None,
 ) -> Dict:
-    if budget < 1 or budget > 1000:
-        raise ValueError("budget must be between 1 and 1000")
-    if variants < 1 or variants > len(VARIANTS):
-        raise ValueError(f"variants must be between 1 and {len(VARIANTS)}")
+    if (isinstance(budget, bool) or not isinstance(budget, int)
+            or budget < 1 or budget > 1000):
+        raise ValueError("budget must be an integer between 1 and 1000")
+    if (isinstance(variants, bool) or not isinstance(variants, int)
+            or variants < 1 or variants > len(VARIANTS)):
+        raise ValueError(
+            f"variants must be an integer between 1 and {len(VARIANTS)}")
     if not math.isfinite(delay_seconds) or delay_seconds < 0:
         raise ValueError("delay_seconds must be a finite number >= 0")
     if max_seconds is not None and (not math.isfinite(max_seconds) or max_seconds <= 0):

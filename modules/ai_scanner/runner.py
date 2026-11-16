@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 from . import __version__
 from .probes import PROBES, evaluate
-from .providers import call_provider, call_provider_messages, ProviderError
+from .providers import call_provider, call_provider_messages
 
 
 def _run_multiturn(provider, probe, model):
@@ -28,7 +28,10 @@ def _run_multiturn(provider, probe, model):
             model, response, metadata = call_provider_messages(
                 provider, list(history), model,
             )
-        except ProviderError as exc:
+        except Exception as exc:
+            # Any failure (network, malformed provider response, ...) stops
+            # the session, but the error and every completed turn are
+            # preserved instead of being discarded.
             turn_errors.append(str(exc))
             break
         turn_errors.append(None)
@@ -106,7 +109,10 @@ def run(provider, model=None, output="openmind-scan-report.json"):
                 record["metadata"] = metadata
                 record["evaluation"] = evaluate(probe, response)
                 record["error"] = None
-        except ProviderError as exc:
+        except Exception as exc:
+            # A provider failure (including a malformed provider response
+            # that is not a ProviderError) records this probe as not run
+            # instead of aborting the whole scan and losing the report.
             record["response"] = None
             record["metadata"] = {}
             record["evaluation"] = {

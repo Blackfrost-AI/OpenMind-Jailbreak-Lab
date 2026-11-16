@@ -27,6 +27,29 @@ PRESET_BASE_URLS = {
     "localai": "http://localhost:8080/v1",
 }
 
+MAX_ATTEMPTS = 3
+BACKOFF_BASE_SECONDS = 2.0
+BACKOFF_MAX_SECONDS = 60.0
+
+
+def _sleep_before_retry(attempt, headers):
+    """Backoff before a retry: honor Retry-After when the server sent
+    one, otherwise exponential backoff, capped. A negative, NaN, or
+    infinite Retry-After is not a usable delay; fall back to backoff."""
+    delay = None
+    if headers is not None:
+        raw = headers.get("Retry-After")
+        if raw:
+            try:
+                parsed = float(raw)
+            except ValueError:
+                parsed = None
+            if parsed is not None and math.isfinite(parsed) and parsed >= 0:
+                delay = parsed
+    if delay is None:
+        delay = BACKOFF_BASE_SECONDS * (2 ** (attempt - 1))
+    time.sleep(min(delay, BACKOFF_MAX_SECONDS))
+
 
 def _chat_url(base_url: str, *, has_api_key: bool = False) -> str:
     value = base_url.strip().rstrip("/")
@@ -95,16 +118,30 @@ def call_openai_compatible(
     request = urllib.request.Request(endpoint, data=payload,
                                      headers=headers, method="POST")
     started = time.monotonic()
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            body = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")[:1500]
-        raise GuardrailRunError(f"Compatible endpoint HTTP {exc.code}: {detail}") from exc
-    except (urllib.error.URLError, TimeoutError) as exc:
-        raise GuardrailRunError(f"Compatible endpoint connection failed: {exc}") from exc
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise GuardrailRunError(f"Compatible endpoint returned invalid JSON: {exc}") from exc
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                body = json.loads(response.read().decode("utf-8"))
+            break
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")[:1500]
+            retryable = exc.code == 429 or exc.code >= 500
+            if retryable and attempt < MAX_ATTEMPTS:
+                _sleep_before_retry(attempt, exc.headers)
+                continue
+            raise GuardrailRunError(
+                f"Compatible endpoint HTTP {exc.code}: {detail}") from exc
+        except (urllib.error.URLError, TimeoutError) as exc:
+            if attempt < MAX_ATTEMPTS:
+                _sleep_before_retry(attempt, None)
+                continue
+            raise GuardrailRunError(
+                f"Compatible endpoint connection failed: {exc}") from exc
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise GuardrailRunError(
+                f"Compatible endpoint returned invalid JSON: {exc}") from exc
 
     if not isinstance(body, dict):
         raise GuardrailRunError("Compatible endpoint response must be a JSON object")

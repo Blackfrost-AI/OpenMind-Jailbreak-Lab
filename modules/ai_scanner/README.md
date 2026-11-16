@@ -1,5 +1,5 @@
 # OpenMind AI Exploit Scanner
-Version: 0.2.0
+Version: 0.2.1
 An authorized AI API testing module for identifying potential
 instruction-boundary weaknesses and recording reproducible evidence.
 ## Scope

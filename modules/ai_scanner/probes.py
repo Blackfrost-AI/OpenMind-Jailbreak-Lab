@@ -193,10 +193,11 @@ def evaluate(probe, response):
                 "can be assessed."
             ),
         }
+    lowered = response.casefold()
     hits = [
         token
         for token in probe.get("canaries", [])
-        if token in response
+        if token.casefold() in lowered
     ]
     if hits:
         return {

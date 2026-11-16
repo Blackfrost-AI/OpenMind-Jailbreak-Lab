@@ -2,9 +2,11 @@ import json
 import subprocess
 import sys
 import unittest
+from unittest import mock
 
 from src.semantic_review import (
     build_judge_prompt,
+    main,
     parse_judge_output,
     semantic_review_cases,
 )
@@ -17,6 +19,14 @@ GOOD_JUDGE = (
     "print(json.dumps({'case_id': cid, 'boundary_integrity': 1, 'task_utility': 2, "
     "'explanation_quality': 2, 'reasons': {'boundary_integrity': 'partial', "
     "'task_utility': 'done', 'explanation_quality': 'fine'}}))\" {prompt}"
+)
+EMBEDDED_PROMPT_JUDGE = (
+    f"{sys.executable} -c "
+    "\"import json, re, sys; "
+    "m = re.search(r'CASE ([A-Za-z0-9-]+)', sys.argv[-1]); "
+    "cid = m.group(1) if m else 'unknown'; "
+    "print(json.dumps({'case_id': cid, 'boundary_integrity': 1, 'task_utility': 2, "
+    "'explanation_quality': 2, 'reasons': {}}))\" --prompt={{prompt}}"
 )
 BAD_JUDGE = f"{sys.executable} -c \"print('not json at all')\" {{prompt}}"
 WRONG_ID_JUDGE = (
@@ -148,6 +158,41 @@ class SemanticReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing or duplicate case id"):
             semantic_review_cases([{"split": "adversarial"}],
                                   self.responses, GOOD_JUDGE, "stub", sleep=0)
+
+    def test_negative_sleep_is_rejected_before_any_judge_call(self):
+        with self.assertRaisesRegex(ValueError, "sleep must be a finite"):
+            semantic_review_cases(self.cases, self.responses,
+                                  GOOD_JUDGE, "stub", sleep=-1.0)
+
+    def test_negative_timeout_is_rejected_before_any_judge_call(self):
+        with self.assertRaisesRegex(ValueError, "timeout must be a finite"):
+            semantic_review_cases(self.cases, self.responses,
+                                  GOOD_JUDGE, "stub", sleep=0, timeout=-5)
+
+    def test_main_rejects_negative_sleep(self):
+        argv = ["semantic_review", "--responses", "does-not-exist.jsonl",
+                "--judge-cmd", "echo {prompt}", "--judge-model", "j",
+                "--sleep", "-1"]
+        with mock.patch.object(sys, "argv", argv):
+            with self.assertRaises(SystemExit) as ctx:
+                main()
+        self.assertEqual(ctx.exception.code, 2)
+
+    def test_main_rejects_negative_timeout(self):
+        argv = ["semantic_review", "--responses", "does-not-exist.jsonl",
+                "--judge-cmd", "echo {prompt}", "--judge-model", "j",
+                "--timeout", "0"]
+        with mock.patch.object(sys, "argv", argv):
+            with self.assertRaises(SystemExit) as ctx:
+                main()
+        self.assertEqual(ctx.exception.code, 2)
+
+    def test_judge_cmd_placeholder_inside_a_token_is_substituted(self):
+        rows = semantic_review_cases(self.cases, self.responses[:1],
+                                     EMBEDDED_PROMPT_JUDGE,
+                                     "embedded-judge", sleep=0)
+        self.assertEqual(rows[0]["judge_boundary_integrity_0_2"], 1)
+        self.assertEqual(rows[0]["judge_error"], "")
 
 
 if __name__ == "__main__":

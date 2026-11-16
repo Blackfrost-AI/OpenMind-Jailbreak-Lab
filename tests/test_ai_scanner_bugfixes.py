@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 from modules.ai_scanner import __version__, cli
+from modules.ai_scanner.probes import PROBES
 from modules.ai_scanner.providers import ProviderError, _post, call_provider
 from modules.ai_scanner.runner import run
 from src.validate import validate
@@ -185,6 +186,137 @@ class MalformedProviderBodyTests(unittest.TestCase):
                 _post("https://example.invalid/", {}, {})
         self.assertEqual(urlopen.call_count, 3)
         self.assertIn("500", str(ctx.exception))
+
+    def test_malformed_provider_response_shapes_raise_provider_error(self):
+        cases = (
+            ("openai", {"OPENAI_API_KEY": "k"}, {"output": None}),
+            ("openai", {"OPENAI_API_KEY": "k"}, {"output": "oops"}),
+            ("openai", {"OPENAI_API_KEY": "k"},
+             {"output": [{"content": "oops"}]}),
+            ("anthropic", {"ANTHROPIC_API_KEY": "k"}, {"content": None}),
+            ("anthropic", {"ANTHROPIC_API_KEY": "k"}, {"content": "oops"}),
+            ("gemini", {"GEMINI_API_KEY": "k"}, {"candidates": None}),
+            ("gemini", {"GEMINI_API_KEY": "k"}, {"candidates": "oops"}),
+        )
+        for provider, env, payload in cases:
+            with self.subTest(provider=provider, payload=payload):
+                with mock.patch.dict(os.environ, env), \
+                        mock.patch("urllib.request.urlopen",
+                                   side_effect=self._fake_urlopen(payload)):
+                    with self.assertRaises(ProviderError):
+                        call_provider(provider, "hi")
+
+    def test_non_dict_response_items_are_tolerated(self):
+        # A list-shaped response with junk items yields empty text rather
+        # than an AttributeError; the probe scores empty_response.
+        cases = (
+            ("openai", {"OPENAI_API_KEY": "k"}, {"output": ["oops"]}),
+            ("anthropic", {"ANTHROPIC_API_KEY": "k"}, {"content": [7]}),
+            ("gemini", {"GEMINI_API_KEY": "k"}, {"candidates": ["oops"]}),
+        )
+        for provider, env, payload in cases:
+            with self.subTest(provider=provider, payload=payload):
+                with mock.patch.dict(os.environ, env), \
+                        mock.patch("urllib.request.urlopen",
+                                   side_effect=self._fake_urlopen(payload)):
+                    _, text, _ = call_provider(provider, "hi")
+                self.assertEqual(text, "")
+
+    def test_negative_or_nan_retry_after_falls_back_to_backoff(self):
+        from modules.ai_scanner.providers import _sleep_before_retry
+        for raw in ("-5", "nan", "inf", "not-a-date"):
+            with mock.patch("time.sleep") as sleep:
+                _sleep_before_retry(1, {"Retry-After": raw})
+            sleep.assert_called_once_with(2.0)
+
+    def test_valid_retry_after_is_honored_and_capped(self):
+        from modules.ai_scanner.providers import _sleep_before_retry
+        with mock.patch("time.sleep") as sleep:
+            _sleep_before_retry(1, {"Retry-After": "5"})
+        sleep.assert_called_once_with(5.0)
+        with mock.patch("time.sleep") as sleep:
+            _sleep_before_retry(1, {"Retry-After": "3600"})
+        sleep.assert_called_once_with(60.0)
+
+
+class ScanSurvivesAdapterFailureTests(unittest.TestCase):
+    def test_unexpected_adapter_exception_records_not_run_and_keeps_report(self):
+        calls = {"n": 0}
+
+        def flaky(provider, prompt, model=None):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                raise AttributeError("'NoneType' object is not iterable")
+            return "mock-model", "ok response", {}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = str(Path(tmp) / "report.json")
+            with mock.patch("modules.ai_scanner.runner.call_provider",
+                           side_effect=flaky), \
+                    mock.patch(
+                        "modules.ai_scanner.runner.call_provider_messages",
+                        side_effect=lambda p, m, model=None: (
+                            "mock-model", "ok", {})):
+                report, path = run("gemini", None, out)
+            self.assertTrue(Path(path).exists())
+            self.assertEqual(len(report["results"]), len(PROBES))
+            second = report["results"][1]
+            self.assertEqual(second["evaluation"]["status"], "not_run")
+            self.assertIn("NoneType", second["error"])
+            self.assertEqual(
+                report["results"][0]["evaluation"]["status"],
+                "no_indicator_observed")
+
+    def test_unexpected_adapter_exception_on_second_turn_is_partial_run(self):
+        def fake_messages(provider, messages, model=None):
+            if len(messages) == 1:
+                return ("mock-model", "The release is on track.", {})
+            raise AttributeError("'NoneType' object is not iterable")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = str(Path(tmp) / "report.json")
+            with mock.patch(
+                    "modules.ai_scanner.runner.call_provider",
+                    side_effect=lambda p, pr, model=None: (
+                        "mock-model", "ok", {})), \
+                    mock.patch(
+                        "modules.ai_scanner.runner.call_provider_messages",
+                        side_effect=fake_messages):
+                report, _ = run("gemini", None, out)
+        record = next(
+            r for r in report["results"] if r["probe_id"] == LIVE_PROBE_ID)
+        self.assertEqual(record["evaluation"]["status"], "partial_run")
+        self.assertEqual(record["turn_responses"],
+                         ["The release is on track."])
+        self.assertIn("NoneType", record["turn_errors"][1])
+        self.assertEqual(len(record["transcript"]), 3)
+
+
+class CompareMalformedReportTests(unittest.TestCase):
+    def test_malformed_json_report_exits_cleanly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = Path(tmp) / "bad.json"
+            bad.write_text("not json", encoding="utf-8")
+            code = cli.main(["compare", str(bad),
+                             "--output", str(Path(tmp) / "out.json")])
+        self.assertEqual(code, 2)
+
+    def test_result_without_evaluation_exits_cleanly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = Path(tmp) / "noeval.json"
+            bad.write_text(json.dumps({
+                "provider": "gemini", "model": "m",
+                "results": [{"probe_id": "BOUNDARY-001"}]}),
+                encoding="utf-8")
+            code = cli.main(["compare", str(bad),
+                             "--output", str(Path(tmp) / "out.json")])
+        self.assertEqual(code, 2)
+
+    def test_missing_report_file_exits_cleanly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            code = cli.main(["compare", str(Path(tmp) / "gone.json"),
+                             "--output", str(Path(tmp) / "out.json")])
+        self.assertEqual(code, 2)
 
 
 class ComparisonDuplicateColumnTests(unittest.TestCase):

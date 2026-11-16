@@ -292,6 +292,18 @@ class Jb002FreeTextRepromptTests(unittest.TestCase):
         self.assertEqual(rows[0]["model"], "gemini-3.5-flash-lite")
         self.assertIn("required", output)
 
+    def test_record_reprompts_on_empty_provider(self):
+        answers = ["JB002-01",
+                   "", "google",  # Blank provider: reprompted, not a crash
+                   "gemini-3.5-flash-lite",
+                   "My own account", "kept in my notes",
+                   "A two-sentence summary.", "",
+                   "1", "1", "1", ""]
+        rows, output = self._run_record(answers)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["provider"], "google")
+        self.assertIn("required", output)
+
     def test_record_reprompts_on_empty_scope(self):
         answers = ["JB002-01", "google", "gemini-3.5-flash-lite",
                    "", "My own account",  # Blank scope: reprompted

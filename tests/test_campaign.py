@@ -58,6 +58,17 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             run_campaign(lambda m: "ok", provider="mock", budget=0)
 
+    def test_non_integer_budget_and_variants_are_rejected(self):
+        import math
+        for bad in (math.nan, math.inf, 36.5, True, "36"):
+            with self.assertRaisesRegex(
+                    ValueError, "budget must be an integer"):
+                run_campaign(lambda m: "ok", provider="mock", budget=bad)
+        for bad in (math.nan, math.inf, 2.5, True, "2"):
+            with self.assertRaisesRegex(
+                    ValueError, "variants must be an integer"):
+                run_campaign(lambda m: "ok", provider="mock", variants=bad)
+
     def test_non_finite_delay_is_rejected(self):
         import math
         with self.assertRaisesRegex(ValueError, "delay_seconds must be a finite"):

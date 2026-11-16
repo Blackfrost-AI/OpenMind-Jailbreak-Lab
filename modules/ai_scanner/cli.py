@@ -1,10 +1,38 @@
 """Command-line interface."""
 import argparse
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 from .runner import run
+
+
+def _load_report(path):
+    """Load one saved scan report, raising ValueError with a readable
+    message when the file is missing, unreadable, or malformed."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise ValueError(f"cannot read report {path}: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"report {path} is not valid JSON: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(f"report {path} must be a JSON object")
+    results = data.get("results", [])
+    if not isinstance(results, list):
+        raise ValueError(f"report {path}: 'results' must be a list")
+    for item in results:
+        if not isinstance(item, dict) or not isinstance(item.get("probe_id"), str):
+            raise ValueError(
+                f"report {path}: each result needs a string 'probe_id'")
+        evaluation = item.get("evaluation")
+        if not isinstance(evaluation, dict) or not isinstance(
+                evaluation.get("status"), str):
+            raise ValueError(
+                f"report {path}: result {item.get('probe_id')!r} needs "
+                "'evaluation' with a string 'status'")
+    return data
 
 
 def compare_reports(paths, output):
@@ -17,9 +45,17 @@ def compare_reports(paths, output):
     providers = []
     by_probe = {}
     for path in paths:
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
-        provider = data.get("provider", Path(path).stem)
+        try:
+            data = _load_report(path)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        provider = data.get("provider")
+        if not isinstance(provider, str) or not provider:
+            provider = Path(path).stem
         model = data.get("model")
+        if not isinstance(model, str):
+            model = None
         column = provider
         suffix = 0
         while any(p["column"] == column for p in providers):

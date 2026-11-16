@@ -1,5 +1,6 @@
 """Minimal standard-library adapters for provider APIs."""
 import json
+import math
 import os
 import time
 import urllib.error
@@ -30,9 +31,13 @@ def _sleep_before_retry(attempt, headers):
         raw = headers.get("Retry-After")
         if raw:
             try:
-                delay = float(raw)
+                parsed = float(raw)
             except ValueError:
-                delay = None
+                parsed = None
+            # A negative, NaN, or infinite Retry-After is not a usable
+            # delay (time.sleep would raise); fall back to backoff.
+            if parsed is not None and math.isfinite(parsed) and parsed >= 0:
+                delay = parsed
     if delay is None:
         delay = BACKOFF_BASE_SECONDS * (2 ** (attempt - 1))
     time.sleep(min(delay, BACKOFF_MAX_SECONDS))
@@ -134,12 +139,28 @@ def call_provider_messages(provider, messages, model=None):
                 "input": messages,
             },
         )
+        output = body.get("output", [])
+        if not isinstance(output, list):
+            raise ProviderError(
+                "Invalid provider response: 'output' must be a list")
         parts = []
-        for output_item in body.get("output", []):
-            for item in output_item.get("content", []):
-                if item.get("type") == "output_text" and item.get("text"):
+        for output_item in output:
+            if not isinstance(output_item, dict):
+                continue
+            content = output_item.get("content", [])
+            if not isinstance(content, list):
+                raise ProviderError(
+                    "Invalid provider response: 'content' must be a list")
+            for item in content:
+                if not isinstance(item, dict):
+                    continue
+                if (item.get("type") == "output_text"
+                        and isinstance(item.get("text"), str)
+                        and item["text"]):
                     parts.append(item["text"])
-                elif item.get("type") == "refusal" and item.get("refusal"):
+                elif (item.get("type") == "refusal"
+                      and isinstance(item.get("refusal"), str)
+                      and item["refusal"]):
                     parts.append(f"[refusal] {item['refusal']}")
         text = "\n".join(parts)
         metadata = _with_latency(_present({
@@ -171,10 +192,15 @@ def call_provider_messages(provider, messages, model=None):
                 "messages": messages,
             },
         )
+        content = body.get("content", [])
+        if not isinstance(content, list):
+            raise ProviderError(
+                "Invalid provider response: 'content' must be a list")
         text = "\n".join(
             block.get("text", "")
-            for block in body.get("content", [])
-            if block.get("type") == "text"
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "text"
+            and isinstance(block.get("text"), str)
         )
         metadata = _with_latency(_present({
             "request_id": body.get("id"),
@@ -213,13 +239,27 @@ def call_provider_messages(provider, messages, model=None):
                 ]
             },
         )
-        text = "\n".join(
-            part.get("text", "")
-            for candidate in body.get("candidates", [])
-            for part in candidate.get("content", {}).get("parts", [])
-        )
         candidates = body.get("candidates", [])
-        finish = candidates[0].get("finishReason") if candidates else None
+        if not isinstance(candidates, list):
+            raise ProviderError(
+                "Invalid provider response: 'candidates' must be a list")
+        text_parts = []
+        finish = None
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            if finish is None:
+                finish = candidate.get("finishReason")
+            content = candidate.get("content", {})
+            if not isinstance(content, dict):
+                continue
+            parts = content.get("parts", [])
+            if not isinstance(parts, list):
+                continue
+            for part in parts:
+                if isinstance(part, dict) and isinstance(part.get("text"), str):
+                    text_parts.append(part["text"])
+        text = "\n".join(text_parts)
         metadata = _with_latency(_present({
             "request_id": body.get("responseId"),
             "model_version": body.get("modelVersion"),

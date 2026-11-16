@@ -105,6 +105,62 @@ class OpenAICompatibleTests(unittest.TestCase):
                                                 model="m", base_url="http://localhost/v1")
         self.assertEqual(text, "one\ntwo")
 
+    def test_transient_429_is_retried_then_succeeds(self):
+        import io as _io
+        import urllib.error as _urlerr
+        response = {"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
+        attempts = {"n": 0}
+
+        def flaky(request, timeout=90.0):
+            attempts["n"] += 1
+            if attempts["n"] < 3:
+                raise _urlerr.HTTPError(
+                    request.full_url, 429, "slow down", {},
+                    _io.BytesIO(b"slow down"))
+            return FakeResponse(response)
+
+        with patch("urllib.request.urlopen", side_effect=flaky), \
+                patch("time.sleep"):
+            _, text, _ = call_openai_compatible(
+                [{"role": "user", "content": "x"}],
+                model="m", base_url="http://localhost/v1")
+        self.assertEqual(text, "ok")
+        self.assertEqual(attempts["n"], 3)
+
+    def test_5xx_retry_exhaustion_raises_guardrail_error(self):
+        import io as _io
+        import urllib.error as _urlerr
+
+        def failing(request, timeout=90.0):
+            raise _urlerr.HTTPError(
+                request.full_url, 500, "err", {}, _io.BytesIO(b"boom"))
+
+        with patch("urllib.request.urlopen", side_effect=failing) as urlopen, \
+                patch("time.sleep"):
+            with self.assertRaisesRegex(GuardrailRunError, "500"):
+                call_openai_compatible([{"role": "user", "content": "x"}],
+                                       model="m", base_url="http://localhost/v1")
+        self.assertEqual(urlopen.call_count, 3)
+
+    def test_connection_error_is_retried_then_succeeds(self):
+        import urllib.error as _urlerr
+        response = {"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
+        attempts = {"n": 0}
+
+        def flaky(request, timeout=90.0):
+            attempts["n"] += 1
+            if attempts["n"] == 1:
+                raise _urlerr.URLError("connection reset")
+            return FakeResponse(response)
+
+        with patch("urllib.request.urlopen", side_effect=flaky), \
+                patch("time.sleep"):
+            _, text, _ = call_openai_compatible(
+                [{"role": "user", "content": "x"}],
+                model="m", base_url="http://localhost/v1")
+        self.assertEqual(text, "ok")
+        self.assertEqual(attempts["n"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

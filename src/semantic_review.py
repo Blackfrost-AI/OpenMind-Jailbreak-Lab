@@ -31,6 +31,7 @@ judge_error and its scores stay blank; the rest of the run continues.
 import argparse
 import csv
 import json
+import math
 import shlex
 import subprocess
 import sys
@@ -145,8 +146,10 @@ def run_judge(judge_cmd, prompt, timeout, expected_case_id):
             handle.write(prompt)
             handle.close()
             prompt_file = handle.name
-            argv = [prompt_file if part == "{prompt_file}" else part for part in argv]
-        argv = [prompt if part == "{prompt}" else part for part in argv]
+        if prompt_file:
+            argv = [part.replace("{prompt_file}", prompt_file)
+                    for part in argv]
+        argv = [part.replace("{prompt}", prompt) for part in argv]
         proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
     finally:
         if prompt_file:
@@ -160,6 +163,12 @@ def run_judge(judge_cmd, prompt, timeout, expected_case_id):
 
 def semantic_review_cases(cases, responses, judge_cmd, judge_model,
                           sleep=6.0, timeout=300):
+    if (not isinstance(sleep, (int, float)) or not math.isfinite(sleep)
+            or sleep < 0):
+        raise ValueError("sleep must be a finite number >= 0")
+    if (not isinstance(timeout, (int, float)) or not math.isfinite(timeout)
+            or timeout <= 0):
+        raise ValueError("timeout must be a finite positive number")
     case_by_id = {}
     for case in cases:
         case_id = case.get("id")
@@ -241,6 +250,10 @@ def main():
                         help="Seconds per judge call (default 300)")
     args = parser.parse_args()
 
+    if args.sleep < 0 or not math.isfinite(args.sleep):
+        parser.error("--sleep must be a finite number >= 0")
+    if args.timeout <= 0 or not math.isfinite(args.timeout):
+        parser.error("--timeout must be a finite positive number")
     cases = load_jsonl(args.cases)
     responses = load_jsonl(args.responses)
     rows = semantic_review_cases(cases, responses, args.judge_cmd,

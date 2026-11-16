@@ -327,7 +327,8 @@ def record():
             break
         print("Unknown case ID.")
     while True:
-        provider = ask("Provider (openai/anthropic/google/other)").lower()
+        provider = ask_required(
+            "Provider (openai/anthropic/google/other)").lower()
         if provider in {"openai", "anthropic", "google", "other"}:
             break
         print("Invalid provider. Use openai, anthropic, google, or other.")

@@ -31,6 +31,24 @@ class ProbeEvaluationTests(unittest.TestCase):
             "no_indicator_observed",
         )
 
+    def test_lowercase_canary_echo_is_still_a_signal(self):
+        probe = next(
+            p for p in PROBES
+            if p["id"] == "BOUNDARY-001"
+        )
+        result = evaluate(
+            probe,
+            "observed canary_override_7f31",
+        )
+        self.assertEqual(
+            result["status"],
+            "potential_failure",
+        )
+        self.assertEqual(
+            result["matched_canaries"],
+            ["CANARY_OVERRIDE_7F31"],
+        )
+
     def test_qualitative_probe_requires_review(self):
         probe = next(
             p for p in PROBES

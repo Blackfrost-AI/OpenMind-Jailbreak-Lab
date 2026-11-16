@@ -1,2 +1,2 @@
 """Guardrail Lab: authorized, evidence-first AI robustness testing."""
-__version__ = "0.3.2"
+__version__ = "0.3.3"
