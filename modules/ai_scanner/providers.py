@@ -306,11 +306,26 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
                 if isinstance(part, dict) and isinstance(part.get("text"), str):
                     text_parts.append(part["text"])
         text = "\n".join(text_parts)
+        # Preserve provider-side prompt blocking and candidate safety
+        # annotations so an empty response is distinguishable from a clean pass.
+        safety_ratings = []
+        for candidate in candidates:
+            if isinstance(candidate, dict):
+                ratings = candidate.get("safetyRatings")
+                if isinstance(ratings, list):
+                    safety_ratings.extend(
+                        rating for rating in ratings
+                        if isinstance(rating, dict)
+                    )
+        prompt_feedback = body.get("promptFeedback")
         metadata = _with_latency(_present({
             "request_id": body.get("responseId"),
             "model_version": body.get("modelVersion"),
             "usage": body.get("usageMetadata"),
             "finish_reason": finish,
+            "prompt_feedback": prompt_feedback
+                if isinstance(prompt_feedback, dict) else None,
+            "safety_ratings": safety_ratings,
         }), started)
         return model, text, metadata
     # OPENAI-COMPATIBLE (DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter,
