@@ -40,7 +40,7 @@ jobs:
           python -m modules.guardrail_lab \
             --provider gemini \
             --model "$MODEL" \
-            --delay 8.5 \
+            --delay 13.0 \
             --output reports/gemini-full-red-team.json
       - name: Validate evidence completeness
         if: success()
