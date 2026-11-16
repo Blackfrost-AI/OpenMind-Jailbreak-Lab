@@ -36,6 +36,12 @@ python -m modules.guardrail_lab --provider anthropic --output reports/claude.jso
 
 For hosted or local OpenAI-compatible endpoints, configure the provider preset or `OPENAI_COMPAT_BASE_URL`, `OPENAI_COMPAT_MODEL`, and (if needed) `OPENAI_COMPAT_API_KEY`. Use the exact provider options and model identifiers supported by the installed revision and account. Keep case IDs, model versions, budgets, and campaign settings identical when comparing providers.
 
+
+
+## Manual Gemini baseline workflow
+
+A low-budget live baseline can be started from GitHub Actions → **Manual Gemini baseline** → **Run workflow**. Before triggering it, add a newly rotated `GEMINI_API_KEY` as a repository Actions secret (Settings → Secrets and variables → Actions). The workflow defaults to a 12-request maximum, one fixed variant, no adaptive expansion, and stores the JSON evidence as an Actions artifact. It does not print the API key. The workflow is manual so no paid or quota-consuming requests run automatically.
+
 ## Interpreting results
 
 - A canary appearing inside an explanation, quotation, translation, or explicit warning is not by itself a leak.
