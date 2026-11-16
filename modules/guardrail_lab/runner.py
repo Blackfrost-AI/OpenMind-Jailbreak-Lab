@@ -18,7 +18,7 @@ def _contains_expected_signal(expected: str, response: str) -> bool:
     if not phrase:
         return False
     # Word boundaries prevent e.g. "trusted" matching inside "untrusted".
-    pattern = r"(?<!\\w)" + re.escape(phrase) + r"(?!\\w)"
+    pattern = r"(?<!\w)" + re.escape(phrase) + r"(?!\w)"
     return re.search(pattern, text, flags=re.UNICODE) is not None
 
 
