@@ -79,16 +79,35 @@ def _with_latency(metadata, started):
     return metadata
 
 
-def call_provider(provider, prompt, model=None):
-    """Call one provider and return (model, text, metadata).
+def _gemini_content(message):
+    """Map one chat message to a Gemini content block."""
+    role = "model" if message["role"] == "assistant" else "user"
+    return {"role": role, "parts": [{"text": message["content"]}]}
 
-    metadata carries the provider's request id, usage, and finish/status
-    information when the provider returns it, plus latency_seconds.
-    The key is never placed in a URL: Gemini authenticates with the
-    x-goog-api-key request header, OpenAI and Anthropic with their
-    usual authorization headers.
+
+def call_provider_messages(provider, messages, model=None):
+    """Call one provider with a full message list and return
+    (model, text, metadata).
+
+    messages is a list of {"role": "user"|"assistant", "content": str}
+    in conversation order, so multi-turn sessions send the real
+    conversation so far. Single-turn callers pass one user message.
+    metadata carries the provider's request id, usage, and
+    finish/status information when the provider returns it, plus
+    latency_seconds. The key is never placed in a URL: Gemini
+    authenticates with the x-goog-api-key request header, OpenAI
+    and Anthropic with their usual authorization headers.
     """
     provider = provider.lower()
+    if not messages or not all(
+        isinstance(item, dict)
+        and item.get("role") in ("user", "assistant")
+        and isinstance(item.get("content"), str)
+        for item in messages
+    ):
+        raise ProviderError(
+            "messages must be a non-empty list of user/assistant messages"
+        )
     started = time.monotonic()
     # OPENAI
     if provider == "openai":
@@ -107,7 +126,7 @@ def call_provider(provider, prompt, model=None):
             },
             {
                 "model": model,
-                "input": prompt,
+                "input": messages,
             },
         )
         parts = []
@@ -144,12 +163,7 @@ def call_provider(provider, prompt, model=None):
             {
                 "model": model,
                 "max_tokens": 1200,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
+                "messages": messages,
             },
         )
         text = "\n".join(
@@ -190,11 +204,7 @@ def call_provider(provider, prompt, model=None):
             },
             {
                 "contents": [
-                    {
-                        "parts": [
-                            {"text": prompt}
-                        ]
-                    }
+                    _gemini_content(item) for item in messages
                 ]
             },
         )
@@ -213,3 +223,16 @@ def call_provider(provider, prompt, model=None):
         }), started)
         return model, text, metadata
     raise ProviderError(f"Unsupported provider: {provider}")
+
+
+def call_provider(provider, prompt, model=None):
+    """Call one provider with a single user prompt.
+
+    Thin wrapper over call_provider_messages; returns
+    (model, text, metadata) exactly as before.
+    """
+    return call_provider_messages(
+        provider,
+        [{"role": "user", "content": prompt}],
+        model,
+    )

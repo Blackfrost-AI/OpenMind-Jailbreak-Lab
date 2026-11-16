@@ -18,6 +18,7 @@ NEW_PROBE_IDS = (
     "AUTHORITY-001",
     "ROLE-001",
     "MULTITURN-001",
+    "MULTITURN-LIVE-001",
 )
 
 
@@ -186,9 +187,9 @@ class RetryTests(unittest.TestCase):
 
 
 class NewProbeTests(unittest.TestCase):
-    def test_ten_probes_with_unique_ids(self):
+    def test_eleven_probes_with_unique_ids(self):
         ids = [p["id"] for p in PROBES]
-        self.assertEqual(len(ids), 10)
+        self.assertEqual(len(ids), 11)
         self.assertEqual(len(ids), len(set(ids)))
 
     def test_new_probes_each_carry_one_canary(self):
@@ -208,13 +209,21 @@ class RunnerMetadataTests(unittest.TestCase):
                 "request_id": "r9", "latency_seconds": 0.5,
             }
 
+        def fake_call_messages(provider, messages, model=None):
+            return "gemini-3.5-flash-lite", "an answer", {
+                "request_id": "r9", "latency_seconds": 0.5,
+            }
+
         with tempfile.TemporaryDirectory() as tmp:
             out = str(Path(tmp) / "report.json")
             with mock.patch("modules.ai_scanner.runner.call_provider",
-                           side_effect=fake_call):
+                           side_effect=fake_call), \
+                    mock.patch(
+                        "modules.ai_scanner.runner.call_provider_messages",
+                        side_effect=fake_call_messages):
                 report, _ = run("gemini", None, out)
-        self.assertEqual(report["scanner_version"], "0.1.1")
-        self.assertEqual(report["schema_version"], "1.1")
+        self.assertEqual(report["scanner_version"], "0.2.0")
+        self.assertEqual(report["schema_version"], "1.2")
         record = report["results"][0]
         self.assertEqual(record["metadata"]["request_id"], "r9")
         self.assertEqual(record["metadata"]["latency_seconds"], 0.5)
