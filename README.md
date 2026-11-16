@@ -149,6 +149,7 @@ For other providers and custom endpoints, see [Installation and provider configu
 ## Run the multi-provider GitHub Actions workflow
 
 The repository includes a manually triggered [multi-provider red-team workflow](.github/workflows/multi-provider-red-team.yml).
+It runs a bounded campaign of up to 24 requests with up to six fixed, reviewed framings. Adaptive follow-ups require an exact canary-only response; ambiguous mentions are reserved for human review and are not called bypasses.
 
 1. Add the provider credential under **Settings → Secrets and variables → Actions**.
 2. Open **Actions → Manual multi-provider red-team suite**.
