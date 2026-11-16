@@ -7,6 +7,7 @@ def compare_reports(reports):
     if len(reports) < 2:
         raise ValueError("at least two reports are required")
     indexed = []
+    source_labels = set()
     for report in reports:
         results = report.get("results")
         if not isinstance(results, list):
@@ -19,7 +20,13 @@ def compare_reports(reports):
             if case_id in mapping:
                 raise ValueError("duplicate case_id in report: " + case_id)
             mapping[case_id] = item.get("assessment", "unknown")
-        indexed.append((report.get("provider", "unknown"), report.get("model"), mapping))
+        provider = report.get("provider", "unknown")
+        model = report.get("model")
+        label = f"{provider}/{model or 'unspecified'}"
+        if label in source_labels:
+            raise ValueError("duplicate provider/model report label: " + label)
+        source_labels.add(label)
+        indexed.append((provider, model, mapping))
     common = set.intersection(*(set(item[2]) for item in indexed))
     union = set.union(*(set(item[2]) for item in indexed))
     rows, disagreements = [], []
