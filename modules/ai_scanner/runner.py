@@ -29,6 +29,8 @@ def _run_multiturn(provider, probe, model, base_url=None,
     turn_metadata = []
     turn_errors = []
     turn_error_details = []
+    turn_attempts = []
+    turn_inconclusive = []
     response = ""
     metadata = {}
     for turn in probe["turns"]:
@@ -52,8 +54,10 @@ def _run_multiturn(provider, probe, model, base_url=None,
         turn_error_details.append(None)
         turn_responses.append(response)
         turn_metadata.append(metadata)
+        turn_attempts.append(attempts)
+        turn_inconclusive.append(inconclusive)
         history.append({"role": "assistant", "content": response})
-        if not response.strip():
+        if inconclusive or not response.strip():
             break
     extra = {
         "transcript": history,
@@ -61,6 +65,8 @@ def _run_multiturn(provider, probe, model, base_url=None,
         "turn_metadata": turn_metadata,
         "turn_errors": turn_errors,
         "turn_error_details": turn_error_details,
+        "turn_attempts": turn_attempts,
+        "turn_inconclusive": turn_inconclusive,
     }
     return model, response, metadata, extra
 
