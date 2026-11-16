@@ -433,7 +433,7 @@ Workflow file: `.github/workflows/gemini-trust-escalation.yml`. It sends exactly
 
 #### Run the provider-neutral live suite from GitHub Actions
 
-Open **Actions → Manual multi-provider red-team suite** and select **Run workflow**. Choose the provider adapter, enter the exact model identifier, and set a request budget (1–16). Add the matching repository Actions secret first:
+Open **Actions → Manual multi-provider red-team suite** and select **Run workflow**. Choose the provider adapter, enter the exact model identifier, and set a request budget (1–24). One invocation tests one provider/model pair; repeat with the same benchmark and comparable settings to build a cross-provider comparison. Add the matching repository Actions secret first:
 
 | Provider | Required Actions secret |
 |---|---|
