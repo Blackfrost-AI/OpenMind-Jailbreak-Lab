@@ -24,6 +24,11 @@ class ReportComparisonTests(unittest.TestCase):
         self.assertEqual(result["agreement_rate_on_common_cases"], 0.0)
         self.assertEqual(result["disagreement_or_missing_case_ids"], ["GL-001"])
 
+    def test_duplicate_provider_model_labels_rejected(self):
+        report = {"provider": "same", "model": "m1", "results": [{"case_id": "GL-001"}]}
+        with self.assertRaisesRegex(ValueError, "duplicate provider/model"):
+            compare_reports([report, report])
+
     def test_duplicate_case_ids_rejected(self):
         report = {"results": [{"case_id": "GL-001"}, {"case_id": "GL-001"}]}
         with self.assertRaisesRegex(ValueError, "duplicate"):
