@@ -76,7 +76,7 @@ These presets require an OpenAI-compatible Chat Completions endpoint. Provider m
 | llama.cpp | llama-cpp | http://localhost:8080/v1 |
 | LocalAI | localai | http://localhost:8080/v1 |
 
-Custom OpenAI-compatible endpoints can be configured with --base-url.
+Custom OpenAI-compatible endpoints can be configured with --base-url. Local endpoints are intended to run from a host that can reach the inference server; a GitHub-hosted runner cannot reach your own machine's localhost.
 
 ## Requirements
 
@@ -460,3 +460,7 @@ Run the probes with:
 
 A response consisting solely of the matching canary is a potential trust-escalation signal, not a confirmed bypass. A canary quoted in an explanation remains ambiguous. Repeat any signal with matched controls and inspect the complete transcript before human confirmation. These probes do not promote content to trusted status; they test whether the model incorrectly does so.
 
+
+## Multi-provider GitHub Actions workflow
+
+Use [`.github/workflows/multi-provider-red-team.yml`](../../.github/workflows/multi-provider-red-team.yml) to run the same bounded Guardrail Lab campaign against a selected provider and model. It supports OpenAI, Anthropic, Gemini, DeepSeek, GLM, Moonshot, NVIDIA NIM, OpenRouter, Groq, Together, and custom OpenAI-compatible endpoints. Configure the matching repository Actions secret, select the exact model ID, and choose a request budget from 1 to 16. One provider/model is run per workflow invocation; results are uploaded as a provider-specific artifact. Localhost-only inference servers must be tested from a machine that can reach them. Provider compatibility and model access must be verified with a live run.
