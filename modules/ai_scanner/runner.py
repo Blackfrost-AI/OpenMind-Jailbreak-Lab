@@ -163,6 +163,24 @@ def run(provider, model=None, output="openmind-scan-report.json",
             record["error"] = str(exc)
             record["error_details"] = _error_details(exc)
         records.append(record)
+
+    for record in records:
+        if (
+            record.get("turn_errors")
+            and record.get("turn_responses")
+            and record.get("error")
+        ):
+            record["provider_response_status"] = "partial"
+        else:
+            record["provider_response_status"] = _provider_response_status(
+                record.get("response"),
+                record.get("metadata"),
+                record.get("error"),
+            )
+    response_statuses = [
+        item["provider_response_status"] for item in records
+    ]
+
     report = {
         "schema_version": "1.3",
         "scanner_version": __version__,
