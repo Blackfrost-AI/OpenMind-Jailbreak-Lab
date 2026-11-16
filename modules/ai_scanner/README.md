@@ -1,5 +1,5 @@
 # OpenMind AI Exploit Scanner
-Version: 0.3.3
+Version: 0.3.4
 An authorized AI API testing module for identifying potential
 instruction-boundary weaknesses and recording reproducible evidence.
 ## Scope
@@ -118,6 +118,12 @@ It does not execute tools, access secrets, exploit accounts,
 or test third-party systems.
 API calls may incur charges.
 Only test accounts and systems you are authorized to assess.
+## Version 0.3.4
+- Separates probe execution counts from provider response accounting.
+- Adds per-result response state and explicit incomplete/empty response counts.
+- Returns a nonzero CLI exit code for incomplete, empty, or missing output.
+- Adds regression coverage for provider response accounting.
+
 ## Version 0.3.3
 - An unwritable report path now exits with a clean error (exit 2)
   instead of a traceback.
@@ -149,8 +155,15 @@ request fails. Stable categories distinguish missing configuration,
 authentication (401/403), model or endpoint not found (404), rate limits
 (429), provider service errors (5xx), network failures, and unexpected errors.
 Details include a stable code, optional HTTP status, retryability, and message.
-The report-level `summary` counts completed, partial, not-run, and errored
-probes. Failed requests are never counted as passes.
+The report summary separates probe execution from provider output. It records
+`probe_executions_completed`, `provider_responses_completed`,
+`provider_responses_incomplete`, `provider_responses_empty`,
+`provider_responses_partial`, and `provider_responses_not_received`.
+The legacy `completed` field remains an alias for probe execution completion;
+it does not mean that the provider generated a complete response. A non-empty
+response is recorded as `text_returned`, which does not guarantee semantic
+completeness. The CLI exits nonzero when a response is incomplete, empty,
+partial, or not received. These outcomes are not clean results.
 
 Use the category and code for automation; use the message for operator guidance.
 Do not publish API keys, authorization headers, or raw secret values in reports.
