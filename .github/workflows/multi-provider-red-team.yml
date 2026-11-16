@@ -19,6 +19,11 @@ on:
           - groq
           - together
           - openai-compatible
+          - ollama
+          - vllm
+          - lm-studio
+          - llama-cpp
+          - localai
       model:
         description: "Exact model identifier for the selected provider"
         required: true
