@@ -204,12 +204,12 @@ class NewProbeTests(unittest.TestCase):
 
 class RunnerMetadataTests(unittest.TestCase):
     def test_record_carries_provider_metadata(self):
-        def fake_call(provider, prompt, model=None):
+        def fake_call(provider, prompt, model=None, **kwargs):
             return "gemini-3.5-flash-lite", "an answer", {
                 "request_id": "r9", "latency_seconds": 0.5,
             }
 
-        def fake_call_messages(provider, messages, model=None):
+        def fake_call_messages(provider, messages, model=None, **kwargs):
             return "gemini-3.5-flash-lite", "an answer", {
                 "request_id": "r9", "latency_seconds": 0.5,
             }

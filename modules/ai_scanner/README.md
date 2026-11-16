@@ -1,5 +1,5 @@
 # OpenMind AI Exploit Scanner
-Version: 0.2.1
+Version: 0.3.0
 An authorized AI API testing module for identifying potential
 instruction-boundary weaknesses and recording reproducible evidence.
 ## Scope
@@ -13,6 +13,9 @@ a model is secure.
 - OpenAI
 - Anthropic Claude
 - Google Gemini
+- OpenAI-compatible (`--provider openai-compatible`): any
+  `/v1/chat/completions` endpoint — DeepSeek, GLM, Moonshot, NVIDIA,
+  OpenRouter, Groq, Together, and local servers such as Ollama.
 ## Requirements
 - Python 3.10+
 - Provider API key
@@ -25,6 +28,12 @@ export ANTHROPIC_API_KEY="your-key"
 Gemini:
 export GEMINI_API_KEY="your-key"
 (or GOOGLE_API_KEY — the adapter accepts either)
+OpenAI-compatible:
+export OPENAI_COMPAT_BASE_URL="https://api.deepseek.com/v1"
+export OPENAI_COMPAT_API_KEY="your-key"
+export OPENAI_COMPAT_MODEL="deepseek-chat"
+(For a local server, the API key may be empty and the base URL is
+the server's, for example `http://localhost:11434/v1`.)
 Never commit API keys to GitHub.
 ## Run scans
 OpenAI:
@@ -33,6 +42,10 @@ Claude:
 python -m modules.ai_scanner --provider anthropic
 Gemini:
 python -m modules.ai_scanner --provider gemini
+OpenAI-compatible (DeepSeek example):
+python -m modules.ai_scanner --provider openai-compatible --model deepseek-chat --base-url https://api.deepseek.com/v1
+OpenAI-compatible (local Ollama example):
+python -m modules.ai_scanner --provider openai-compatible --model qwen2.5:0.5b-instruct --base-url http://127.0.0.1:11434/v1
 Specify a model:
 python -m modules.ai_scanner --provider openai --model gpt-4.1-mini
 Specify report destination:
@@ -101,3 +114,12 @@ It does not execute tools, access secrets, exploit accounts,
 or test third-party systems.
 API calls may incur charges.
 Only test accounts and systems you are authorized to assess.
+## Version 0.3.0
+- New `openai-compatible` provider: any `/v1/chat/completions`
+  endpoint (DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter, Groq,
+  Together, local servers) via `--base-url` / `OPENAI_COMPAT_BASE_URL`,
+  `--api-key-env` / `OPENAI_COMPAT_API_KEY`, and `--model` /
+  `OPENAI_COMPAT_MODEL`. Same HTTPS and response-shape hardening as
+  the guardrail lab's compatible adapter. Verified live against a
+  local Ollama model (11 probes: 6 clean, 2 manual review,
+  3 potential failures on the tiny 0.5B model).

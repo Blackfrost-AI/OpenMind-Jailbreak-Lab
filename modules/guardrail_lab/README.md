@@ -1,5 +1,5 @@
 # OpenMind Guardrail Lab
-**Version:** 0.4.2
+**Version:** 0.5.0
 **Purpose:** authorized, evidence-first testing of AI instruction-boundary and guardrail behavior.
 OpenMind Guardrail Lab is a small Python test harness for checking how an AI model handles untrusted instructions embedded in quoted text, documents, retrieval content, and simulated tool output. It can run individual test cases or a bounded automated campaign, then save structured JSON evidence for review and regression testing.
 Use it only with models and services you own or are explicitly authorized to assess.
@@ -59,6 +59,30 @@ python -m modules.guardrail_lab --provider llama-cpp --model your-model
 python -m modules.guardrail_lab --provider localai --model your-model
 ```
 Override a preset endpoint with `--base-url`. Local HTTP is accepted only for loopback hosts (`localhost`, `127.0.0.1`, and `::1`).
+### Hosted providers
+Convenience provider names and default base URLs are provided for
+hosted OpenAI-compatible services. Each needs its own API key in
+`OPENAI_COMPAT_API_KEY` (or `--api-key-env`) and a `--model`:
+| Provider option | Default base URL |
+|---|---|
+| `deepseek` | `https://api.deepseek.com/v1` |
+| `glm` | `https://open.bigmodel.cn/api/paas/v4` |
+| `moonshot` | `https://api.moonshot.ai/v1` |
+| `nvidia` | `https://integrate.api.nvidia.com/v1` |
+| `openrouter` | `https://openrouter.ai/api/v1` |
+| `groq` | `https://api.groq.com/openai/v1` |
+| `together` | `https://api.together.xyz/v1` |
+Examples:
+```bash
+export OPENAI_COMPAT_API_KEY="your-provider-key"
+python -m modules.guardrail_lab --provider deepseek --model deepseek-chat
+python -m modules.guardrail_lab --provider openrouter --model meta-llama/llama-3.1-8b-instruct:free
+python -m modules.guardrail_lab --provider groq --model openai/gpt-oss-20b
+```
+Moonshot's China endpoint is `https://api.moonshot.cn/v1`; pass it
+with `--base-url` if your key is for that platform. GLM's base URL
+keeps its `/api/paas/v4` path; the adapter appends
+`/chat/completions` to it.
 ### Other OpenAI-compatible endpoints
 For a hosted open-model service or custom gateway, supply its HTTPS base URL and model name:
 ```bash
@@ -121,7 +145,14 @@ Run the tests from the package/repository root:
 ```bash
 python -m unittest discover -s tests -v
 ```
-The v0.4.2 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+The v0.5.0 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+## Version 0.5.0
+- Hosted provider presets: `deepseek`, `glm`, `moonshot`, `nvidia`,
+  `openrouter`, `groq`, and `together` join the local presets as
+  `--provider` options, each with its documented base URL. The
+  scanner gained the same reach via its new `openai-compatible`
+  provider. Base URLs were verified against vendor docs; Moonshot's
+  China endpoint (`api.moonshot.cn`) is available via `--base-url`.
 ## Version 0.4.2
 - The campaign's finite-number check now survives huge integers (`10**10000` raised an uncaught OverflowError from `math.isfinite`); the same hardening applies to the OpenAI-compatible adapter's `--timeout` validation, which also rejected booleans cleanly now (`True` previously passed as a 1-second timeout).
 - Module README corrected: the variants option documents 1–6 framings (was still 1–3 after the 0.4.0 expansion).

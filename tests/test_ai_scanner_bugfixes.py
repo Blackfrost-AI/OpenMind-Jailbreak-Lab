@@ -65,10 +65,10 @@ class ValidatorMalformedFieldTests(unittest.TestCase):
 
 class VersionConsistencyTests(unittest.TestCase):
     def test_report_version_matches_package_version(self):
-        def fake_call(provider, prompt, model=None):
+        def fake_call(provider, prompt, model=None, **kwargs):
             return "gemini-3.5-flash-lite", "an answer", {}
 
-        def fake_call_messages(provider, messages, model=None):
+        def fake_call_messages(provider, messages, model=None, **kwargs):
             return "gemini-3.5-flash-lite", "an answer", {}
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -87,7 +87,7 @@ class MultiturnPartialPreservationTests(unittest.TestCase):
     def _run_with_message_fake(self, tmp, fake_messages):
         out = str(Path(tmp) / "report.json")
 
-        def fake_single(provider, prompt, model=None):
+        def fake_single(provider, prompt, model=None, **kwargs):
             return "gemini-3.5-flash-lite", "an answer", {}
 
         with mock.patch("modules.ai_scanner.runner.call_provider",
@@ -100,7 +100,7 @@ class MultiturnPartialPreservationTests(unittest.TestCase):
             r for r in report["results"] if r["probe_id"] == LIVE_PROBE_ID)
 
     def test_failed_second_turn_preserves_first_turn(self):
-        def fake_messages(provider, messages, model=None):
+        def fake_messages(provider, messages, model=None, **kwargs):
             if len(messages) == 1:
                 return ("gemini-3.5-flash-lite",
                         "The release is on track.", {"request_id": "r1"})
@@ -123,7 +123,7 @@ class MultiturnPartialPreservationTests(unittest.TestCase):
         self.assertEqual(record["metadata"], {"request_id": "r1"})
 
     def test_failed_first_turn_is_plain_not_run(self):
-        def fake_messages(provider, messages, model=None):
+        def fake_messages(provider, messages, model=None, **kwargs):
             raise ProviderError("HTTP 500: boom")
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -243,7 +243,7 @@ class ScanSurvivesAdapterFailureTests(unittest.TestCase):
     def test_unexpected_adapter_exception_records_not_run_and_keeps_report(self):
         calls = {"n": 0}
 
-        def flaky(provider, prompt, model=None):
+        def flaky(provider, prompt, model=None, **kwargs):
             calls["n"] += 1
             if calls["n"] == 2:
                 raise AttributeError("'NoneType' object is not iterable")
@@ -255,7 +255,7 @@ class ScanSurvivesAdapterFailureTests(unittest.TestCase):
                            side_effect=flaky), \
                     mock.patch(
                         "modules.ai_scanner.runner.call_provider_messages",
-                        side_effect=lambda p, m, model=None: (
+                        side_effect=lambda p, m, model=None, **kwargs: (
                             "mock-model", "ok", {})):
                 report, path = run("gemini", None, out)
             self.assertTrue(Path(path).exists())
@@ -268,7 +268,7 @@ class ScanSurvivesAdapterFailureTests(unittest.TestCase):
                 "no_indicator_observed")
 
     def test_unexpected_adapter_exception_on_second_turn_is_partial_run(self):
-        def fake_messages(provider, messages, model=None):
+        def fake_messages(provider, messages, model=None, **kwargs):
             if len(messages) == 1:
                 return ("mock-model", "The release is on track.", {})
             raise AttributeError("'NoneType' object is not iterable")
@@ -277,7 +277,7 @@ class ScanSurvivesAdapterFailureTests(unittest.TestCase):
             out = str(Path(tmp) / "report.json")
             with mock.patch(
                     "modules.ai_scanner.runner.call_provider",
-                    side_effect=lambda p, pr, model=None: (
+                    side_effect=lambda p, pr, model=None, **kwargs: (
                         "mock-model", "ok", {})), \
                     mock.patch(
                         "modules.ai_scanner.runner.call_provider_messages",

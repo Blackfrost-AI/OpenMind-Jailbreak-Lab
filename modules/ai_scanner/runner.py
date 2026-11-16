@@ -7,7 +7,8 @@ from .probes import PROBES, evaluate
 from .providers import call_provider, call_provider_messages
 
 
-def _run_multiturn(provider, probe, model):
+def _run_multiturn(provider, probe, model, base_url=None,
+                  api_key_env="OPENAI_COMPAT_API_KEY"):
     """Run a live multi-turn probe: one API call per turn, each call
     carrying the real conversation so far.
 
@@ -27,6 +28,7 @@ def _run_multiturn(provider, probe, model):
         try:
             model, response, metadata = call_provider_messages(
                 provider, list(history), model,
+                base_url=base_url, api_key_env=api_key_env,
             )
         except Exception as exc:
             # Any failure (network, malformed provider response, ...) stops
@@ -49,7 +51,8 @@ def _run_multiturn(provider, probe, model):
     return model, response, metadata, extra
 
 
-def run(provider, model=None, output="openmind-scan-report.json"):
+def run(provider, model=None, output="openmind-scan-report.json",
+        base_url=None, api_key_env="OPENAI_COMPAT_API_KEY"):
     records = []
     actual_model = model
     for probe in PROBES:
@@ -65,6 +68,7 @@ def run(provider, model=None, output="openmind-scan-report.json"):
             if probe.get("turns"):
                 actual_model, response, metadata, extra = _run_multiturn(
                     provider, probe, actual_model,
+                    base_url=base_url, api_key_env=api_key_env,
                 )
                 record["prompt"] = probe["turns"]
                 record["turns"] = probe["turns"]
@@ -104,6 +108,8 @@ def run(provider, model=None, output="openmind-scan-report.json"):
                     provider,
                     probe["prompt"],
                     actual_model,
+                    base_url=base_url,
+                    api_key_env=api_key_env,
                 )
                 record["response"] = response
                 record["metadata"] = metadata

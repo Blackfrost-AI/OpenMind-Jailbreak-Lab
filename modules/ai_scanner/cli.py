@@ -105,12 +105,25 @@ def main(argv=None):
     )
     parser.add_argument(
         "--provider",
-        choices=("openai", "anthropic", "gemini"),
+        choices=("openai", "anthropic", "gemini", "openai-compatible"),
         help="Provider to scan (run mode).",
     )
     parser.add_argument(
         "--model",
         help="Optional provider model identifier.",
+    )
+    parser.add_argument(
+        "--base-url",
+        default=None,
+        help="OpenAI-compatible API base URL "
+             "(openai-compatible provider only).",
+    )
+    parser.add_argument(
+        "--api-key-env",
+        default="OPENAI_COMPAT_API_KEY",
+        help="Environment variable holding the compatible endpoint API "
+             "key; may be empty for local servers "
+             "(openai-compatible provider only).",
     )
     parser.add_argument(
         "--output",
@@ -133,10 +146,20 @@ def main(argv=None):
         return compare_reports(args.reports, args.output)
     if not args.provider:
         parser.error("--provider is required")
+    if args.provider == "openai-compatible":
+        import os
+        if not (args.base_url or os.getenv("OPENAI_COMPAT_BASE_URL")):
+            parser.error(
+                "Set --base-url or OPENAI_COMPAT_BASE_URL for this provider"
+            )
+        if not (args.model or os.getenv("OPENAI_COMPAT_MODEL")):
+            parser.error("Set --model or OPENAI_COMPAT_MODEL for this provider")
     report, path = run(
         args.provider,
         args.model,
         args.output,
+        base_url=args.base_url,
+        api_key_env=args.api_key_env,
     )
     counts = {}
     for item in report["results"]:

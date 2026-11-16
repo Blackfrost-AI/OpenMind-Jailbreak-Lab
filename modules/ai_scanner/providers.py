@@ -1,11 +1,12 @@
 """Minimal standard-library adapters for provider APIs."""
+import ipaddress
 import json
 import math
 import os
 import time
 import urllib.error
 import urllib.request
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 
 class ProviderError(RuntimeError):
@@ -89,13 +90,50 @@ def _with_latency(metadata, started):
     return metadata
 
 
+def _compat_chat_url(base_url):
+    """Resolve an OpenAI-compatible base URL to its chat endpoint.
+
+    Mirrors the guardrail lab's rules: HTTPS for non-loopback hosts,
+    no credentials, query, or fragment in the URL. Appends
+    /chat/completions unless the path already ends with it.
+    """
+    value = base_url.strip().rstrip("/")
+    if not value:
+        raise ProviderError("OpenAI-compatible base URL cannot be empty")
+    parsed = urlsplit(value)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise ProviderError("base URL must be an absolute http(s) URL")
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise ProviderError(
+            "base URL must not contain credentials, query parameters, "
+            "or a fragment"
+        )
+    host = parsed.hostname.casefold()
+    is_loopback = host == "localhost"
+    if not is_loopback:
+        try:
+            is_loopback = ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            is_loopback = False
+    if parsed.scheme != "https" and not is_loopback:
+        raise ProviderError(
+            "HTTPS is required for non-local endpoints; plain HTTP is "
+            "allowed only on loopback"
+        )
+    path = parsed.path.rstrip("/")
+    if path.endswith("/chat/completions"):
+        return value
+    return value + "/chat/completions"
+
+
 def _gemini_content(message):
     """Map one chat message to a Gemini content block."""
     role = "model" if message["role"] == "assistant" else "user"
     return {"role": role, "parts": [{"text": message["content"]}]}
 
 
-def call_provider_messages(provider, messages, model=None):
+def call_provider_messages(provider, messages, model=None, base_url=None,
+                         api_key_env="OPENAI_COMPAT_API_KEY"):
     """Call one provider with a full message list and return
     (model, text, metadata).
 
@@ -107,6 +145,11 @@ def call_provider_messages(provider, messages, model=None):
     latency_seconds. The key is never placed in a URL: Gemini
     authenticates with the x-goog-api-key request header, OpenAI
     and Anthropic with their usual authorization headers.
+    The "openai-compatible" provider talks to any /v1/chat/completions
+    endpoint (DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter, Groq,
+    Together, local servers). It takes its base URL from base_url or
+    OPENAI_COMPAT_BASE_URL, its key from api_key_env (may be empty for
+    local servers), and its model from model or OPENAI_COMPAT_MODEL.
     """
     provider = provider.lower()
     if not messages or not all(
@@ -267,10 +310,66 @@ def call_provider_messages(provider, messages, model=None):
             "finish_reason": finish,
         }), started)
         return model, text, metadata
+    # OPENAI-COMPATIBLE (DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter,
+    # Groq, Together, local servers, and any /v1/chat/completions host)
+    if provider == "openai-compatible":
+        model = model or os.getenv("OPENAI_COMPAT_MODEL")
+        if not model:
+            raise ProviderError(
+                "Set --model or OPENAI_COMPAT_MODEL for this endpoint"
+            )
+        chosen_url = base_url or os.getenv("OPENAI_COMPAT_BASE_URL")
+        if not chosen_url:
+            raise ProviderError(
+                "Set a base URL with --base-url or OPENAI_COMPAT_BASE_URL"
+            )
+        api_key = os.getenv(api_key_env) if api_key_env else None
+        endpoint = _compat_chat_url(chosen_url)
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        body = _post(
+            endpoint,
+            headers,
+            {"model": model, "messages": messages},
+        )
+        choices = body.get("choices")
+        if (not isinstance(choices, list) or not choices
+                or not isinstance(choices[0], dict)):
+            raise ProviderError(
+                "Invalid provider response: 'choices[0]' must be an object"
+            )
+        message = choices[0].get("message")
+        if not isinstance(message, dict) or "content" not in message:
+            raise ProviderError(
+                "Invalid provider response: "
+                "'choices[0].message.content' is required"
+            )
+        content = message["content"]
+        if isinstance(content, list):
+            content = "\n".join(
+                part.get("text", "")
+                for part in content
+                if isinstance(part, dict) and part.get("type") == "text"
+                and isinstance(part.get("text"), str)
+            )
+        if not isinstance(content, str):
+            raise ProviderError(
+                "Invalid provider response: message content must be text"
+            )
+        metadata = _with_latency(_present({
+            "request_id": body.get("id"),
+            "finish_reason": choices[0].get("finish_reason"),
+            "usage": body.get("usage"),
+            "model": body.get("model"),
+            "endpoint_type": "openai-compatible",
+        }), started)
+        return model, content, metadata
     raise ProviderError(f"Unsupported provider: {provider}")
 
 
-def call_provider(provider, prompt, model=None):
+def call_provider(provider, prompt, model=None, base_url=None,
+                  api_key_env="OPENAI_COMPAT_API_KEY"):
     """Call one provider with a single user prompt.
 
     Thin wrapper over call_provider_messages; returns
@@ -280,4 +379,6 @@ def call_provider(provider, prompt, model=None):
         provider,
         [{"role": "user", "content": prompt}],
         model,
+        base_url=base_url,
+        api_key_env=api_key_env,
     )

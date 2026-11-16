@@ -25,6 +25,15 @@ PRESET_BASE_URLS = {
     "lm-studio": "http://localhost:1234/v1",
     "llama-cpp": "http://localhost:8080/v1",
     "localai": "http://localhost:8080/v1",
+    # Hosted OpenAI-compatible providers. Each needs its own API key
+    # in OPENAI_COMPAT_API_KEY (or --api-key-env) and a --model.
+    "deepseek": "https://api.deepseek.com/v1",
+    "glm": "https://open.bigmodel.cn/api/paas/v4",
+    "moonshot": "https://api.moonshot.ai/v1",
+    "nvidia": "https://integrate.api.nvidia.com/v1",
+    "openrouter": "https://openrouter.ai/api/v1",
+    "groq": "https://api.groq.com/openai/v1",
+    "together": "https://api.together.xyz/v1",
 }
 
 MAX_ATTEMPTS = 3

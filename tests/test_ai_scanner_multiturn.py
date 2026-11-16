@@ -137,7 +137,7 @@ class LiveRunnerTests(unittest.TestCase):
     def _fake_messages(self, responses):
         seen = []
 
-        def fake(provider, messages, model=None):
+        def fake(provider, messages, model=None, **kwargs):
             seen.append(list(messages))
             index = len(seen) - 1
             return (
@@ -152,7 +152,7 @@ class LiveRunnerTests(unittest.TestCase):
         out = str(Path(tmp) / "report.json")
         fake_call, seen = self._fake_messages(message_responses)
 
-        def fake_single(provider, prompt, model=None):
+        def fake_single(provider, prompt, model=None, **kwargs):
             return "gemini-3.5-flash-lite", "an answer", {}
 
         with mock.patch("modules.ai_scanner.runner.call_provider",

@@ -167,6 +167,37 @@ class OpenAICompatibleTests(unittest.TestCase):
         self.assertEqual(text, "ok")
         self.assertEqual(attempts["n"], 2)
 
+    def test_hosted_presets_have_documented_base_urls(self):
+        from modules.guardrail_lab.openai_compatible import PRESET_BASE_URLS
+
+        expected = {
+            "deepseek": "https://api.deepseek.com/v1",
+            "glm": "https://open.bigmodel.cn/api/paas/v4",
+            "moonshot": "https://api.moonshot.ai/v1",
+            "nvidia": "https://integrate.api.nvidia.com/v1",
+            "openrouter": "https://openrouter.ai/api/v1",
+            "groq": "https://api.groq.com/openai/v1",
+            "together": "https://api.together.xyz/v1",
+        }
+        for name, url in expected.items():
+            with self.subTest(preset=name):
+                self.assertEqual(PRESET_BASE_URLS[name], url)
+
+    def test_preset_name_resolves_to_its_base_url(self):
+        from modules.guardrail_lab.cli import _adapter
+
+        with patch(
+            "modules.guardrail_lab.cli.call_openai_compatible",
+            return_value=("m", "ok", {}),
+        ) as compat:
+            call = _adapter("openrouter", "some-model")
+            _, text, _ = call([{"role": "user", "content": "x"}])
+        self.assertEqual(text, "ok")
+        self.assertEqual(
+            compat.call_args.kwargs["base_url"],
+            "https://openrouter.ai/api/v1",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
