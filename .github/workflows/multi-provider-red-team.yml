@@ -57,7 +57,7 @@ jobs:
             ''|*[!0-9]*) echo "Budget must be an integer from 1 to 24"; exit 2 ;;
           esac
           if [ "$BUDGET" -lt 1 ] || [ "$BUDGET" -gt 24 ]; then
-            echo "Budget must be an integer from 1 to 16"; exit 2
+            echo "Budget must be an integer from 1 to 24"; exit 2
           fi
       - name: Validate endpoint configuration
         env:
