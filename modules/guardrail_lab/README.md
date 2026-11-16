@@ -46,7 +46,7 @@ The lab does not attempt to obtain real secrets, compromise accounts, execute un
 * Anthropic / Claude
 * Google Gemini
 
-These use the repository's shared provider adapter — see [INTEGRATION.md](INTEGRATION.md).
+These use the repository's shared provider adapter — see [INTEGRATION.md](INTEGRATION.md). For cross-provider mocked adapter regression tests and comparable live-run guidance, see [PROVIDER_MATRIX.md](PROVIDER_MATRIX.md).
 
 ### Hosted OpenAI-compatible providers
 
