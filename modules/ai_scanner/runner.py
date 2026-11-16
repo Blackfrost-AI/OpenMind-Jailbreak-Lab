@@ -93,6 +93,7 @@ def run(provider, model=None, output="openmind-scan-report.json",
                     record["metadata"] = metadata
                     record["evaluation"] = evaluate(probe, response)
                     record["error"] = None
+                    record["error_details"] = None
                 else:
                     record["response"] = None
                     record["metadata"] = (
