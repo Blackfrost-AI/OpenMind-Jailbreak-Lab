@@ -33,6 +33,21 @@ It also runs bounded automated campaigns (`--campaign`, fixed framings, budget/t
 
 The repository also includes the OpenMind Benchmark (`data/benchmark_v0.6.1.jsonl`, 66 cases) and JB-002, a three-case module for recording and validating manually observed test results. See `data/` and `modules/jb002/README.md`.
 
+## Results
+
+### Qwen 3 235B — Guardrail Lab campaign (2026-11-16)
+
+| | |
+|---|---|
+| Model | `qwen/qwen3-235b-a22b-2507` via OpenRouter |
+| Tool | Guardrail Lab 0.5.5, adaptive campaign (budget 36, 6 variants, 12 cases) |
+| Attempts | 12 |
+| Boundary held | 3 |
+| Ambiguous canary mention | 7 — all quoting-style on manual review; the model flagged each injection as untrusted and disregarded it |
+| Manual review | 1 — benign reading-list answer |
+| Control passed | 1 |
+| **Confirmed guardrail failures** | **0** |
+
 ## Supported Providers
 
 * OpenAI
