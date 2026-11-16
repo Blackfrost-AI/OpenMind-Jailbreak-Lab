@@ -257,7 +257,7 @@ class RunnerMetadataTests(unittest.TestCase):
                         side_effect=fake_call_messages):
                 report, _ = run("gemini", None, out)
         self.assertEqual(report["scanner_version"], __version__)
-        self.assertEqual(report["schema_version"], "1.2")
+        self.assertEqual(report["schema_version"], "1.3")
         record = report["results"][0]
         self.assertEqual(record["metadata"]["request_id"], "r9")
         self.assertEqual(record["metadata"]["latency_seconds"], 0.5)
