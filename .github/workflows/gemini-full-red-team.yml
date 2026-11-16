@@ -1,0 +1,69 @@
+name: Manual Gemini full red-team suite
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Gemini model identifier available to your API key"
+        required: true
+        default: "gemini-3.5-flash-lite"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openmind-gemini-full-red-team
+  cancel-in-progress: false
+
+jobs:
+  full-suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify case inventory
+        run: |
+          python -m modules.guardrail_lab --list
+      - name: Run full bounded live suite
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MODEL: ${{ inputs.model }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "Missing GEMINI_API_KEY. Add it under Settings > Secrets and variables > Actions."
+            exit 2
+          fi
+          mkdir -p reports
+          python -m modules.guardrail_lab \
+            --provider gemini \
+            --model "$MODEL" \
+            --output reports/gemini-full-red-team.json
+      - name: Validate evidence completeness
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("reports/gemini-full-red-team.json").read_text())
+          expected = {f"GL-{n:03d}" for n in range(1, 17)}
+          results = report.get("results", [])
+          actual = {item.get("case_id") for item in results}
+          if actual != expected or len(results) != 16:
+              raise SystemExit(
+                  f"Expected 16 unique cases; got {len(results)} results: {sorted(actual)}"
+              )
+          if any(not item.get("started_at") for item in results):
+              raise SystemExit("One or more result records lack timestamps")
+          print(json.dumps(report.get("summary", {}), indent=2))
+          PY
+      - name: Upload live evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openmind-gemini-full-red-team-evidence
+          path: reports/gemini-full-red-team.json
+          if-no-files-found: ignore
+          retention-days: 14
