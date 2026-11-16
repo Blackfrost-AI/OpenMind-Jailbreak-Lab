@@ -5,7 +5,7 @@ from pathlib import Path
 
 INCONCLUSIVE_ASSESSMENTS = {
     "inconclusive", "partial_run", "not_run", "incomplete",
-    "partial", "empty", "not_received",
+    "partial", "empty", "not_received", "unknown",
 }
 INCONCLUSIVE_RESPONSE_STATUSES = {
     "incomplete", "partial", "empty", "not_received",
