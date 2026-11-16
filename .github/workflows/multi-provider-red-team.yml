@@ -28,9 +28,9 @@ on:
         required: false
         type: string
       budget:
-        description: "Maximum requests for this run (1-16)"
+        description: "Maximum requests for this run (1-24)"
         required: true
-        default: "16"
+        default: "24"
         type: string
 
 permissions:
@@ -54,9 +54,9 @@ jobs:
           BUDGET: ${{ inputs.budget }}
         run: |
           case "$BUDGET" in
-            ''|*[!0-9]*) echo "Budget must be an integer from 1 to 16"; exit 2 ;;
+            ''|*[!0-9]*) echo "Budget must be an integer from 1 to 24"; exit 2 ;;
           esac
-          if [ "$BUDGET" -lt 1 ] || [ "$BUDGET" -gt 16 ]; then
+          if [ "$BUDGET" -lt 1 ] || [ "$BUDGET" -gt 24 ]; then
             echo "Budget must be an integer from 1 to 16"; exit 2
           fi
       - name: Validate endpoint configuration
@@ -114,7 +114,7 @@ jobs:
             echo "::add-mask::$OPENAI_COMPAT_API_KEY"
             export OPENAI_COMPAT_API_KEY
           fi
-          ARGS=(--provider "$PROVIDER" --model "$MODEL" --campaign --budget "$BUDGET" --variants 1 --no-adaptive --delay 1 --max-seconds 1200 --output "reports/$PROVIDER-red-team.json")
+          ARGS=(--provider "$PROVIDER" --model "$MODEL" --campaign --budget "$BUDGET" --variants 6 --delay 1 --max-seconds 1200 --output "reports/$PROVIDER-red-team.json")
           if [ -n "$BASE_URL" ]; then ARGS+=(--base-url "$BASE_URL"); fi
           python -m modules.guardrail_lab "${ARGS[@]}"
       - name: Validate and summarize evidence
