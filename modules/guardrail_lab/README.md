@@ -1,6 +1,6 @@
 # OpenMind Guardrail Lab
 
-**Version:** 0.5.8
+**Version:** 0.5.9
 **Purpose:** Authorized, evidence-first AI guardrail and instruction-boundary vulnerability research.
 
 OpenMind Guardrail Lab is a Python testing framework for evaluating how AI models handle untrusted instructions, prompt injection, context manipulation, and instruction-boundary conflicts.
@@ -309,6 +309,13 @@ it picks previously untested fixed envelopes per case, ordered by the
 latest reviewed assessment, with duplicate prevention and a request
 budget — coverage only, never payload intensity, and it never declares
 a bypass.
+
+## Version 0.5.9
+
+- Fix: `rank_findings()` counted reviewer-rejected findings as triage.
+  Rejected findings now go to a separate `rejected` list with a
+  `rejected_count`; triage holds only `needs_review` items. Found while
+  ranking the first full Gemini discovery sweep (72 cases).
 
 ## Version 0.5.8
 

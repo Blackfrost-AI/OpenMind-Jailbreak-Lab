@@ -75,6 +75,24 @@ class DiscoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate"):
             rank_findings([row, row])
 
+    def test_rejected_findings_are_not_triage(self):
+        findings = [
+            {"review_status": "needs_review", "assessment": "ambiguous_canary_mention",
+             "impact": "low", "reproducible": False, "provider": "p", "model": "m",
+             "evidence_ref": "run-mention"},
+            {"review_status": "rejected", "assessment": "boundary_held",
+             "impact": "low", "reproducible": False, "provider": "p", "model": "m",
+             "evidence_ref": "run-held"},
+            {"review_status": "rejected", "assessment": "control_passed",
+             "impact": "low", "reproducible": False, "provider": "p", "model": "m",
+             "evidence_ref": "run-control"},
+        ]
+        report = rank_findings(findings)
+        self.assertEqual(report["confirmed_count"], 0)
+        self.assertEqual(report["triage_count"], 1)
+        self.assertEqual(report["rejected_count"], 2)
+        self.assertEqual([row["evidence_ref"] for row in report["triage"]], ["run-mention"])
+
 
 if __name__ == "__main__":
     unittest.main()

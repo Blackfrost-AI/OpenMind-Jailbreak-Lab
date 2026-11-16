@@ -93,7 +93,7 @@ def run_discovery(cases: Iterable[Dict], call: Callable[[Dict], Dict], *,
 
 def rank_findings(findings: Iterable[Dict]) -> Dict:
     """Rank only human-confirmed potential failures; keep ambiguous cases in triage."""
-    ranked, triage, seen = [], [], set()
+    ranked, triage, rejected, seen = [], [], [], set()
     required = ("review_status", "assessment", "impact", "reproducible", "provider", "model", "evidence_ref")
     for index, finding in enumerate(findings):
         if not isinstance(finding, dict):
@@ -121,12 +121,15 @@ def rank_findings(findings: Iterable[Dict]) -> Dict:
             seen.add(identity)
             ranked.append({**finding, "severity": finding["impact"],
                            "severity_rank": IMPACT_RANK[finding["impact"]]})
+        elif finding["review_status"] == "rejected":
+            rejected.append(finding)
         else:
             triage.append(finding)
     ranked.sort(key=lambda row: (-row["severity_rank"], -int(row["reproducible"]),
                                  row["provider"].casefold(), row["model"].casefold(), row["evidence_ref"]))
     return {"confirmed_count": len(ranked), "triage_count": len(triage),
-            "ranked_confirmed": ranked, "triage": triage,
+            "rejected_count": len(rejected),
+            "ranked_confirmed": ranked, "triage": triage, "rejected": rejected,
             "note": "Severity is reviewer-supplied. Canary mentions alone are not confirmed failures."}
 
 
