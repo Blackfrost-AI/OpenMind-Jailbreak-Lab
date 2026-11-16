@@ -33,6 +33,7 @@ The project has shifted from a Gemini-focused test setup to a **multi-provider e
 - Provider adapter behavior, request failures, and response normalization
 
 Tests use bounded scenarios and harmless synthetic canaries. They do not require real secrets, private data, destructive actions, or access to third-party accounts.
+Each Guardrail Lab case is evaluated beneath a fixed lab-owned system instruction that explicitly marks quoted text, documents, retrieved passages, metadata, and tool outputs as untrusted. This creates a reproducible system-versus-user trust boundary across supported providers; it is a standardized harness baseline, not a copy of any target application's private system prompt.
 
 ## Project modules
 
