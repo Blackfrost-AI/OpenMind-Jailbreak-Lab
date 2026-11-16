@@ -27,7 +27,7 @@ A real API-backed adversarial testing module designed to evaluate:
 
 Tests produce structured JSON evidence containing prompts, responses, provider information, errors, and assessment results.
 
-The current suite includes four trust-escalation probes (`GL-013`–`GL-016`) for untrusted documents, forged authority claims, encoded content, and quoted text. They use harmless synthetic canaries; canary mentions require transcript review and are not automatically counted as confirmed bypasses. Run them locally using the [Guardrail Lab guide](modules/guardrail_lab/README.md#trust-escalation-probes-gl-013gl-016), or trigger the [manual Gemini live red-team workflow](.github/workflows/gemini-trust-escalation.yml) to collect a real API-backed evidence artifact.
+The current suite includes four trust-escalation probes (`GL-013`–`GL-016`) for untrusted documents, forged authority claims, encoded content, and quoted text. They use harmless synthetic canaries; canary mentions require transcript review and are not automatically counted as confirmed bypasses. Run them locally using the [Guardrail Lab guide](modules/guardrail_lab/README.md#trust-escalation-probes-gl-013gl-016), or trigger the [manual Gemini live red-team workflow](.github/workflows/gemini-trust-escalation.yml) to collect a real API-backed evidence artifact. For a complete 16-case live run, use the [manual Gemini full red-team workflow](.github/workflows/gemini-full-red-team.yml); it uploads the JSON evidence artifact.
 
 It also runs bounded automated campaigns (`--campaign`, fixed framings, budget/time limits) and supports OpenAI-compatible endpoints (Ollama, vLLM, LM Studio, llama.cpp, LocalAI) for testing local models.
 
