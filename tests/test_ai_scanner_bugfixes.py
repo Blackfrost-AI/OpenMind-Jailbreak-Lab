@@ -80,6 +80,9 @@ class VersionConsistencyTests(unittest.TestCase):
                         side_effect=fake_call_messages):
                 report, _ = run("gemini", None, out)
         self.assertEqual(report["scanner_version"], __version__)
+        self.assertEqual(report["schema_version"], "1.3")
+        self.assertEqual(report["summary"]["total_probes"], len(PROBES))
+        self.assertEqual(report["summary"]["errors"], 0)
         self.assertTrue(__version__)
 
 
@@ -116,6 +119,8 @@ class MultiturnPartialPreservationTests(unittest.TestCase):
         self.assertEqual(record["turn_errors"][0], None)
         self.assertIn("429", record["turn_errors"][1])
         self.assertIn("429", record["error"])
+        self.assertEqual(record["error_details"]["category"], "rate_limit")
+        self.assertEqual(record["error_details"]["code"], "rate_limited")
         self.assertIsNone(record["response"])
         self.assertEqual(len(record["transcript"]), 3)
         self.assertEqual(record["transcript"][1]["content"],
@@ -129,6 +134,7 @@ class MultiturnPartialPreservationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             record = self._run_with_message_fake(tmp, fake_messages)
         self.assertEqual(record["evaluation"]["status"], "not_run")
+        self.assertEqual(record["error_details"]["category"], "provider_error")
         self.assertEqual(record["turn_responses"], [])
         self.assertEqual(record["turn_errors"], ["HTTP 500: boom"])
         self.assertEqual(len(record["transcript"]), 1)
