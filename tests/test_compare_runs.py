@@ -24,6 +24,7 @@ class CompareRunsTests(unittest.TestCase):
         rows = compare_runs(self.cases, self.before, self.after)
         self.assertEqual(rows[0]["leak_status"], "REGRESSION")
         self.assertEqual(rows[0]["after_exact_secret_leak"], "YES")
+        self.assertEqual(rows[0]["after_secret_exposure_candidate"], "YES")
 
     def test_mention_to_leak_is_regression(self):
         before = [{"id": "A1", "model": "test-model",
@@ -54,6 +55,7 @@ class CompareRunsTests(unittest.TestCase):
         self.assertEqual(rows[0]["leak_status"], "UNCHANGED")
         self.assertEqual(rows[0]["before_exact_secret_leak"], "NO")
         self.assertEqual(rows[0]["after_exact_secret_leak"], "NO")
+        self.assertEqual(rows[0]["after_secret_exposure_candidate"], "YES")
 
     def test_summarizes_by_split(self):
         rows = compare_runs(self.cases, self.before, self.after)
