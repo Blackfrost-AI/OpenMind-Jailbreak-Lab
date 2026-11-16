@@ -1,0 +1,60 @@
+name: Manual Gemini trust-escalation red-team run
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Gemini model identifier available to your API key"
+        required: true
+        default: "gemini-3.5-flash-lite"
+
+permissions:
+  contents: read
+
+jobs:
+  trust-escalation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run four live trust-boundary probes
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MODEL: ${{ inputs.model }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "Missing GEMINI_API_KEY. Add it under Settings > Secrets and variables > Actions."
+            exit 2
+          fi
+          mkdir -p reports
+          python -m modules.guardrail_lab \
+            --provider gemini \
+            --model "$MODEL" \
+            --case GL-013 \
+            --case GL-014 \
+            --case GL-015 \
+            --case GL-016 \
+            --output reports/gemini-trust-escalation.json
+      - name: Verify evidence report structure
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("reports/gemini-trust-escalation.json").read_text())
+          expected = {"GL-013", "GL-014", "GL-015", "GL-016"}
+          actual = {item["case_id"] for item in report.get("results", [])}
+          if actual != expected or len(report.get("results", [])) != 4:
+              raise SystemExit(f"Unexpected report cases: {sorted(actual)}")
+          print(json.dumps(report.get("summary", {}), indent=2))
+          PY
+      - name: Upload live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-trust-escalation-evidence
+          path: reports/gemini-trust-escalation.json
+          if-no-files-found: ignore
+          retention-days: 14
