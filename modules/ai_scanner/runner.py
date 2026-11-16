@@ -4,7 +4,13 @@ from pathlib import Path
 import json
 from . import __version__
 from .probes import PROBES, evaluate
-from .providers import call_provider, call_provider_messages
+from .providers import ProviderError, call_provider, call_provider_messages
+
+def _error_details(exc):
+    if isinstance(exc, ProviderError):
+        return exc.as_dict()
+    return {"category": "unexpected", "code": "unexpected_error",
+            "http_status": None, "retryable": False, "message": str(exc)}
 
 
 def _run_multiturn(provider, probe, model, base_url=None,
@@ -21,6 +27,7 @@ def _run_multiturn(provider, probe, model, base_url=None,
     turn_responses = []
     turn_metadata = []
     turn_errors = []
+    turn_error_details = []
     response = ""
     metadata = {}
     for turn in probe["turns"]:
@@ -35,8 +42,10 @@ def _run_multiturn(provider, probe, model, base_url=None,
             # the session, but the error and every completed turn are
             # preserved instead of being discarded.
             turn_errors.append(str(exc))
+            turn_error_details.append(_error_details(exc))
             break
         turn_errors.append(None)
+        turn_error_details.append(None)
         turn_responses.append(response)
         turn_metadata.append(metadata)
         history.append({"role": "assistant", "content": response})
@@ -47,6 +56,7 @@ def _run_multiturn(provider, probe, model, base_url=None,
         "turn_responses": turn_responses,
         "turn_metadata": turn_metadata,
         "turn_errors": turn_errors,
+        "turn_error_details": turn_error_details,
     }
     return model, response, metadata, extra
 
@@ -90,6 +100,7 @@ def run(provider, model=None, output="openmind-scan-report.json",
                         if extra["turn_metadata"] else {}
                     )
                     record["error"] = extra["turn_errors"][failed]
+                    record["error_details"] = extra["turn_error_details"][failed]
                     if failed == 0:
                         record["evaluation"] = {"status": "not_run"}
                     else:
@@ -115,6 +126,7 @@ def run(provider, model=None, output="openmind-scan-report.json",
                 record["metadata"] = metadata
                 record["evaluation"] = evaluate(probe, response)
                 record["error"] = None
+                record["error_details"] = None
         except Exception as exc:
             # A provider failure (including a malformed provider response
             # that is not a ProviderError) records this probe as not run
@@ -125,9 +137,10 @@ def run(provider, model=None, output="openmind-scan-report.json",
                 "status": "not_run"
             }
             record["error"] = str(exc)
+            record["error_details"] = _error_details(exc)
         records.append(record)
     report = {
-        "schema_version": "1.2",
+        "schema_version": "1.3",
         "scanner_version": __version__,
         "provider": provider,
         "model": actual_model,
@@ -151,6 +164,13 @@ def run(provider, model=None, output="openmind-scan-report.json",
             "reliably detect semantic failures such as paraphrased "
             "compliance or reworded disclosures.",
         ],
+        "summary": {
+            "total_probes": len(records),
+            "completed": sum(item["evaluation"]["status"] not in ("not_run", "partial_run") for item in records),
+            "partial": sum(item["evaluation"]["status"] == "partial_run" for item in records),
+            "not_run": sum(item["evaluation"]["status"] == "not_run" for item in records),
+            "errors": sum(item.get("error") is not None for item in records),
+        },
         "results": records,
     }
     path = Path(output)
