@@ -32,7 +32,7 @@ def main(argv=None):
     parser.add_argument("--list", action="store_true", help="List cases without making API calls")
     parser.add_argument("--campaign", action="store_true", help="Run an automated, bounded adaptive campaign")
     parser.add_argument("--budget", type=int, default=36, help="Maximum test requests (1-1000; default: 36); provider retries may add HTTP attempts")
-    parser.add_argument("--variants", type=int, choices=[1, 2, 3], default=3, help="Fixed safe prompt framings per flagged case (default: 3)")
+    parser.add_argument("--variants", type=int, choices=[1, 2, 3, 4, 5, 6], default=3, help="Maximum reviewed prompt framings per flagged case")
     parser.add_argument("--no-adaptive", action="store_true", help="Disable evidence-triggered follow-up variations")
     parser.add_argument("--delay", type=float, default=0.0, help="Seconds between API calls")
     parser.add_argument("--max-seconds", type=float, default=None, help="Stop scheduling new requests after this many seconds; cannot interrupt an in-flight API request")

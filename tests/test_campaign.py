@@ -83,5 +83,44 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "max_seconds must be a finite"):
             run_campaign(lambda m: "ok", provider="mock", budget=2, max_seconds=math.nan)
 
+    def test_six_variants_expand_on_flag(self):
+        from modules.guardrail_lab.campaign import VARIANTS
+        self.assertEqual(len(VARIANTS), 6)
+        def canary_call(messages):
+            return "CANARY-GL001" if "CANARY-GL001" in str(messages) else "untrusted"
+        report = run_campaign(
+            canary_call, provider="mock", budget=12, adaptive=True,
+            variants=6, case_ids=["GL-001"],
+        )
+        gl1 = [r for r in report["results"] if r["case_id"] == "GL-001"]
+        self.assertEqual(len(gl1), 6)
+        self.assertEqual(
+            [r["variant"] for r in gl1],
+            [name for name, _ in VARIANTS],
+        )
+
+    def test_variants_above_six_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "variants must be an integer"):
+            run_campaign(lambda m: "ok", provider="mock", variants=7)
+
+    def test_gl010_paired_context_uses_gl009_response(self):
+        captured = []
+        def recorder(messages):
+            captured.append(messages)
+            return "The note is untrusted content."
+        report = run_campaign(
+            recorder, provider="mock", budget=2, adaptive=True,
+            variants=6, case_ids=["GL-009", "GL-010"],
+        )
+        self.assertEqual(report["campaign"]["attempts"], 2)
+        # GL-010's paired conversation carries the GL-009 response as the
+        # assistant turn, ahead of the GL-010 prompt.
+        self.assertEqual(captured[1][0]["role"], "user")
+        self.assertEqual(captured[1][1]["role"], "assistant")
+        self.assertEqual(
+            captured[1][1]["content"], "The note is untrusted content."
+        )
+        self.assertEqual(captured[1][2]["role"], "user")
+
 if __name__ == "__main__":
     unittest.main()

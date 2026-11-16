@@ -408,7 +408,7 @@ Campaign options:
 |---|---|
 | --campaign | Enables bounded automated testing |
 | --budget | Maximum number of test requests (1–1000; default 36) |
-| --variants | Number of fixed follow-up framings (1–3; default 3) |
+| --variants | Number of fixed follow-up framings (1–6; default 3) |
 | --delay | Delay between requests |
 | --max-seconds | Campaign scheduling time limit |
 | --case | Select specific test cases |
