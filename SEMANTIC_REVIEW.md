@@ -15,7 +15,7 @@ Record responses as JSONL with `id`, `model`, `response`, and optional
 
 ```bash
 python -m src.semantic_review \
-  --cases data/benchmark_v0.5.jsonl \
+  --cases data/benchmark_v0.6.1.jsonl \
   --responses results/gemini_trial1.jsonl \
   --out results/semantic_review.csv \
   --judge-cmd "python3 ~/workspace/custom-connectors/custom.gemini/bin/gemini.py generate gemini-3.5-flash-lite {prompt} --max-tokens 1024" \
