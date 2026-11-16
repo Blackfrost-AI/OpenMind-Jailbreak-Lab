@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 import json
+import time
 from . import __version__
 from .probes import PROBES, evaluate
 from .providers import ProviderError, call_provider, call_provider_messages
@@ -33,7 +34,10 @@ def _run_multiturn(provider, probe, model, base_url=None,
     for turn in probe["turns"]:
         history.append({"role": "user", "content": turn})
         try:
-            model, response, metadata = call_provider_messages(
+            (
+                model, response, metadata, attempts, inconclusive
+            ) = _call_with_incomplete_retry(
+                call_provider_messages,
                 provider, list(history), model,
                 base_url=base_url, api_key_env=api_key_env,
             )
@@ -111,10 +115,29 @@ def run(provider, model=None, output="openmind-scan-report.json",
                      if err is not None),
                     None,
                 )
-                if failed is None:
+                inconclusive_turn = next(
+                    (i for i, value in enumerate(extra["turn_inconclusive"])
+                     if value),
+                    None,
+                )
+                if failed is None and inconclusive_turn is None:
                     record["response"] = response
                     record["metadata"] = metadata
                     record["evaluation"] = evaluate(probe, response)
+                    record["error"] = None
+                    record["error_details"] = None
+                elif failed is None:
+                    record["response"] = response
+                    record["metadata"] = metadata
+                    record["evaluation"] = {
+                        "status": "inconclusive",
+                        "matched_canaries": [],
+                        "note": (
+                            f"Turn {inconclusive_turn + 1} remained incomplete "
+                            "after the bounded retry policy; no pass/fail "
+                            "judgment was made."
+                        ),
+                    }
                     record["error"] = None
                     record["error_details"] = None
                 else:
@@ -139,16 +162,31 @@ def run(provider, model=None, output="openmind-scan-report.json",
                         }
             else:
                 record["prompt"] = probe["prompt"]
-                actual_model, response, metadata = call_provider(
+                (
+                    actual_model, response, metadata, attempts, inconclusive
+                ) = _call_with_incomplete_retry(
+                    call_provider,
                     provider,
                     probe["prompt"],
                     actual_model,
                     base_url=base_url,
                     api_key_env=api_key_env,
                 )
+                record["response_attempts"] = attempts
                 record["response"] = response
                 record["metadata"] = metadata
-                record["evaluation"] = evaluate(probe, response)
+                if inconclusive:
+                    record["evaluation"] = {
+                        "status": "inconclusive",
+                        "matched_canaries": [],
+                        "note": (
+                            "Provider generation remained incomplete after "
+                            "the bounded retry policy; no pass/fail "
+                            "judgment was made."
+                        ),
+                    }
+                else:
+                    record["evaluation"] = evaluate(probe, response)
                 record["error"] = None
                 record["error_details"] = None
         except Exception as exc:
@@ -219,7 +257,7 @@ def run(provider, model=None, output="openmind-scan-report.json",
                 for item in records
             ),
             "provider_responses_completed": response_statuses.count("text_returned"),
-            "provider_responses_incomplete": response_statuses.count("incomplete"),
+            "provider_responses_incomplete": response_statuses.count("incomplete"),\n            "inconclusive": sum(\n                item["evaluation"]["status"] == "inconclusive"\n                for item in records\n            ),
             "provider_responses_partial": response_statuses.count("partial"),
             "provider_responses_empty": response_statuses.count("empty"),
             "provider_responses_not_received": response_statuses.count("not_received"),
@@ -248,3 +286,60 @@ def run(provider, model=None, output="openmind-scan-report.json",
         encoding="utf-8",
     )
     return report, path
+
+
+INCOMPLETE_RESPONSE_RETRIES = 1
+INCOMPLETE_RESPONSE_RETRY_DELAY_SECONDS = 0.5
+
+
+def _incomplete_retryable(metadata):
+    """Retry only ambiguous incomplete generations, never known hard stops."""
+    metadata = metadata if isinstance(metadata, dict) else {}
+    status = str(metadata.get("status") or "").casefold()
+    reason = str(
+        metadata.get("stop_reason")
+        or metadata.get("finish_reason")
+        or ""
+    ).casefold()
+    details = metadata.get("incomplete_details")
+    if isinstance(details, dict):
+        detail_reason = str(details.get("reason") or "").casefold()
+        if detail_reason in {
+            "max_output_tokens", "max_tokens", "length",
+            "content_filter", "safety",
+        }:
+            return False
+    if reason in {
+        "max_output_tokens", "max_tokens", "length",
+        "content_filter", "safety", "refusal",
+    }:
+        return False
+    return status == "incomplete" or reason in {"error", "other"}
+
+
+def _call_with_incomplete_retry(call, *args, **kwargs):
+    """Retry one ambiguous incomplete generation once and preserve attempts.
+
+    Known output-limit and safety stops are not retried. A response is
+    usable only when the final attempt is not explicitly incomplete.
+    """
+    attempts = []
+    for attempt_number in range(1, INCOMPLETE_RESPONSE_RETRIES + 2):
+        model, response, metadata = call(*args, **kwargs)
+        metadata = metadata if isinstance(metadata, dict) else {}
+        attempts.append({
+            "attempt": attempt_number,
+            "response": response,
+            "metadata": metadata,
+        })
+        status = _provider_response_status(response, metadata)
+        if status != "incomplete":
+            return model, response, metadata, attempts, False
+        if (
+            attempt_number > INCOMPLETE_RESPONSE_RETRIES
+            or not _incomplete_retryable(metadata)
+        ):
+            return model, response, metadata, attempts, True
+        time.sleep(INCOMPLETE_RESPONSE_RETRY_DELAY_SECONDS)
+    raise AssertionError("unreachable retry loop")
+
