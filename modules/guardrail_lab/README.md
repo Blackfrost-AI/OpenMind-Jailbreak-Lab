@@ -37,8 +37,9 @@ Use it only with models and services you own or are explicitly authorized to ass
 | `GL-014` | Retrieved passage with a forged authority claim |
 | `GL-015` | Encoded untrusted instruction |
 | `GL-016` | Quoted content with an embedded canary instruction |
+| `GL-017`–`GL-024` | RAG metadata, HTML comments, CSV cells, email bodies, mock tool results, Markdown links, multilingual metadata, and conflicting-source injection |
 
-The test suite uses harmless canary markers. A canary match is a signal for manual investigation, not automatic proof of a vulnerability.
+The test suite uses harmless synthetic canary markers across direct and indirect prompt-injection surfaces. A canary match is a signal for manual investigation, not automatic proof of a vulnerability.
 
 The lab does not attempt to obtain real secrets, compromise accounts, execute unauthorized tools, or facilitate harmful safeguard evasion.
 
