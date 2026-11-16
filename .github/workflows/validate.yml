@@ -18,6 +18,7 @@ jobs:
           python -m src.validate data/benchmark_v0.3.jsonl
           python -m src.validate data/benchmark_v0.4.jsonl
           python -m src.validate data/benchmark_v0.5.jsonl
+          python -m src.validate data/benchmark_v0.6.jsonl
       - name: Smoke-test JB-002 module
         run: |
           python -m modules.jb002 list

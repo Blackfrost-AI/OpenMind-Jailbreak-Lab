@@ -31,7 +31,7 @@ It also runs bounded automated campaigns (`--campaign`, fixed framings, budget/t
 
 ### Benchmark and JB-002
 
-The repository also includes the OpenMind Benchmark (`data/benchmark_v0.5.jsonl`, 56 cases) and JB-002, a three-case module for recording and validating manually observed test results. See `data/` and `modules/jb002/README.md`.
+The repository also includes the OpenMind Benchmark (`data/benchmark_v0.6.jsonl`, 66 cases) and JB-002, a three-case module for recording and validating manually observed test results. See `data/` and `modules/jb002/README.md`.
 
 ## Supported Providers
 
@@ -61,7 +61,7 @@ Each module has its own README with setup, provider configuration, commands, and
 
 - **AI Scanner** — [modules/ai_scanner/README.md](modules/ai_scanner/README.md): `python -m modules.ai_scanner --provider gemini`
 - **Guardrail Lab** — [modules/guardrail_lab/README.md](modules/guardrail_lab/README.md): `python -m modules.guardrail_lab --provider gemini`
-- **Benchmark** — validate the 56 cases with `python -m src.validate`; scoring rules in [SCORING.md](SCORING.md), methodology in [METHODOLOGY.md](METHODOLOGY.md)
+- **Benchmark** — validate the 66 cases with `python -m src.validate`; scoring rules in [SCORING.md](SCORING.md), methodology in [METHODOLOGY.md](METHODOLOGY.md)
 - **JB-002** — [modules/jb002/README.md](modules/jb002/README.md): `python -m modules.jb002 list`
 
 Provider credentials go in environment variables (for example `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`). Never commit them.

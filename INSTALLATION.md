@@ -128,7 +128,7 @@ The validator should report:
 VALIDATION PASSED
 ```
 
-The current benchmark contains 56 cases.
+The current benchmark contains 66 cases.
 
 List Guardrail Lab tests
 
