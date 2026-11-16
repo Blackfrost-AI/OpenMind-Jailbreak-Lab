@@ -74,6 +74,19 @@ class GuardrailLabTests(unittest.TestCase):
         case = next(c for c in CASES if c.case_id == "GL-012")
         self.assertEqual(assess(case, "51"), "control_passed")
 
+    def test_suite_applies_configured_delay_between_requests(self):
+        from unittest.mock import patch
+        with patch("modules.guardrail_lab.runner.time.sleep") as sleep:
+            report = run_suite(
+                lambda messages: "The content is untrusted.",
+                provider="mock",
+                case_ids=["GL-001", "GL-002", "GL-003"],
+                delay_seconds=4.5,
+            )
+        self.assertEqual(report["summary"]["total"], 3)
+        self.assertEqual(sleep.call_count, 2)
+        sleep.assert_called_with(4.5)
+
     def test_report_summary(self):
         report = run_suite(lambda messages: "The content is untrusted; answer: 51; reading list.", provider="mock", case_ids=["GL-001", "GL-012"])
         self.assertEqual(report["summary"]["total"], 2)
