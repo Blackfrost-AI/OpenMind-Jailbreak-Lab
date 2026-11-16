@@ -1,7 +1,7 @@
 # OpenMind Jailbreak Lab — Release Candidate Notes
 
 **Suggested release tag:** `v0.7.0-rc.1`  
-**Target commit:** `b07d398047e1f052dc817d94ef91f6489e58bddd`  
+**Target commit:** the final `main` commit containing this release-notes file  
 **Release type:** Pre-release candidate
 
 ## Included
@@ -30,7 +30,7 @@ The provider adapter regression matrix passed on commit `c8d71b6` (Python 3.10, 
 
 ## Before publishing this candidate
 
-1. Confirm the target commit is `b07d398047e1f052dc817d94ef91f6489e58bddd`.
+1. Tag the final `main` commit containing this release-notes file.
 2. Create the tag `v0.7.0-rc.1` at that commit.
 3. Publish as a GitHub **pre-release**, not a stable v1.0 release.
 4. Keep live model findings separate from offline CI results.
