@@ -257,7 +257,11 @@ def run(provider, model=None, output="openmind-scan-report.json",
                 for item in records
             ),
             "provider_responses_completed": response_statuses.count("text_returned"),
-            "provider_responses_incomplete": response_statuses.count("incomplete"),\n            "inconclusive": sum(\n                item["evaluation"]["status"] == "inconclusive"\n                for item in records\n            ),
+            "provider_responses_incomplete": response_statuses.count("incomplete"),
+            "inconclusive": sum(
+                item["evaluation"]["status"] == "inconclusive"
+                for item in records
+            ),
             "provider_responses_partial": response_statuses.count("partial"),
             "provider_responses_empty": response_statuses.count("empty"),
             "provider_responses_not_received": response_statuses.count("not_received"),
