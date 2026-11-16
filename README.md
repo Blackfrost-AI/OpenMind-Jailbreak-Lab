@@ -27,7 +27,7 @@ A real API-backed adversarial testing module designed to evaluate:
 
 Tests produce structured JSON evidence containing prompts, responses, provider information, errors, and assessment results.
 
-The current suite includes four trust-escalation probes (`GL-013`–`GL-016`) for untrusted documents, forged authority claims, encoded content, and quoted text. They use harmless synthetic canaries; canary mentions require transcript review and are not automatically counted as confirmed bypasses. Run them locally using the [Guardrail Lab guide](modules/guardrail_lab/README.md#trust-escalation-probes-gl-013gl-016), or trigger the [manual Gemini live red-team workflow](.github/workflows/gemini-trust-escalation.yml) to collect a real API-backed evidence artifact. For a complete 16-case live run, use the [manual Gemini full red-team workflow](.github/workflows/gemini-full-red-team.yml); it uploads the JSON evidence artifact.
+The current suite includes four trust-escalation probes (`GL-013`–`GL-016`) for untrusted documents, forged authority claims, encoded content, and quoted text. They use harmless synthetic canaries; canary mentions require transcript review and are not automatically counted as confirmed bypasses. Run them locally using the [Guardrail Lab guide](modules/guardrail_lab/README.md#trust-escalation-probes-gl-013gl-016), or trigger the [manual Gemini live red-team workflow](.github/workflows/gemini-trust-escalation.yml) to collect a real API-backed evidence artifact. For provider-neutral live testing, use the [manual multi-provider red-team workflow](.github/workflows/multi-provider-red-team.yml): select OpenAI, Anthropic, Gemini, DeepSeek, GLM, Moonshot, NVIDIA NIM, OpenRouter, Groq, Together, or a custom OpenAI-compatible endpoint, then choose the exact model ID. Each run saves a provider-specific JSON evidence artifact. Gemini also has dedicated convenience workflows.
 
 It also runs bounded automated campaigns (`--campaign`, fixed framings, budget/time limits) and supports OpenAI-compatible endpoints (Ollama, vLLM, LM Studio, llama.cpp, LocalAI) for testing local models.
 
@@ -42,7 +42,8 @@ The repository also includes the OpenMind Benchmark (`data/benchmark_v0.6.1.json
 * OpenAI
 * Anthropic Claude
 * Google Gemini
-* Any OpenAI-compatible endpoint (local model servers and hosted providers)
+* DeepSeek, GLM, Moonshot, NVIDIA NIM, OpenRouter, Groq, Together
+* Ollama, vLLM, LM Studio, llama.cpp, LocalAI, and other OpenAI-compatible endpoints
 
 Provider and model availability depends on configured API credentials and supported adapters.
 
