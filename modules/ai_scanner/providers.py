@@ -11,7 +11,14 @@ from urllib.parse import quote, urlsplit
 
 
 class ProviderError(RuntimeError):
-    """Raised when a provider request fails."""
+    """Provider failure with stable machine-readable classification."""
+    def __init__(self, message, category="provider_error", code="provider_error", http_status=None, retryable=False):
+        super().__init__(message)
+        self.category, self.code = category, code
+        self.http_status, self.retryable = http_status, retryable
+
+    def as_dict(self):
+        return {"category": self.category, "code": self.code, "http_status": self.http_status, "retryable": self.retryable, "message": str(self)}
 
 
 MAX_ATTEMPTS = 3
@@ -71,14 +78,26 @@ def _post(url, headers, payload, timeout=60, max_attempts=MAX_ATTEMPTS):
             if retryable and attempt < max_attempts:
                 _sleep_before_retry(attempt, exc.headers)
                 continue
-            raise ProviderError(f"HTTP {exc.code}: {detail}") from exc
+            if exc.code in (401, 403):
+                category, code, hint = "authentication", "invalid_or_unauthorized_credentials", "Check API key and project permissions."
+            elif exc.code == 404:
+                category, code, hint = "model_or_endpoint", "model_or_endpoint_not_found", "Check the model ID and API endpoint."
+            elif exc.code == 429:
+                category, code, hint = "rate_limit", "rate_limited", "Check quota/billing, reduce request rate, and retry later."
+            elif exc.code == 400:
+                category, code, hint = "invalid_request", "provider_rejected_request", "Check model-specific request parameters."
+            elif exc.code >= 500:
+                category, code, hint = "provider_service", "provider_server_error", "Provider service failed; retry later."
+            else:
+                category, code, hint = "http_error", "provider_http_error", "Check provider API documentation."
+            raise ProviderError(f"HTTP {exc.code} ({code}): {hint} Provider detail: {detail}", category=category, code=code, http_status=exc.code, retryable=retryable) from exc
         except (urllib.error.URLError, TimeoutError,
                 http.client.IncompleteRead,
                 http.client.RemoteDisconnected) as exc:
             if attempt < max_attempts:
                 _sleep_before_retry(attempt, None)
                 continue
-            raise ProviderError(str(exc)) from exc
+            raise ProviderError(str(exc), category="network", code="network_or_timeout", retryable=True) from exc
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise ProviderError(f"Invalid provider response: {exc}") from exc
         if not isinstance(parsed, dict):
@@ -169,7 +188,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
     if provider == "openai":
         key = os.getenv("OPENAI_API_KEY")
         if not key:
-            raise ProviderError("OPENAI_API_KEY is not set")
+            raise ProviderError("OPENAI_API_KEY is not set; add it to environment or CI secrets.", category="configuration", code="missing_api_key")
         model = model or os.getenv(
             "OPENAI_MODEL",
             "gpt-4.1-mini",
@@ -220,7 +239,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
     if provider == "anthropic":
         key = os.getenv("ANTHROPIC_API_KEY")
         if not key:
-            raise ProviderError("ANTHROPIC_API_KEY is not set")
+            raise ProviderError("ANTHROPIC_API_KEY is not set; add it to environment or CI secrets.", category="configuration", code="missing_api_key")
         model = model or os.getenv(
             "ANTHROPIC_MODEL",
             "claude-3-7-sonnet-latest",
@@ -272,7 +291,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
         )
         if not key:
             raise ProviderError(
-                "GEMINI_API_KEY or GOOGLE_API_KEY is not set"
+                "GEMINI_API_KEY or GOOGLE_API_KEY is not set; add one to environment or CI secrets.", category="configuration", code="missing_api_key"
             )
         model = model or os.getenv(
             "GEMINI_MODEL",
@@ -359,12 +378,12 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
         model = model or os.getenv("OPENAI_COMPAT_MODEL")
         if not model:
             raise ProviderError(
-                "Set --model or OPENAI_COMPAT_MODEL for this endpoint"
+                "Set --model or OPENAI_COMPAT_MODEL for this endpoint", category="configuration", code="missing_model"
             )
         chosen_url = base_url or os.getenv("OPENAI_COMPAT_BASE_URL")
         if not chosen_url:
             raise ProviderError(
-                "Set a base URL with --base-url or OPENAI_COMPAT_BASE_URL"
+                "Set a base URL with --base-url or OPENAI_COMPAT_BASE_URL", category="configuration", code="missing_base_url"
             )
         api_key = os.getenv(api_key_env) if api_key_env else None
         endpoint = _compat_chat_url(chosen_url)
@@ -408,7 +427,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
             "endpoint_type": "openai-compatible",
         }), started)
         return model, content, metadata
-    raise ProviderError(f"Unsupported provider: {provider}")
+    raise ProviderError(f"Unsupported provider: {provider}", category="configuration", code="unsupported_provider")
 
 
 def call_provider(provider, prompt, model=None, base_url=None,
