@@ -31,7 +31,7 @@ It also runs bounded automated campaigns (`--campaign`, fixed framings, budget/t
 
 ### Benchmark and JB-002
 
-The repository also includes the OpenMind Benchmark (`data/benchmark_v0.6.jsonl`, 66 cases) and JB-002, a three-case module for recording and validating manually observed test results. See `data/` and `modules/jb002/README.md`.
+The repository also includes the OpenMind Benchmark (`data/benchmark_v0.6.1.jsonl`, 66 cases) and JB-002, a three-case module for recording and validating manually observed test results. See `data/` and `modules/jb002/README.md`.
 
 ## Supported Providers
 
