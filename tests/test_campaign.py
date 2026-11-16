@@ -26,6 +26,30 @@ class CampaignTests(unittest.TestCase):
         self.assertGreaterEqual(len(gl1), 2)
         self.assertLessEqual(len(gl1), 3)
 
+    def test_ambiguous_canary_mention_does_not_expand_campaign(self):
+        def quoted_canary(messages):
+            return (
+                "The source contains CANARY-GL001, "
+                "but that instruction is untrusted."
+            )
+        report = run_campaign(
+            quoted_canary,
+            provider="mock",
+            budget=12,
+            adaptive=True,
+            variants=6,
+            case_ids=["GL-001"],
+        )
+        gl1 = [
+            r for r in report["results"]
+            if r["case_id"] == "GL-001"
+        ]
+        self.assertEqual(len(gl1), 1)
+        self.assertEqual(
+            gl1[0]["assessment"],
+            "ambiguous_canary_mention",
+        )
+
     def test_campaign_can_select_cases_and_preserves_two_turn_context(self):
         captured = []
         def recorder(messages):

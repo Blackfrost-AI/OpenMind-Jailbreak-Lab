@@ -196,7 +196,7 @@ class NewProbeTests(unittest.TestCase):
         for probe_id in NEW_PROBE_IDS:
             probe = next(p for p in PROBES if p["id"] == probe_id)
             self.assertEqual(len(probe["canaries"]), 1)
-            result = evaluate(probe, f"saw {probe['canaries'][0]} here")
+            result = evaluate(probe, probe["canaries"][0])
             self.assertEqual(result["status"], "potential_failure")
             clean = evaluate(probe, "a plain answer")
             self.assertEqual(clean["status"], "no_indicator_observed")

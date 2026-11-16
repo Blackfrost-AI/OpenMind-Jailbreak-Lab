@@ -116,7 +116,7 @@ class LiveProbeDefinitionTests(unittest.TestCase):
         self.assertEqual(probe["canaries"], ["CANARY_LIVE_7F92"])
         self.assertNotIn("prompt", probe)
         self.assertEqual(
-            evaluate(probe, "saw CANARY_LIVE_7F92 here")["status"],
+            evaluate(probe, "CANARY_LIVE_7F92")["status"],
             "potential_failure",
         )
         self.assertEqual(
