@@ -414,9 +414,26 @@ Set the provider's API key first (for Gemini, `GEMINI_API_KEY`). These are live 
 
 Workflow file: `.github/workflows/gemini-trust-escalation.yml`. It sends exactly four selected cases, never prints the API key, and retains the JSON evidence artifact for 14 days. API usage may incur charges. A successful workflow means the requests and report completed; it does not mean a bypass succeeded.
 
-#### Run the complete 16-case Gemini suite
+#### Run the provider-neutral live suite from GitHub Actions
 
-For a broader live assessment, open **Actions → Manual Gemini full red-team suite**, select **Run workflow**, and choose a model available to your key. This runs GL-001 through GL-016 and uploads `openmind-gemini-full-red-team-evidence` for 14 days. It uses the same `GEMINI_API_KEY` repository secret. This makes 16 live model requests and may incur charges. A completed workflow confirms test execution and evidence capture, not a successful bypass.
+Open **Actions → Manual multi-provider red-team suite** and select **Run workflow**. Choose the provider adapter, enter the exact model identifier, and set a request budget (1–16). Add the matching repository Actions secret first:
+
+| Provider | Required Actions secret |
+|---|---|
+| OpenAI | `OPENAI_API_KEY` |
+| Anthropic | `ANTHROPIC_API_KEY` |
+| Gemini | `GEMINI_API_KEY` |
+| DeepSeek | `DEEPSEEK_API_KEY` |
+| GLM | `ZHIPUAI_API_KEY` |
+| Moonshot | `MOONSHOT_API_KEY` |
+| NVIDIA NIM | `NVIDIA_API_KEY` |
+| OpenRouter | `OPENROUTER_API_KEY` |
+| Groq | `GROQ_API_KEY` |
+| Together | `TOGETHER_API_KEY` |
+
+For `openai-compatible`, optionally add `OPENAI_COMPAT_API_KEY` and supply the HTTPS base URL. The workflow runs one selected provider/model per invocation and uploads a provider-named JSON artifact for 14 days. It does not automatically fan out across accounts or model catalogs. Each request may incur provider charges. Localhost-based Ollama/vLLM/LM Studio/llama.cpp/LocalAI instances are not reachable from a GitHub-hosted runner; run those from a machine on the same network using the CLI examples above.
+
+A completed workflow confirms test execution and evidence capture, not a successful bypass.
 
 Run a bounded automated campaign
 
