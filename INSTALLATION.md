@@ -299,7 +299,24 @@ Local server presets do not install models or start inference servers automatica
 
 ---
 
-## 7. Configure custom providers
+## 7. Run GitHub Actions provider tests
+
+The manual multi-provider workflow runs on a GitHub-hosted Ubuntu runner. Its choices are the hosted native adapters (OpenAI, Anthropic, Gemini), hosted compatible presets (DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter, Groq, Together), and a custom OpenAI-compatible endpoint.
+
+1. Add the selected provider's API key under **Settings → Secrets and variables → Actions**. Secret names are `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `ZHIPUAI_API_KEY`, `MOONSHOT_API_KEY`, `NVIDIA_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, or `TOGETHER_API_KEY`.
+2. Open **Actions → Manual multi-provider red-team suite**.
+3. Choose one provider and enter the exact model identifier.
+4. For `openai-compatible`, provide an HTTPS base URL reachable from the GitHub-hosted runner. Add `OPENAI_COMPAT_API_KEY` as a secret if the endpoint requires authentication.
+5. Choose a request budget from 1 to 16 and run the workflow.
+6. Download the JSON evidence artifact from the completed run.
+
+Localhost presets (Ollama, vLLM, LM Studio, llama.cpp, and LocalAI) are deliberately not workflow choices: a GitHub-hosted runner cannot reach a service listening on your phone or computer's `localhost`. Run those adapters from the machine or network where the inference server is reachable, using the local CLI examples below.
+
+The workflow tests one selected provider/model per run; it does not discover or test every model in a provider's catalog. A completed run means the configured requests and report steps completed, not that a jailbreak succeeded.
+
+---
+
+## 8. Configure custom providers
 
 For hosted providers or custom OpenAI-compatible gateways:
 
