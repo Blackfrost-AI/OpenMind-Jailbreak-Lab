@@ -154,13 +154,18 @@ def main(argv=None):
             )
         if not (args.model or os.getenv("OPENAI_COMPAT_MODEL")):
             parser.error("Set --model or OPENAI_COMPAT_MODEL for this provider")
-    report, path = run(
-        args.provider,
-        args.model,
-        args.output,
-        base_url=args.base_url,
-        api_key_env=args.api_key_env,
-    )
+    report, path = None, None
+    try:
+        report, path = run(
+            args.provider,
+            args.model,
+            args.output,
+            base_url=args.base_url,
+            api_key_env=args.api_key_env,
+        )
+    except OSError as exc:
+        print(f"error: cannot write report: {exc}", file=sys.stderr)
+        return 2
     counts = {}
     for item in report["results"]:
         status = item["evaluation"]["status"]

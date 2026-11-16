@@ -319,6 +319,15 @@ class CompareMalformedReportTests(unittest.TestCase):
         self.assertEqual(code, 2)
 
 
+class RunOutputErrorTests(unittest.TestCase):
+    def test_unwritable_output_exits_cleanly(self):
+        with mock.patch("modules.ai_scanner.cli.run",
+                        side_effect=OSError("No such file or directory")):
+            code = cli.main(["--provider", "openai", "--model", "m",
+                             "--output", "/proc/nope/report.json"])
+        self.assertEqual(code, 2)
+
+
 class ComparisonDuplicateColumnTests(unittest.TestCase):
     def _report(self, provider, model, statuses):
         return {
