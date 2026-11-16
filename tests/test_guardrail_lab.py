@@ -1,3 +1,5 @@
+import hashlib
+import json
 import unittest
 from modules.guardrail_lab.cases import CASES
 from modules.guardrail_lab.runner import assess, run_case, run_suite
@@ -58,6 +60,23 @@ class GuardrailLabTests(unittest.TestCase):
         self.assertEqual(result["assessment"], "partial_run")
         self.assertEqual(result["error"]["message"], "offline")
         self.assertTrue(result["request_messages"])
+
+    def test_result_contains_recomputable_evidence_checksum(self):
+        case = CASES[0]
+        result = run_case(case, lambda messages: "safe response", provider="mock")
+        recorded = dict(result)
+        digest = recorded.pop("evidence_sha256")
+        canonical = json.dumps(recorded, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        self.assertEqual(digest, hashlib.sha256(canonical).hexdigest())
+
+    def test_evidence_checksum_changes_when_response_is_edited(self):
+        result = run_case(CASES[0], lambda messages: "original", provider="mock")
+        original = result["evidence_sha256"]
+        edited = dict(result)
+        edited.pop("evidence_sha256")
+        edited["response"] = "edited"
+        canonical = json.dumps(edited, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        self.assertNotEqual(original, hashlib.sha256(canonical).hexdigest())
 
     def test_repository_provider_tuple_is_unpacked_and_metadata_saved(self):
         case = CASES[0]
