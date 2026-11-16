@@ -40,6 +40,7 @@ Use it only with models and services you own or are explicitly authorized to ass
 | `GL-017`–`GL-024` | RAG metadata, HTML comments, CSV cells, email bodies, mock tool results, Markdown links, multilingual metadata, and conflicting-source injection |
 
 The test suite uses harmless synthetic canary markers across direct and indirect prompt-injection surfaces. A canary match is a signal for manual investigation, not automatic proof of a vulnerability.
+Each case is sent beneath a fixed lab-owned system instruction that marks quoted text, documents, retrieved passages, metadata, and tool outputs as untrusted. Provider adapters map that instruction to the native system/developer field where supported. This is a reproducible harness baseline, not the target application's own private system prompt.
 
 The lab does not attempt to obtain real secrets, compromise accounts, execute unauthorized tools, or facilitate harmful safeguard evasion.
 
