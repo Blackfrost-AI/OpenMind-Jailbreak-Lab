@@ -122,11 +122,11 @@ Run against Gemini:
 export GEMINI_API_KEY="your-key"
 python -m modules.guardrail_lab \
   --provider gemini \
-  --delay 4.5 \
+  --delay 8.5 \
   --output reports/gemini.json
 ```
 
-The `--delay` option pauses between requests in a full suite as well as in campaigns. The Gemini Actions full-suite workflow uses a 4.5-second interval to reduce free-tier requests-per-minute errors; actual quota availability still depends on your Google AI Studio project and model.
+The `--delay` option pauses between requests in a full suite as well as in campaigns. The Gemini Actions full-suite workflow uses an 8.5-second interval to reduce free-tier requests-per-minute errors; actual quota availability still depends on your Google AI Studio project and model.
 
 ### Hosted provider examples
 
