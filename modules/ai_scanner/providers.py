@@ -140,7 +140,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
     """Call one provider with a full message list and return
     (model, text, metadata).
 
-    messages is a list of {"role": "user"|"assistant", "content": str}
+    messages is a list of {"role": "system"|"user"|"assistant", "content": str}
     in conversation order, so multi-turn sessions send the real
     conversation so far. Single-turn callers pass one user message.
     metadata carries the provider's request id, usage, and
@@ -157,12 +157,12 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
     provider = provider.lower()
     if not messages or not all(
         isinstance(item, dict)
-        and item.get("role") in ("user", "assistant")
+        and item.get("role") in ("system", "user", "assistant")
         and isinstance(item.get("content"), str)
         for item in messages
     ):
         raise ProviderError(
-            "messages must be a non-empty list of user/assistant messages"
+            "messages must be a non-empty list of system/user/assistant messages"
         )
     started = time.monotonic()
     # OPENAI
@@ -225,6 +225,19 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
             "ANTHROPIC_MODEL",
             "claude-3-7-sonnet-latest",
         )
+        system_text = "\\n\\n".join(
+            item["content"] for item in messages if item["role"] == "system"
+        )
+        conversation = [
+            item for item in messages if item["role"] != "system"
+        ]
+        payload = {
+            "model": model,
+            "max_tokens": 1200,
+            "messages": conversation,
+        }
+        if system_text:
+            payload["system"] = system_text
         body = _post(
             "https://api.anthropic.com/v1/messages",
             {
@@ -232,11 +245,7 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
                 "anthropic-version": "2023-06-01",
                 "Content-Type": "application/json",
             },
-            {
-                "model": model,
-                "max_tokens": 1200,
-                "messages": messages,
-            },
+            payload,
         )
         content = body.get("content", [])
         if not isinstance(content, list):
@@ -273,17 +282,28 @@ def call_provider_messages(provider, messages, model=None, base_url=None,
             "https://generativelanguage.googleapis.com/v1beta/"
             f"models/{quote(model, safe='')}:generateContent"
         )
+        system_text = "\\n\\n".join(
+            item["content"] for item in messages if item["role"] == "system"
+        )
+        conversation = [
+            item for item in messages if item["role"] != "system"
+        ]
+        payload = {
+            "contents": [
+                _gemini_content(item) for item in conversation
+            ]
+        }
+        if system_text:
+            payload["systemInstruction"] = {
+                "parts": [{"text": system_text}]
+            }
         body = _post(
             url,
             {
                 "Content-Type": "application/json",
                 "x-goog-api-key": key,
             },
-            {
-                "contents": [
-                    _gemini_content(item) for item in messages
-                ]
-            },
+            payload,
         )
         candidates = body.get("candidates", [])
         if not isinstance(candidates, list):
