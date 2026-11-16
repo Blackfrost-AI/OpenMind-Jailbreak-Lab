@@ -24,6 +24,7 @@ Anthropic:
 export ANTHROPIC_API_KEY="your-key"
 Gemini:
 export GEMINI_API_KEY="your-key"
+(or GOOGLE_API_KEY — the adapter accepts either)
 Never commit API keys to GitHub.
 ## Run scans
 OpenAI:

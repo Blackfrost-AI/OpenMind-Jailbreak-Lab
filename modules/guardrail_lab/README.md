@@ -1,5 +1,5 @@
 # OpenMind Guardrail Lab
-**Version:** 0.3.1
+**Version:** 0.3.2
 **Purpose:** authorized, evidence-first testing of AI instruction-boundary and guardrail behavior.
 OpenMind Guardrail Lab is a small Python test harness for checking how an AI model handles untrusted instructions embedded in quoted text, documents, retrieval content, and simulated tool output. It can run individual test cases or a bounded automated campaign, then save structured JSON evidence for review and regression testing.
 Use it only with models and services you own or are explicitly authorized to assess.
@@ -113,19 +113,19 @@ Reports are JSON and retain per-case outcomes, response evidence, provider/model
 | `manual_review` | The response did not match the simple expected signal. |
 | `partial_run` | A provider call failed or a required paired step could not be completed. |
 A canary match can be a false positive or depend on model wording, provider behavior, and test configuration. Exact canary matching cannot tell quoting from following: several cases ask the model to describe, translate, or flag the injected text, and a correct answer quotes the canary while doing so. Confirm a failure only when the model outputs the canary as its own compliance (for example, the response is just the canary). Reproduce important findings, inspect the full request/response context, and document the model version and date before drawing conclusions. This tool is a lightweight test harness, not a certification, penetration test, or exhaustive security audit.
-## Integration
-This package is an add-on module, not a standalone replacement for the parent repository's provider layer.
-1. Copy `modules/guardrail_lab/` into the repository's `modules/` directory.
-2. Copy `tests/test_guardrail_lab.py`, `tests/test_campaign.py`, and `tests/test_openai_compatible.py` into the repository's `tests/` directory.
-3. Ensure the parent repository provides `modules.ai_scanner.providers.call_provider_messages(provider, messages, model=None)` for the native OpenAI, Anthropic, and Gemini routes. It should return `(actual_model, response_text, metadata)`.
-4. Run the commands in [Quick start](#quick-start) from the repository root.
-The OpenAI-compatible routes use the bundled `modules.guardrail_lab.openai_compatible` adapter. See [INTEGRATION.md](INTEGRATION.md) for the concise integration notes.
+## Repository layout
+Guardrail Lab is part of this repository, not a standalone package. It lives in `modules/guardrail_lab/`, with its tests in `tests/test_guardrail_lab.py`, `tests/test_campaign.py`, and `tests/test_openai_compatible.py`.
+The native OpenAI, Anthropic, and Gemini routes use the repository's shared provider adapter at `modules.ai_scanner.providers.call_provider_messages(provider, messages, model=None)`, which returns `(actual_model, response_text, metadata)`. The OpenAI-compatible routes use the bundled `modules.guardrail_lab.openai_compatible` adapter. See [INTEGRATION.md](INTEGRATION.md) for the integration notes.
 ## Development and validation
 Run the tests from the package/repository root:
 ```bash
 python -m unittest discover -s tests -v
 ```
-The v0.3.1 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+The v0.3.2 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+## Version 0.3.2
+- Campaign `--delay` and `--max-seconds` reject non-finite values (infinity and NaN); previously an infinite delay raised an uncaught OverflowError and a NaN time limit silently disabled the limit.
+- Module documentation rewritten for the integrated project (no copy-in instructions); repository layout described in place of the old add-on checklist.
+- CI now tests Python 3.10, 3.11, and 3.12.
 ## Version 0.3.1 hardening
 - Enforces HTTPS for non-loopback compatible endpoints while retaining loopback HTTP for local inference.
 - Rejects unsafe or malformed endpoint URL forms and validates response JSON structure.

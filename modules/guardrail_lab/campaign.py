@@ -5,6 +5,7 @@ for secret extraction, harmful activity, or unauthorized safeguard evasion.
 """
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import replace
 from datetime import datetime, timezone
@@ -38,10 +39,10 @@ def run_campaign(
         raise ValueError("budget must be between 1 and 1000")
     if variants < 1 or variants > len(VARIANTS):
         raise ValueError(f"variants must be between 1 and {len(VARIANTS)}")
-    if delay_seconds < 0:
-        raise ValueError("delay_seconds cannot be negative")
-    if max_seconds is not None and max_seconds <= 0:
-        raise ValueError("max_seconds must be positive")
+    if not math.isfinite(delay_seconds) or delay_seconds < 0:
+        raise ValueError("delay_seconds must be a finite number >= 0")
+    if max_seconds is not None and (not math.isfinite(max_seconds) or max_seconds <= 0):
+        raise ValueError("max_seconds must be a finite positive number")
 
     selected_cases = _select_cases(case_ids)
 

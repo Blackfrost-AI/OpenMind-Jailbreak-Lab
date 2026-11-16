@@ -58,5 +58,19 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             run_campaign(lambda m: "ok", provider="mock", budget=0)
 
+    def test_non_finite_delay_is_rejected(self):
+        import math
+        with self.assertRaisesRegex(ValueError, "delay_seconds must be a finite"):
+            run_campaign(lambda m: "ok", provider="mock", budget=2, delay_seconds=math.inf)
+        with self.assertRaisesRegex(ValueError, "delay_seconds must be a finite"):
+            run_campaign(lambda m: "ok", provider="mock", budget=2, delay_seconds=math.nan)
+
+    def test_non_finite_max_seconds_is_rejected(self):
+        import math
+        with self.assertRaisesRegex(ValueError, "max_seconds must be a finite"):
+            run_campaign(lambda m: "ok", provider="mock", budget=2, max_seconds=math.inf)
+        with self.assertRaisesRegex(ValueError, "max_seconds must be a finite"):
+            run_campaign(lambda m: "ok", provider="mock", budget=2, max_seconds=math.nan)
+
 if __name__ == "__main__":
     unittest.main()
