@@ -50,6 +50,15 @@ VARIANTS = (
 )
 
 
+def _is_finite_number(value):
+    """Accept finite numeric values, but reject booleans."""
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+    )
+
+
 def run_campaign(
     call: Callable,
     *,
@@ -69,9 +78,11 @@ def run_campaign(
             or variants < 1 or variants > len(VARIANTS)):
         raise ValueError(
             f"variants must be an integer between 1 and {len(VARIANTS)}")
-    if not math.isfinite(delay_seconds) or delay_seconds < 0:
-        raise ValueError("delay_seconds must be a finite number >= 0")
-    if max_seconds is not None and (not math.isfinite(max_seconds) or max_seconds <= 0):
+    if not _is_finite_number(delay_seconds) or delay_seconds < 0:
+        raise ValueError("delay_seconds must be a finite non-negative number")
+    if max_seconds is not None and (
+        not _is_finite_number(max_seconds) or max_seconds <= 0
+    ):
         raise ValueError("max_seconds must be a finite positive number")
 
     selected_cases = _select_cases(case_ids)

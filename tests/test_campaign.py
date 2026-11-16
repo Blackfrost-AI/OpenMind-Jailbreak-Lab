@@ -103,6 +103,30 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "variants must be an integer"):
             run_campaign(lambda m: "ok", provider="mock", variants=7)
 
+    def test_invalid_delay_values_are_rejected(self):
+        import math
+        for value in (True, "1", None, math.inf, math.nan):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    run_campaign(
+                        lambda _: "ok",
+                        provider="mock",
+                        budget=2,
+                        delay_seconds=value,
+                    )
+
+    def test_invalid_max_seconds_values_are_rejected(self):
+        import math
+        for value in (True, "10", math.inf, math.nan, 0, -1):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    run_campaign(
+                        lambda _: "ok",
+                        provider="mock",
+                        budget=2,
+                        max_seconds=value,
+                    )
+
     def test_gl010_paired_context_uses_gl009_response(self):
         captured = []
         def recorder(messages):

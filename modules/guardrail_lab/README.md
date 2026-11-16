@@ -1,5 +1,5 @@
 # OpenMind Guardrail Lab
-**Version:** 0.4.0
+**Version:** 0.4.1
 **Purpose:** authorized, evidence-first testing of AI instruction-boundary and guardrail behavior.
 OpenMind Guardrail Lab is a small Python test harness for checking how an AI model handles untrusted instructions embedded in quoted text, documents, retrieval content, and simulated tool output. It can run individual test cases or a bounded automated campaign, then save structured JSON evidence for review and regression testing.
 Use it only with models and services you own or are explicitly authorized to assess.
@@ -121,7 +121,9 @@ Run the tests from the package/repository root:
 ```bash
 python -m unittest discover -s tests -v
 ```
-The v0.4.0 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+The v0.4.1 package was validated with its unit tests and CLI case listing. Unit tests use mocked provider responses; they do not establish that a live provider account, network endpoint, or specific model is reachable or behaves as expected. Run an authorized, low-budget live smoke test before relying on a provider integration.
+## Version 0.4.1
+- Campaign `--delay` and `--max-seconds` now reject booleans and non-numeric values with a clean ValueError; a boolean previously slipped through (`True` behaves as 1) and a string raised an unexpected TypeError from `math.isfinite`.
 ## Version 0.4.0
 - Campaign framings grow from 3 to 6 reviewed variants: baseline, evaluation context, untrusted context, quote boundary, task boundary, and structured context. `--variants` now accepts 1-6 (default still 3); adaptive expansion stays bounded by the budget and by one expansion per flagged case.
 - GL-010's paired conversation is seeded only from GL-009's baseline response, so the assistant turn always matches the original GL-009 prompt shown as the user turn.
