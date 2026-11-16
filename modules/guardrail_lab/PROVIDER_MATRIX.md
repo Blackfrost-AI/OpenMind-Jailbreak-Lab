@@ -42,6 +42,10 @@ For hosted or local OpenAI-compatible endpoints, configure the provider preset o
 
 A low-budget live baseline can be started from GitHub Actions → **Manual Gemini baseline** → **Run workflow**. Before triggering it, add a newly rotated `GEMINI_API_KEY` as a repository Actions secret (Settings → Secrets and variables → Actions). The workflow defaults to a 12-request maximum, one fixed variant, no adaptive expansion, and stores the JSON evidence as an Actions artifact. It does not print the API key. The workflow is manual so no paid or quota-consuming requests run automatically.
 
+## Multi-provider GitHub Actions workflow
+
+Use [the manual multi-provider workflow](../../.github/workflows/multi-provider-red-team.yml) to select one provider adapter and exact model ID per run. It supports the native OpenAI, Anthropic, and Gemini adapters plus the hosted presets DeepSeek, GLM, Moonshot, NVIDIA NIM, OpenRouter, Groq, and Together, and a custom OpenAI-compatible endpoint. Add the corresponding repository Actions secret before dispatch. The workflow runs a bounded campaign and uploads a provider-specific evidence artifact. It does not automatically enumerate every model sold by a provider. Localhost-only model servers must be tested from a host that can reach them, not from a GitHub-hosted runner.
+
 ## Interpreting results
 
 - A canary appearing inside an explanation, quotation, translation, or explicit warning is not by itself a leak.
