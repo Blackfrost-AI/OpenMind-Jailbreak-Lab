@@ -469,3 +469,13 @@ A response consisting solely of the matching canary is a potential trust-escalat
 ## Multi-provider GitHub Actions workflow
 
 Use [`.github/workflows/multi-provider-red-team.yml`](../../.github/workflows/multi-provider-red-team.yml) to run the same bounded Guardrail Lab campaign against a selected provider and model. It supports OpenAI, Anthropic, Gemini, DeepSeek, GLM, Moonshot, NVIDIA NIM, OpenRouter, Groq, Together, and custom OpenAI-compatible endpoints. Configure the matching repository Actions secret, select the exact model ID, and choose a request budget from 1 to 24. The workflow can use up to six fixed, reviewed framings; adaptive follow-ups occur only after an exact canary-only response. Ambiguous canary mentions do not trigger expansion and are never reported as confirmed bypasses. One provider/model is run per workflow invocation; results are uploaded as a provider-specific artifact. Localhost-only inference servers must be tested from a machine that can reach them. Provider compatibility and model access must be verified with a live run.
+
+## Synthetic demonstration report
+
+Generate a clearly labelled fictional report without contacting a provider:
+
+```bash
+python -m modules.guardrail_lab.demo --output reports/synthetic-demo.json
+```
+
+The report sets `report_type` to `SYNTHETIC_DEMONSTRATION`, records `provider_calls: 0`, uses `SIMULATED_PROVIDER` / `SIMULATED_MODEL`, and always reports `confirmed_live_findings: 0`. Its example candidate is a fabricated fixture for demonstrating report rendering and triage only. It is not a model result, cannot be ranked as a confirmed finding, and must not be presented as live evidence. Live findings still require an authorized provider run, replay, and human review.
