@@ -57,3 +57,17 @@ Use [the manual multi-provider workflow](../../.github/workflows/multi-provider-
 ## Credentials
 
 Use environment variables or a local untracked `.env` file. Never commit API keys. If a key was pasted into chat, logs, or a public repository, revoke it and issue a replacement.
+
+
+## Compare saved provider reports
+
+After collecting reports for the same case set, compare their labels:
+
+```bash
+python -m modules.guardrail_lab.compare reports/gemini.json reports/openai.json --output reports/comparison.json
+```
+
+The comparison output explicitly lists missing case IDs and disagreements.
+Agreement is calculated only over cases present in every report. It is not a
+security score; inspect full transcripts and keep model versions, system
+instructions, sampling settings, and case IDs aligned.
