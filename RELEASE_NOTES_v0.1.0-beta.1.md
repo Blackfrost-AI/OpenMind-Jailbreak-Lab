@@ -1,7 +1,7 @@
 # OpenMind Jailbreak Lab v0.1.0-beta.1
 
 **Release type:** Pre-release  
-**Target commit:** `fe70526916ac167c175e4aed9440b9860397623b`  
+**Target commit:** `67ec0bf89ffecddc1d604ee40e647de93c059b4b` (this tag)  
 **Status:** Public source repository; pre-release candidate, not a production certification.
 
 ## Highlights
@@ -15,11 +15,15 @@
 
 ## Verification
 
-The benchmark validation workflow completed successfully on target commit `fe70526916ac167c175e4aed9440b9860397623b`:
+**Tag target vs. verified commit:** this release is tagged at `67ec0bf`, whose only change over its parent `fe70526` is this release-notes file. The benchmark validation workflow ran on `fe70526`:
 
 - [Validate benchmark — run 43946290403](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/43946290403)
 
-The provider-adapter regression matrix has passed on earlier commits, but a matching run on this exact target commit has not been confirmed in this release note. Do not interpret offline tests as live provider certification.
+It also ran on the tagged commit `67ec0bf` and passed:
+
+- [Validate benchmark — run 43946486407](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/43946486407)
+
+The provider-adapter regression matrix has passed on earlier commits, but no provider-matrix workflow run exists for this tagged commit — that workflow runs only on pull requests touching provider files, not on pushes to main. Do not interpret offline tests as live provider certification.
 
 ## Known limitations
 
