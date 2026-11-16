@@ -232,3 +232,13 @@ See [LICENSE](LICENSE) for the repository's license.
   <strong>OpenMind Jailbreak Lab</strong><br>
   Authorized testing · Reproducible evaluation · Evidence-first analysis
 </p>
+
+### Synthetic demonstration report
+
+To demonstrate report generation without API credentials or network calls:
+
+```bash
+python -m modules.guardrail_lab.demo --output reports/synthetic-demo.json
+```
+
+This creates a visibly labelled fictional fixture (`SYNTHETIC_DEMONSTRATION`, zero provider calls, zero confirmed live findings). It is for UI and workflow demonstrations only—not evidence of a real model bypass.
