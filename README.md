@@ -156,7 +156,7 @@ The repository includes a manually triggered [multi-provider red-team workflow](
 5. Start the workflow and inspect its run summary.
 6. Download the provider-specific JSON evidence artifact.
 
-The workflow supports hosted provider choices and compatible endpoints defined in its dispatch inputs. Localhost-only model servers are not reachable from a GitHub-hosted runner; run those tests from a host that can reach the local server.
+The dedicated Gemini full-suite workflow also runs all 24 Guardrail Lab cases with a conservative 13-second request interval. It is manually triggered and requires the `GEMINI_API_KEY` Actions secret. Other provider workflows remain one provider/model per invocation. The workflow supports hosted provider choices and compatible endpoints defined in its dispatch inputs. Localhost-only model servers are not reachable from a GitHub-hosted runner; run those tests from a host that can reach the local server.
 
 A successful workflow indicates that the workflow completed its configured execution and report steps. It is not a successful-bypass indicator. API requests may incur charges and remain subject to provider quotas.
 
