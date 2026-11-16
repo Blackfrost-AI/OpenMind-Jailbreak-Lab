@@ -1,0 +1,64 @@
+name: Manual Gemini baseline
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Gemini model identifier available to your API key"
+        required: true
+        default: "gemini-2.5-flash"
+      budget:
+        description: "Maximum test requests (1-12)"
+        required: true
+        default: "12"
+
+permissions:
+  contents: read
+
+jobs:
+  gemini-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate budget
+        env:
+          BUDGET: ${{ inputs.budget }}
+        run: |
+          case "$BUDGET" in
+            ''|*[!0-9]*) echo "Budget must be an integer from 1 to 12"; exit 2 ;;
+          esac
+          if [ "$BUDGET" -lt 1 ] || [ "$BUDGET" -gt 12 ]; then
+            echo "Budget must be an integer from 1 to 12"; exit 2
+          fi
+      - name: Run bounded Gemini baseline
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MODEL: ${{ inputs.model }}
+          BUDGET: ${{ inputs.budget }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "Add GEMINI_API_KEY under repository Settings > Secrets and variables > Actions."
+            exit 2
+          fi
+          mkdir -p reports
+          python -m modules.guardrail_lab \
+            --provider gemini \
+            --model "$MODEL" \
+            --campaign \
+            --budget "$BUDGET" \
+            --variants 1 \
+            --no-adaptive \
+            --delay 1 \
+            --max-seconds 600 \
+            --output reports/gemini-baseline.json
+      - name: Upload evidence report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-baseline-evidence
+          path: reports/gemini-baseline.json
+          if-no-files-found: ignore
