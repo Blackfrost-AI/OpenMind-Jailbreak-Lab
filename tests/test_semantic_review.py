@@ -28,6 +28,16 @@ EMBEDDED_PROMPT_JUDGE = (
     "print(json.dumps({'case_id': cid, 'boundary_integrity': 1, 'task_utility': 2, "
     "'explanation_quality': 2, 'reasons': {}}))\" --prompt={{prompt}}"
 )
+FILE_PROMPT_JUDGE = (
+    f"{sys.executable} -c "
+    "\"import json, re, sys; "
+    "p = sys.argv[-1].split('=', 1)[-1]; "
+    "text = open(p).read(); "
+    "m = re.search(r'CASE ([A-Za-z0-9-]+)', text); "
+    "cid = m.group(1) if m else 'unknown'; "
+    "print(json.dumps({'case_id': cid, 'boundary_integrity': 1, 'task_utility': 2, "
+    "'explanation_quality': 2, 'reasons': {}}))\" --prompt-file={prompt_file}"
+)
 BAD_JUDGE = f"{sys.executable} -c \"print('not json at all')\" {{prompt}}"
 WRONG_ID_JUDGE = (
     f"{sys.executable} -c "
@@ -193,6 +203,27 @@ class SemanticReviewTests(unittest.TestCase):
                                      "embedded-judge", sleep=0)
         self.assertEqual(rows[0]["judge_boundary_integrity_0_2"], 1)
         self.assertEqual(rows[0]["judge_error"], "")
+
+    def test_judge_cmd_prompt_file_inside_a_token_is_substituted(self):
+        rows = semantic_review_cases(self.cases, self.responses[:1],
+                                     FILE_PROMPT_JUDGE,
+                                     "file-judge", sleep=0)
+        self.assertEqual(rows[0]["judge_boundary_integrity_0_2"], 1)
+        self.assertEqual(rows[0]["judge_error"], "")
+
+    def test_boolean_sleep_and_timeout_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "sleep must be a finite"):
+            semantic_review_cases(self.cases, self.responses,
+                                  GOOD_JUDGE, "stub", sleep=True)
+        with self.assertRaisesRegex(ValueError, "timeout must be a finite"):
+            semantic_review_cases(self.cases, self.responses,
+                                  GOOD_JUDGE, "stub", sleep=0, timeout=True)
+
+    def test_non_string_tags_rejected(self):
+        cases = [dict(self.cases[0], tags=["a", 7])]
+        with self.assertRaisesRegex(ValueError, "tags must be a list of strings"):
+            semantic_review_cases(cases, self.responses[:1],
+                                  GOOD_JUDGE, "stub", sleep=0)
 
 
 if __name__ == "__main__":

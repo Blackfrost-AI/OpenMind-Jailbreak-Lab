@@ -1,5 +1,5 @@
 # OpenMind AI Exploit Scanner
-Version: 0.3.1
+Version: 0.3.2
 An authorized AI API testing module for identifying potential
 instruction-boundary weaknesses and recording reproducible evidence.
 ## Scope
@@ -118,6 +118,12 @@ It does not execute tools, access secrets, exploit accounts,
 or test third-party systems.
 API calls may incur charges.
 Only test accounts and systems you are authorized to assess.
+## Version 0.3.2
+- A connection that drops mid-response (`IncompleteRead` /
+  `RemoteDisconnected`) is now retried like other transient failures
+  instead of ending the probe as `not_run` at once.
+- The report's limitations note now describes the exact-only vs
+  mentioned canary distinction instead of "exact canary matching only".
 ## Version 0.3.1
 - A canary quoted or discussed in a longer response is now
   `ambiguous_canary_mention` instead of `potential_failure`; only a

@@ -1,6 +1,6 @@
 # OpenMind Guardrail Lab
 
-**Version:** 0.5.3
+**Version:** 0.5.4
 **Purpose:** Authorized, evidence-first AI guardrail and instruction-boundary vulnerability research.
 
 OpenMind Guardrail Lab is a Python testing framework for evaluating how AI models handle untrusted instructions, prompt injection, context manipulation, and instruction-boundary conflicts.
@@ -291,6 +291,12 @@ tests/
   test_openai_compatible.py
   test_provider_presets.py
 ```
+
+## Version 0.5.4
+
+- A connection that drops mid-response (`IncompleteRead` /
+  `RemoteDisconnected`) is now retried like other transient failures
+  instead of ending the case as a `partial_run` at once.
 
 ## Version 0.5.3
 

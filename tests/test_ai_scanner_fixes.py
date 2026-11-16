@@ -185,6 +185,40 @@ class RetryTests(unittest.TestCase):
         self.assertEqual(urlopen.call_count, 3)
         self.assertIn("429", str(ctx.exception))
 
+    def test_incomplete_read_is_retried_then_succeeds(self):
+        import http.client
+        calls = {"n": 0}
+
+        class FlakyResponse(FakeResponse):
+            def read(self):
+                calls["n"] += 1
+                if calls["n"] == 1:
+                    raise http.client.IncompleteRead(b'{"ok"', 5)
+                return super().read()
+
+        def fake_urlopen(request, timeout=60):
+            return FlakyResponse({"ok": True})
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen), \
+                mock.patch("time.sleep"):
+            result = _post("https://example.invalid/", {}, {})
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(calls["n"], 2)
+
+    def test_incomplete_read_exhausted_after_three_attempts(self):
+        import http.client
+
+        class AlwaysIncomplete(FakeResponse):
+            def read(self):
+                raise http.client.IncompleteRead(b"", 1)
+
+        with mock.patch("urllib.request.urlopen",
+                        return_value=AlwaysIncomplete({"ok": True})) as urlopen, \
+                mock.patch("time.sleep"):
+            with self.assertRaises(ProviderError):
+                _post("https://example.invalid/", {}, {})
+        self.assertEqual(urlopen.call_count, 3)
+
 
 class NewProbeTests(unittest.TestCase):
     def test_eleven_probes_with_unique_ids(self):

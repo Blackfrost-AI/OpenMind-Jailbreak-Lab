@@ -167,6 +167,44 @@ class OpenAICompatibleTests(unittest.TestCase):
         self.assertEqual(text, "ok")
         self.assertEqual(attempts["n"], 2)
 
+    def test_incomplete_read_is_retried_then_succeeds(self):
+        import http.client
+        response = {"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
+        attempts = {"n": 0}
+
+        class FlakyResponse(FakeResponse):
+            def read(self):
+                attempts["n"] += 1
+                if attempts["n"] == 1:
+                    raise http.client.IncompleteRead(b'{"choices"', 5)
+                return super().read()
+
+        def flaky(request, timeout=90.0):
+            return FlakyResponse(response)
+
+        with patch("urllib.request.urlopen", side_effect=flaky), \
+                patch("time.sleep"):
+            _, text, _ = call_openai_compatible(
+                [{"role": "user", "content": "x"}],
+                model="m", base_url="http://localhost/v1")
+        self.assertEqual(text, "ok")
+        self.assertEqual(attempts["n"], 2)
+
+    def test_incomplete_read_exhaustion_raises_guardrail_error(self):
+        import http.client
+
+        class AlwaysIncomplete(FakeResponse):
+            def read(self):
+                raise http.client.IncompleteRead(b"", 1)
+
+        with patch("urllib.request.urlopen",
+                   return_value=AlwaysIncomplete({})) as urlopen, \
+                patch("time.sleep"):
+            with self.assertRaises(GuardrailRunError):
+                call_openai_compatible([{"role": "user", "content": "x"}],
+                                       model="m", base_url="http://localhost/v1")
+        self.assertEqual(urlopen.call_count, 3)
+
     def test_hosted_presets_have_documented_base_urls(self):
         from modules.guardrail_lab.openai_compatible import PRESET_BASE_URLS
 

@@ -6,6 +6,7 @@ providers exposing /v1/chat/completions. No third-party dependency required.
 """
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import time
@@ -161,7 +162,9 @@ def call_openai_compatible(
                 continue
             raise GuardrailRunError(
                 f"Compatible endpoint HTTP {exc.code}: {detail}") from exc
-        except (urllib.error.URLError, TimeoutError) as exc:
+        except (urllib.error.URLError, TimeoutError,
+                http.client.IncompleteRead,
+                http.client.RemoteDisconnected) as exc:
             if attempt < MAX_ATTEMPTS:
                 _sleep_before_retry(attempt, None)
                 continue

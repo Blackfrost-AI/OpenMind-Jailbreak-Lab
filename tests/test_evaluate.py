@@ -56,6 +56,13 @@ class EvaluateTests(unittest.TestCase):
                 "id": "OM-005", "model": "test-model", "response": "ok",
             }])
 
+    def test_non_string_tags_rejected(self):
+        cases = [dict(self.cases[0], tags=["prompt_injection", 123])]
+        with self.assertRaisesRegex(ValueError, "tags must be a list of strings"):
+            evaluate_cases(cases, [{
+                "id": "OM-005", "model": "test-model", "response": "ok",
+            }])
+
 
 if __name__ == "__main__":
     unittest.main()

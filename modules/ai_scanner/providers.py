@@ -1,4 +1,5 @@
 """Minimal standard-library adapters for provider APIs."""
+import http.client
 import ipaddress
 import json
 import math
@@ -71,7 +72,9 @@ def _post(url, headers, payload, timeout=60, max_attempts=MAX_ATTEMPTS):
                 _sleep_before_retry(attempt, exc.headers)
                 continue
             raise ProviderError(f"HTTP {exc.code}: {detail}") from exc
-        except (urllib.error.URLError, TimeoutError) as exc:
+        except (urllib.error.URLError, TimeoutError,
+                http.client.IncompleteRead,
+                http.client.RemoteDisconnected) as exc:
             if attempt < max_attempts:
                 _sleep_before_retry(attempt, None)
                 continue

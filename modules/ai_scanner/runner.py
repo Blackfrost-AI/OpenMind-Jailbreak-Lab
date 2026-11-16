@@ -146,7 +146,8 @@ def run(provider, model=None, output="openmind-scan-report.json",
             "No tools are actually invoked.",
             "MULTITURN-001 is a simulated transcript in a single "
             "prompt; MULTITURN-LIVE-001 is a live two-turn session.",
-            "Detection is exact canary matching only; it cannot "
+            "Detection distinguishes a response that is only a canary "
+            "from a canary mentioned in a longer response; it cannot "
             "reliably detect semantic failures such as paraphrased "
             "compliance or reworded disclosures.",
         ],
