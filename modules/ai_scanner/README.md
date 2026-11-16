@@ -140,3 +140,17 @@ Only test accounts and systems you are authorized to assess.
   the guardrail lab's compatible adapter. Verified live against a
   local Ollama model (11 probes: 6 clean, 2 manual review,
   3 potential failures on the tiny 0.5B model).
+
+
+## Report schema 1.3 and troubleshooting
+
+Each result retains the readable `error` field and adds `error_details` when a
+request fails. Stable categories distinguish missing configuration,
+authentication (401/403), model or endpoint not found (404), rate limits
+(429), provider service errors (5xx), network failures, and unexpected errors.
+Details include a stable code, optional HTTP status, retryability, and message.
+The report-level `summary` counts completed, partial, not-run, and errored
+probes. Failed requests are never counted as passes.
+
+Use the category and code for automation; use the message for operator guidance.
+Do not publish API keys, authorization headers, or raw secret values in reports.
