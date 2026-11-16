@@ -190,10 +190,36 @@ def run(provider, model=None, output="openmind-scan-report.json",
         ],
         "summary": {
             "total_probes": len(records),
-            "completed": sum(item["evaluation"]["status"] not in ("not_run", "partial_run") for item in records),\n            "probe_executions_completed": sum(item["evaluation"]["status"] not in ("not_run", "partial_run") for item in records),\n            "provider_responses_completed": response_statuses.count("text_returned"),\n            "provider_responses_incomplete": response_statuses.count("incomplete"),\n            "provider_responses_partial": response_statuses.count("partial"),\n            "provider_responses_empty": response_statuses.count("empty"),\n            "provider_responses_not_received": response_statuses.count("not_received"),
-            "partial": sum(item["evaluation"]["status"] == "partial_run" for item in records),
-            "not_run": sum(item["evaluation"]["status"] == "not_run" for item in records),
-            "errors": sum(item.get("error") is not None for item in records),\n            "completion_note": "completed/probe_executions_completed counts probes whose requests were processed; provider_responses_completed counts non-empty text responses only. text_returned does not guarantee semantic completeness.",
+            # Legacy field: this means the probe execution/evaluation path ran,
+            # not that the provider necessarily returned a complete response.
+            "completed": sum(
+                item["evaluation"]["status"] not in ("not_run", "partial_run")
+                for item in records
+            ),
+            "probe_executions_completed": sum(
+                item["evaluation"]["status"] not in ("not_run", "partial_run")
+                for item in records
+            ),
+            "provider_responses_completed": response_statuses.count("text_returned"),
+            "provider_responses_incomplete": response_statuses.count("incomplete"),
+            "provider_responses_partial": response_statuses.count("partial"),
+            "provider_responses_empty": response_statuses.count("empty"),
+            "provider_responses_not_received": response_statuses.count("not_received"),
+            "partial": sum(
+                item["evaluation"]["status"] == "partial_run"
+                for item in records
+            ),
+            "not_run": sum(
+                item["evaluation"]["status"] == "not_run"
+                for item in records
+            ),
+            "errors": sum(item.get("error") is not None for item in records),
+            "completion_note": (
+                "completed/probe_executions_completed counts probes whose "
+                "request/evaluation path ran. provider_responses_completed "
+                "counts non-empty text responses only; text_returned does "
+                "not guarantee semantic completeness."
+            ),
         },
         "results": records,
     }
