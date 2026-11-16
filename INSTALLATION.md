@@ -307,7 +307,7 @@ The manual multi-provider workflow runs on a GitHub-hosted Ubuntu runner. Its ch
 2. Open **Actions → Manual multi-provider red-team suite**.
 3. Choose one provider and enter the exact model identifier.
 4. For `openai-compatible`, provide an HTTPS base URL reachable from the GitHub-hosted runner. Add `OPENAI_COMPAT_API_KEY` as a secret if the endpoint requires authentication.
-5. Choose a request budget from 1 to 16 and run the workflow.
+5. Choose a request budget from 1 to 24 and run the workflow.
 6. Download the JSON evidence artifact from the completed run.
 
 Localhost presets (Ollama, vLLM, LM Studio, llama.cpp, and LocalAI) are deliberately not workflow choices: a GitHub-hosted runner cannot reach a service listening on your phone or computer's `localhost`. Run those adapters from the machine or network where the inference server is reachable, using the local CLI examples below.
