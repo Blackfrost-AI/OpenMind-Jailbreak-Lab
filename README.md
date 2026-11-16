@@ -40,7 +40,7 @@ Tests use bounded scenarios and harmless synthetic canaries. They do not require
 
 The main API-backed evaluation module. It runs individual cases or bounded campaigns, captures request/response evidence, and assigns conservative result labels for follow-up review.
 
-- Case-based tests (GL-001 onward)
+- 24 case-based tests (GL-001–GL-024)
 - Fixed-framing campaign variants and request/time limits
 - Provider-specific configuration and compatible endpoints
 - JSON evidence reports
