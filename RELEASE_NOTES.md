@@ -42,7 +42,7 @@ The 76-case live provider suite and selectable multi-provider Actions workflow h
 4. Keep live model findings separate from offline CI results.
 
 
-## Unreleased — bounded adversarial research mode
+## Current main — bounded adversarial research mode
 
 - Added the `--research-mode` CLI switch for authorized, bounded campaign
   evaluation using six fixed reviewed framings and evidence-triggered follow-ups.
@@ -54,5 +54,4 @@ The 76-case live provider suite and selectable multi-provider Actions workflow h
 - This mode does not generate unrestricted jailbreak payloads, execute
   model-produced tool calls, or establish a vulnerability without human review
   and repeatability checks.
-- CI status for this change must be read from the linked GitHub Actions run;
-  documentation changes do not imply a green workflow or live-provider test.
+- The current main README commit `70fdf9e5c6798aeeccd6ca9298bd45115d4313f2` passed the Validate benchmark workflow ([run 44132621422](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44132621422)). This is a documentation-only commit; it does not replace code-level or live-provider verification.
