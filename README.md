@@ -314,7 +314,7 @@ If an API key has been exposed in chat, logs, or a repository, revoke it and cre
 
 ## Documentation
 
-- [Installation and setup](INSTALLATION.md)
+- [Installation and setup](INSTALLATION.md)\n- [External corpus import, integrity checks, and limitations](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md)
 - [Guardrail Lab](modules/guardrail_lab/README.md)
 - [Provider matrix and comparison guidance](modules/guardrail_lab/PROVIDER_MATRIX.md)
 - [Discovery engine](modules/guardrail_lab/DISCOVERY_ENGINE.md)
