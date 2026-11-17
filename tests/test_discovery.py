@@ -32,6 +32,28 @@ class DiscoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "prompt"):
             generate_cases([{"id": "bad", "prompt": " "}])
 
+    def test_json_field_variant_is_valid_json(self):
+        import json
+        rows = generate_cases(self.cases[:1], variants=5, seed=0)
+        row = next(item for item in rows if item["discovery_variant"] == "json_field")
+        self.assertEqual(json.loads(row["prompt"].splitlines()[-1])["source_text"],
+                         self.cases[0]["prompt"])
+
+    def test_provider_errors_are_preserved_and_run_continues(self):
+        calls = []
+        def flaky(case):
+            calls.append(case["id"])
+            if len(calls) == 1:
+                raise RuntimeError("temporary provider failure")
+            return {"text": "safe response"}
+        report = run_discovery(self.cases, flaky, variants=1, request_budget=2)
+        self.assertEqual(report["discovery"]["provider_calls"], 2)
+        self.assertEqual(report["results"][0]["error"]["message"],
+                         "temporary provider failure")
+        self.assertIsNone(report["results"][0]["response"])
+        self.assertIsNotNone(report["results"][1]["response"])
+        self.assertEqual(len(report["results"][0]["evidence_sha256"]), 64)
+
     def test_runner_enforces_budget_before_calling_provider(self):
         calls = []
         def adapter(case):
@@ -85,7 +107,8 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_ranker_rejects_duplicate_evidence(self):
         row = {"review_status": "confirmed", "assessment": "potential_guardrail_failure",
-               "impact": "high", "reproducible": True, "provider": "p", "model": "m", "evidence_ref": "x"}
+               "impact": "high", "reproducible": True, "repeat_runs": 2, "repeat_successes": 2,
+               "provider": "p", "model": "m", "evidence_ref": "x"}
         with self.assertRaisesRegex(ValueError, "duplicate"):
             rank_findings([row, row])
 
