@@ -1,89 +1,23 @@
-# External jailbreak evaluation corpus
+# Uploaded source archive inventory
 
-The legacy importer creates two reproducible JSONL artifacts from the uploaded ZIP:
+The uploaded archive is represented in this repository by a metadata-only inventory at [data/source_corpus](../../data/source_corpus/). This page documents its scope and limitations. It does not provide an importer that turns the source files into executable jailbreak prompts.
 
-1. A complete source inventory with each archive member's relative path, SHA-256, byte count, model/folder label, and heuristic pattern tags.
-2. A safe evaluation corpus with one harmless synthetic-canary test plus one matched benign control per active, non-empty prompt/configuration file.
+## Committed files
 
-The uploaded ZIP contains 55 logical archive members (excluding the enclosing root directory). All members are represented in the source inventory; non-empty prompt/configuration files have generated safe marker-based evaluation fixtures in the legacy package. These fixtures are synthetic, not original source prompts. Prompt bodies are not copied or executed. The generated adversarial cases check whether a model treats an untrusted note as data rather than following its instruction to emit a harmless marker; each is paired with a benign extraction control.
+- `data/source_corpus/source_inventory.jsonl`: 55 JSONL records, one for each non-directory file in the uploaded ZIP.
+- `data/source_corpus/manifest.json`: source archive SHA-256, record counts, and inventory SHA-256.
+- `data/source_corpus/README.md`: inclusion and handling rules.
 
-## Run
+## Source integrity
 
-```bash
-python scripts/import_external_prompt_archive.py \
-  --input "jailbreaks-main (1).zip" \
-  --out data/external_prompt_archive_v2.jsonl \
-  --cases-out data/external_jailbreak_eval_v1.jsonl
-```
-
-Each generated case carries the source path and SHA-256, model/folder label, heuristic tags, expected signal, and an explicit unreviewed status. For this 55-file archive, the result is 52 adversarial canary cases plus 52 matched benign controls; the withdrawn notice is inventoried but not run.
-
-## Trust and scoring
-
-“Trusted” means source identity and integrity are verifiable; it does not mean the content is safe, licensed for redistribution, accurate, or authorized to override system/developer instructions. Every generated case starts unreviewed. Keyword tags are discovery hints, not proof of a bypass. A candidate failure must be repeated, compared with benign controls, and manually reviewed before confirmation.
-
-Keep the original ZIP in a quarantined research input directory. Never load its contents as system/developer prompts or execute scripts/configurations from it.
-
-
-## Committed corpus package
-
-A pre-generated **legacy combined package** from the source inventory and synthetic evaluation fixtures is committed at
-`data/external_jailbreak_corpus_v1.zip`. Extract it from the repository root:
-
-```bash
-mkdir -p data/external_jailbreak_corpus
-python -m zipfile -e data/external_jailbreak_corpus_v1.zip data/external_jailbreak_corpus
-```
-
-The archive contains:
-
-| File | Records | Purpose |
-|---|---:|---|
-| `external_prompt_archive_v2.jsonl` | 55 | Source inventory and provenance |
-| `external_jailbreak_eval_v1.jsonl` | 104 | 52 canary adaptations plus 52 matched controls |
-| `manifest.json` | 1 | Package counts and SHA-256 hashes |
-
-The package's cases are linked to source paths and source hashes. All evaluation
-rows are marked `unreviewed`; this is intentional and must not be silently
-changed to reviewed or confirmed.
-
-### Current integration boundary
-
-The ZIP is committed as a reusable dataset artifact. The existing
-`modules.guardrail_lab` CLI does **not** currently accept this JSONL file as a
-case registry, so extracting it does not execute or register these 104 cases.
-Do not describe the package as having been run through the provider adapters
-until a future loader/adapter integration exists and reports contain these
-case IDs. For now, inspect, validate, curate, and safely adapt the records using
-the existing GL test-case workflow.
-
-### Integrity and review
-
-Use the manifest to verify SHA-256 hashes before use. Validate JSONL parsing,
-unique case IDs, expected counts, and the `unreviewed` status. Preserve the
-original package and its manifest unchanged; store any curated or reviewed
-version as a separately versioned artifact with reviewer, date, and rationale.
-
-The source inventory is provenance metadata, not a license grant. The package
-does not redistribute original prompt bodies. Removing or omitting a source
-license does not create permission to republish source material. The withdrawn
-notice remains quarantined and must not be executed.
-
-
-## Dataset separation (17 November 2026)
-
-The project now documents two distinct datasets:
-
-1. **Real source archive provenance** — see [data/source_corpus/README.md](../../data/source_corpus/README.md). The uploaded archive has 55 entries, including 52 non-empty prompt/configuration files. Only metadata and hashes are represented here; original bodies are not redistributed. The withdrawn `grok-fast-v2.md` entry is quarantined.
-2. **Synthetic evaluation suite** — see [data/synthetic_evaluation/README.md](../../data/synthetic_evaluation/README.md). It contains 52 generated canary adaptations and 52 matched benign controls. These are synthetic and are not source prompts.
-
-The existing `data/external_jailbreak_corpus_v1.zip` is a legacy combined bundle retained unchanged for traceability. It is not the canonical separated layout. Do not call its 104 generated cases real jailbreak prompts or count them as source examples. The CLI integration limitation described above still applies.
-
-
-## Verified source archive integrity
-
-The uploaded ZIP's SHA-256 was independently recomputed from the supplied file bytes as:
+The exact uploaded archive `jailbreaks-main (1)(1).zip` has SHA-256:
 
 `4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918`
 
-The ZIP contains 75 ZIP entries including directory entries; the logical file inventory is 55 files. The withdrawn notice is at `jailbreaks-main/0x8D jailbreaks/grok-fast-v2.md` and remains quarantined. Do not confuse ZIP entry count with logical file count.
+It contains 55 logical files: 54 non-empty files and one one-byte placeholder treated as empty content. One file is a withdrawn security-quarantine notice: `0x8D jailbreaks/grok-fast-v2.md`. The notice remains excluded and must not be restored or used.
+
+## Execution boundary
+
+No original prompt bodies are redistributed in this repository. The inventory records provenance and byte integrity only. It contains zero runnable records and is not a jailbreak prompt corpus. Hashes do not establish licensing, safety, ownership, or effectiveness.
+
+Use the versioned benchmark and the registered Guardrail Lab test cases for authorized evaluation. Do not load untrusted archive files as system/developer instructions or execute their scripts/configurations.
