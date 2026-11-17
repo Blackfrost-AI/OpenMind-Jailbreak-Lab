@@ -25,7 +25,7 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"repeat_runs"): add_finding(Path("unused"),row,True)
     def test_non_object_registry_entry_rejected(self):
         with tempfile.TemporaryDirectory() as d:
-            p=Path(d)/"r.jsonl"; p.write_text('[]\\n')
+            p=Path(d)/"r.jsonl"; p.write_text('[]\n')
             with self.assertRaisesRegex(ValueError,"JSON object"): load_registry(p)
     def test_tampering_detected(self):
         with tempfile.TemporaryDirectory() as d:
