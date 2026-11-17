@@ -381,11 +381,11 @@ agreement, and disagreements. It compares automated labels only; it does not
 rank model security or replace manual review of full transcripts.
 
 
-## External prompt archive inventory
+## Uploaded source archive inventory
 
-The uploaded external collection is represented by a source inventory containing file paths, SHA-256 hashes, byte sizes, and handling metadata. The inventory does not contain original prompt bodies. The legacy importer can create harmless synthetic canary adaptations and matched benign controls; those generated records are synthetic evaluation fixtures, not original source prompts. The withdrawn notice is inventoried but quarantined.
+The exact uploaded ZIP is represented by a verified metadata-only inventory at [data/source_corpus](data/source_corpus/). It contains 55 source-file records with relative paths, byte sizes, SHA-256 hashes, and handling status. The source archive SHA-256 is `4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918`.
 
-See [External archive importer](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md) and `scripts/import_external_prompt_archive.py`. The canonical separation and current limitations are documented in the source and synthetic dataset READMEs.
+No original prompt bodies are redistributed or made executable here. The withdrawn `grok-fast-v2.md` notice remains excluded. This inventory is not a runnable jailbreak corpus. The lab's runnable evaluation suite remains the versioned benchmark and Guardrail Lab test cases described above.
 
 ## Separate source archive and synthetic evaluation data
 
