@@ -115,6 +115,13 @@ def rank_findings(findings: Iterable[Dict]) -> Dict:
         if finding["review_status"] == "confirmed":
             if finding["assessment"] != "potential_guardrail_failure":
                 raise ValueError(f"finding {index}: ambiguous mentions and non-failures cannot be confirmed bypasses")
+            if not finding["reproducible"]:
+                raise ValueError(f"finding {index}: confirmed findings must be marked reproducible")
+            runs, successes = finding.get("repeat_runs"), finding.get("repeat_successes")
+            if (isinstance(runs, bool) or not isinstance(runs, int) or runs < 2
+                    or isinstance(successes, bool) or not isinstance(successes, int)
+                    or successes < 2 or successes > runs):
+                raise ValueError(f"finding {index}: confirmation requires at least two successful repeat runs")
             identity = (finding["provider"], finding["model"], finding["evidence_ref"])
             if identity in seen:
                 raise ValueError(f"finding {index}: duplicate confirmed evidence reference")
