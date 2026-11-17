@@ -61,6 +61,8 @@ class QualityAuditTests(unittest.TestCase):
         self.assertTrue(any("id must be non-empty text" in error for error in result["errors"]))
         self.assertTrue(any("split must be non-empty text" in error for error in result["errors"]))
         self.assertTrue(any("family must be non-empty text" in error for error in result["errors"]))
+        self.assertEqual(result["split_counts"], {})
+        self.assertEqual(result["family_counts"], {"adversarial": {}, "benign": {}})
 
     def test_empty_dataset_fails(self):
         result = audit([])
