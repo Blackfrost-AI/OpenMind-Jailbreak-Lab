@@ -1,5 +1,6 @@
 """CLI. Uses the repository's existing provider adapter when installed in-repo."""
 import argparse, json, os, sys
+from pathlib import Path
 from .cases import CASES
 from .runner import run_suite, write_report
 from .campaign import run_campaign
@@ -93,7 +94,7 @@ def main(argv=None):
             report = run_suite(adapter, provider=args.provider, model=args.model, case_ids=args.case_ids, delay_seconds=args.delay)
         write_report(report, args.output)
         if args.registry:
-            saved = save_candidate_records(report, args.output, __import__("pathlib").Path(args.registry))
+            saved = save_candidate_records(report, args.output, Path(args.registry))
             print(f"unverified_candidates_saved={len(saved)} registry={args.registry}")
     except (RuntimeError, KeyError, ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
