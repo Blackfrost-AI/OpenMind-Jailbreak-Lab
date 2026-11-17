@@ -5,7 +5,7 @@
 
 OpenMind Guardrail Lab is a Python testing framework for evaluating how AI models handle untrusted instructions, prompt injection, context manipulation, and instruction-boundary conflicts.
 
-It supports individual test cases and bounded automated campaigns, records structured JSON evidence, and allows results to be compared across providers.
+It supports 76 runnable cases (24 core plus 52 source-derived safe adaptations), individual selection, and bounded automated campaigns. Structured JSON evidence includes source provenance for adapted cases and can be compared across providers.
 
 Use it only with models and services you own or are explicitly authorized to assess.
 
@@ -220,7 +220,8 @@ python -m modules.guardrail_lab \
 | --delay | Delay between requests |
 | --max-seconds | Maximum campaign scheduling time |
 | --max-tokens | Caps the model's maximum output tokens per request (OpenAI-compatible providers only) |
-| --case | Select individual test cases |
+| --case | Select individual test cases (repeatable) |
+| --source-corpus | Select all 52 source-derived safe adaptations |
 | --output | Report destination |
 
 Campaigns use fixed test variations and bounded request budgets. They do not generate unrestricted prompts.
@@ -533,4 +534,4 @@ releases when authenticity is required.
 
 ## Source-derived prompt adaptations
 
-The lab includes 52 runnable, safe pattern adaptations derived from eligible, non-withdrawn documents in the supplied source archive. They are loaded alongside the core cases automatically. These are **not verbatim copies** of source prompts: they preserve testable patterns (authority escalation, policy-boundary narrowing, persona reassignment, and agent/tool authority confusion) while replacing risky payloads with inert markers. Provenance is retained in `data/source_corpus/safe_adaptations.jsonl` through source paths and SHA-256 hashes. Run an individual source-derived case with `--case GL-SRC-001` (the CLI option is `--case`, repeatable for multiple IDs), or run the complete source-derived set with `--source-corpus`. This flag selects all 52 source cases and can be combined with `--case` to add specific core cases. The 52 source-derived cases are registered in `CASES`, so they are included automatically in the default full suite and are selectable in bounded campaigns. A campaign remains limited by `--budget` (default 36 requests), so use the normal suite for a complete one-pass run of all 52. The withdrawn notice and empty placeholder are excluded. The original archive remains a provenance source; raw operational instructions are not executed by the lab.
+The lab includes 52 runnable, safe pattern adaptations derived from eligible, non-withdrawn documents in the supplied source archive. They are loaded alongside the 24 core cases automatically, for 76 total cases. These are **not verbatim copies** of source prompts: they preserve testable patterns (authority escalation, policy-boundary narrowing, persona reassignment, and simulated agent/tool authority confusion) while replacing risky payloads with inert markers. At load time, schema, unique IDs/canaries, safe framing, and each source ID/path/SHA-256 link are validated against `source_inventory.jsonl`. Each live evidence record carries `source_provenance` with the original source ID, path, and SHA-256. Run an individual source-derived case with `--case GL-SRC-001` (the CLI option is `--case`, repeatable for multiple IDs), or run the complete source-derived set with `--source-corpus`. This flag selects all 52 source cases and can be combined with `--case` to add specific core cases. The 52 source-derived cases are registered in `CASES`, so they are included automatically in the default full suite and are selectable in bounded campaigns. The default suite runs all 76 cases once. `--source-corpus` runs all 52 source-derived cases once. A campaign is bounded by `--budget` (default 36 requests) and may stop before all selected cases or variants are attempted; use the normal suite for complete one-pass coverage. The withdrawn notice and empty placeholder are excluded. The original archive remains a provenance source; raw operational instructions are not executed by the lab.
