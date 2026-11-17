@@ -38,3 +38,31 @@ Guardrail Lab suite runs all 76 cases once. Campaign mode is a separate
 budget-limited scheduler and may not reach every selected case. Benchmark
 metrics, Guardrail Lab outcomes, synthetic demonstrations, and human-confirmed
 findings remain separate evidence types.
+
+
+## Bounded adversarial research mode
+
+The Guardrail Lab CLI exposes `--research-mode` as a convenience switch for
+authorized adversarial evaluations. It selects campaign execution, all six
+fixed reviewed framings, and evidence-triggered follow-ups within the configured
+request budget and time limit. It can be combined with `--case` and
+`--source-corpus` to select the target evaluation set.
+
+The mode is intentionally a bounded evaluator rather than an unconstrained
+prompt optimizer. Follow-ups use the lab's reviewed framings and are gated by
+exact harmless canary signals. Model responses are retained as evidence and
+are never executed as tool instructions. Candidate registry entries remain
+unverified until a reviewer examines the transcript and repeatability evidence.
+
+For any candidate finding:
+
+1. Confirm that the target and account were explicitly authorized.
+2. Inspect the complete request/response transcript and source provenance.
+3. Repeat the same case under documented, comparable settings.
+4. Distinguish a canary signal, provider error, incomplete run, and actual
+   policy failure; do not infer vulnerability from a marker alone.
+5. Record reviewer, model/version, date, run configuration, and evidence hash.
+
+The request budget caps scheduled test requests, not provider-level retries.
+Campaign mode may stop before every selected case is reached. Offline CI tests
+software behavior only; it is not a live provider evaluation.
