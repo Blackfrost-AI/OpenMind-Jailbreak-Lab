@@ -54,7 +54,9 @@ def load_registry(registry: Path) -> list[dict[str, Any]]:
             if not line.strip(): continue
             try: row = json.loads(line)
             except json.JSONDecodeError as exc: raise ValueError(f"invalid JSON on registry line {n}") from exc
-            if not isinstance(row, dict):\n                raise ValueError(f"registry line {n} must contain a JSON object")\n            if row.get("record_sha256") != _hash({k:v for k,v in row.items() if k != "record_sha256"}):
+            if not isinstance(row, dict):
+                raise ValueError(f"registry line {n} must contain a JSON object")
+            if row.get("record_sha256") != _hash({k:v for k,v in row.items() if k != "record_sha256"}):
                 raise ValueError(f"registry integrity check failed on line {n}")
             rows.append(row)
     return rows
