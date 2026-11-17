@@ -46,6 +46,17 @@ Do not combine simulated demo fixtures with live results. Do not count API error
 Until the remaining items are completed, describe this repository as a validated development build, not as a completed v1.0 release or a universal guardrail-bypass tool.
 
 
+
+## Current main revision — 2026-11-17
+
+Latest observed main commit: `70fdf9e5c6798aeeccd6ca9298bd45115d4313f2` (README shortening; documentation-only).
+
+- [Validate benchmark — run 44132621422](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44132621422): **success** on the current main commit.
+- The release-notes and release-status documentation now records the bounded `--research-mode` feature and its verification boundary.
+- This successful documentation workflow does not establish live provider compatibility, does not certify model security, and does not independently rerun the full code regression matrix on the current head.
+
+The earlier code/workflow verification results listed above remain tied to their exact commit. Re-run the complete release validation workflow on the final release candidate before tagging.
+
 ## Bounded adversarial research mode
 
 The CLI now includes `--research-mode`, which selects the bounded campaign
