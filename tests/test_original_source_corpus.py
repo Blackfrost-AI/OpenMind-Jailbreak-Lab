@@ -49,6 +49,14 @@ class OriginalSourceCorpusTests(unittest.TestCase):
                 with self.assertRaises(ValueError, msg=f"accepted malformed record: {item}"):
                     load_index(path)
 
+    def test_rejects_non_object_lines(self):
+        for line in ("[]", "null", '"text"', "42", "true"):
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "bad.jsonl"
+                path.write_text(line + "\n", encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "must be a JSON object", msg=f"accepted line: {line}"):
+                    load_index(path)
+
     def test_unknown_id_exits_nonzero(self):
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):

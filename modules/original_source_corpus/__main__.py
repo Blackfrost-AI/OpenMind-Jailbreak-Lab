@@ -20,6 +20,8 @@ def load_index(path: Path = DEFAULT_INDEX) -> list[dict]:
             item = json.loads(line)
         except json.JSONDecodeError as exc:
             raise ValueError(f"Invalid JSON on line {number}: {exc}") from exc
+        if not isinstance(item, dict):
+            raise ValueError(f"Line {number}: record must be a JSON object")
         required = {"id", "path", "bytes", "sha256", "status", "runnable"}
         missing = required - item.keys()
         if missing:
