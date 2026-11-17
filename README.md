@@ -56,7 +56,7 @@ Use the environment variable for your provider and keep API keys out of source f
 
 The 52 source-derived Guardrail Lab cases retain source IDs, paths, and hashes, but replace risky instructions with inert markers. They are **not verbatim source prompts** and remain in the defensive benchmark.
 
-The **Original Source Corpus** is separate. Its inventory preserves authentic archive provenance without copying raw prompt bodies into the public repository or executing them. Browse records with `python -m modules.original_source_corpus`; create a human-review template with `--id SRC-### --export-review-template PATH`. Details: [Original Source Corpus guide](modules/original_source_corpus/README.md).
+The **Original Source Corpus** is separate. Its inventory preserves authentic archive provenance without copying raw prompt bodies into the public repository or executing them. Browse records with `python -m modules.original_source_corpus`; create a human-review template with `--id SRC-### --export-review-template PATH`. The inventory loader validates JSONL records, rejects non-object values and malformed fields with a clear error, and enforces that every original-source record remains non-runnable. The checked-in review template is regression-tested against the generator. Details: [Original Source Corpus guide](modules/original_source_corpus/README.md).
 
 ## Providers and automation
 
