@@ -63,6 +63,8 @@ def inventory_archive(source: str) -> list[dict]:
                 kind = "readme"
             elif not body.strip():
                 kind = "empty"
+            elif "withdrawn" in body.lower() and ("security quarantine" in body.lower() or "do not use, copy, or import" in body.lower()):
+                kind = "quarantined_source_notice"
             else:
                 kind = "prompt_config"
             rows.append({
@@ -75,9 +77,9 @@ def inventory_archive(source: str) -> list[dict]:
                 "target_label": target,
                 "record_type": kind,
                 "detected_patterns": tags,
-                "handling": "inert_metadata_only",
+                "handling": "quarantined_notice" if kind == "quarantined_source_notice" else "inert_metadata_only",
                 "prompt_text_included": False,
-                "assessment_status": "unreviewed_source_record",
+                "assessment_status": "quarantined_source_notice" if kind == "quarantined_source_notice" else "unreviewed_source_record",
             })
     return sorted(rows, key=lambda row: row["source_path"].casefold())
 
