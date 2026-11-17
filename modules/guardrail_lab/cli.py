@@ -54,6 +54,7 @@ def main(argv=None):
     parser.add_argument("--source-corpus", action="store_true", help="Run all 52 source-derived safe adaptations (combine with --case to add individual cases).")
     parser.add_argument("--list", action="store_true", help="List cases without making API calls")
     parser.add_argument("--campaign", action="store_true", help="Run an automated, bounded adaptive campaign")
+    parser.add_argument("--research-mode", action="store_true", help="Enable the bounded adversarial research workflow: six reviewed framings, evidence-triggered follow-ups, and manual-review evidence. Does not generate unrestricted bypass payloads.")
     parser.add_argument("--budget", type=int, default=36, help="Maximum test requests (1-1000; default: 36); provider retries may add HTTP attempts")
     parser.add_argument("--variants", type=int, choices=[1, 2, 3, 4, 5, 6], default=3, help="Maximum reviewed prompt framings per flagged case")
     parser.add_argument("--no-adaptive", action="store_true", help="Disable evidence-triggered follow-up variations")
@@ -90,6 +91,11 @@ def main(argv=None):
         selected_case_ids = list(dict.fromkeys(selected_case_ids))
     else:
         selected_case_ids = None
+    if args.research_mode and args.no_adaptive:
+        parser.error("--research-mode cannot be combined with --no-adaptive")
+    if args.research_mode:
+        args.campaign = True
+        args.variants = 6
     try:
         adapter = _adapter(args.provider, args.model, args.base_url, args.api_key_env, max_tokens=args.max_tokens)
         if args.campaign:
