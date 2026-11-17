@@ -50,5 +50,5 @@ class ExternalArchiveImporterTests(unittest.TestCase):
                 inventory_archive(source)
 
 
-if __import__("__name__") == "__main__":
+if __name__ == "__main__":
     unittest.main()
