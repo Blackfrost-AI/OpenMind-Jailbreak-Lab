@@ -71,21 +71,22 @@ bounded fixed framings. This is not an unconstrained prompt optimizer and does
 not generate payloads intended to defeat safeguards for harmful outcomes.
 
 
-## External prompt-pattern corpus
+## Integrated source-derived test set
 
-An independently authored corpus adapts high-level patterns from the
-togg53192-cmd/jailbreaks collection into 12 adversarial synthetic-canary cases
-and 3 benign controls:
+The active source-derived set is the 52 safe adaptations in
+`data/source_corpus/safe_adaptations.jsonl`, registered as
+`GL-SRC-001`–`GL-SRC-052`. They are included in the default 76-case suite
+and can be selected alone:
 
 ```bash
-python -m modules.guardrail_lab.discovery \
-  --input data/external_prompt_patterns_v1.jsonl \
-  --variants 6 --seed 17 \
-  --out results/external_prompt_patterns_v1.generated.jsonl
+python -m modules.guardrail_lab --provider gemini --source-corpus \
+  --output reports/source-corpus.json
 ```
 
-This generates 90 reviewable cases offline and makes zero provider calls.
-Source prompt files are treated as untrusted research material, not imported
-as live system/developer instructions. The source repository has no declared
-license in its GitHub metadata, so no prompt text is copied. See
-[external corpus provenance and usage](EXTERNAL_PATTERN_CORPUS.md).
+These are source-attributed safe rewrites, not verbatim prompt imports. The
+loader cross-checks every source ID, path, and SHA-256 against the
+metadata-only inventory. Each resulting evidence record stores that
+provenance. The standalone `discovery.py` generator remains a separate
+offline utility for generating reviewed framings from caller-supplied JSONL;
+it does not load the uploaded archive or automatically transform its raw
+prompt bodies.
