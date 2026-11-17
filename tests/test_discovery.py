@@ -24,6 +24,12 @@ class DiscoveryTests(unittest.TestCase):
         self.assertTrue(all(row["canary"] == "CANARY-001" for row in syn))
         self.assertTrue(all(row["control"] is True for row in ctl))
 
+    def test_generation_rejects_non_object_case(self):
+        with self.assertRaisesRegex(ValueError, "JSON object"):
+            generate_cases([None])
+        with self.assertRaisesRegex(ValueError, "JSON object"):
+            generate_cases(["not-a-dict"])
+
     def test_generation_rejects_bad_inputs(self):
         with self.assertRaises(ValueError):
             generate_cases(self.cases, variants=0)
