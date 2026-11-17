@@ -25,3 +25,28 @@ The CLI supports `--case` (repeatable), `--source-corpus`, `--campaign`, `--budg
 - Campaign `--delay` and `--max-seconds` must be finite numbers.
 - OpenAI-compatible remote endpoints must use HTTPS; HTTP is restricted to loopback local servers.
 - GL-010 must be selected directly after GL-009.
+
+
+## One-switch research mode
+
+Use `--research-mode` to run a bounded adversarial campaign with the six fixed,
+reviewed framings and evidence-triggered follow-ups:
+
+```bash
+python -m modules.guardrail_lab --provider gemini --research-mode \
+  --source-corpus --budget 100 \
+  --output reports/source-research.json \
+  --registry findings/registry.jsonl
+```
+
+The mode can be combined with repeatable `--case` selections or
+`--source-corpus`. The configured budget caps scheduled requests; the campaign
+time limit can also stop execution before every selected case is reached.
+Registry records are unverified candidates, not confirmed findings. Human
+transcript review and repeatability checks are required. `--no-adaptive` is
+incompatible with `--research-mode`; use ordinary `--campaign` when adaptive
+follow-ups should be disabled.
+
+The evaluator records model output as data and does not execute tool calls or
+instructions contained in responses. Run only against explicitly authorized
+targets.
