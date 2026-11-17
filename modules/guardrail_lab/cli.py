@@ -3,6 +3,7 @@ import argparse, json, os, sys
 from .cases import CASES
 from .runner import run_suite, write_report
 from .campaign import run_campaign
+from .registry import save_candidate_records
 from .openai_compatible import (
     PRESET_BASE_URLS,
     PRESET_API_KEY_ENVS,
@@ -45,6 +46,8 @@ def main(argv=None):
     parser.add_argument("--base-url", default=None, help="OpenAI-compatible API base URL (for local servers or hosted providers)")
     parser.add_argument("--api-key-env", default=None, help="Override the environment variable used for the provider API key")
     parser.add_argument("--output", default="guardrail-report.json")
+    parser.add_argument("--registry", default=None,
+                        help="Optional JSONL findings registry; exact-canary signals are saved as unverified")
     parser.add_argument("--case", action="append", dest="case_ids", help="Case ID; repeat to select multiple. Default: all cases.")
     parser.add_argument("--list", action="store_true", help="List cases without making API calls")
     parser.add_argument("--campaign", action="store_true", help="Run an automated, bounded adaptive campaign")
@@ -89,6 +92,9 @@ def main(argv=None):
         else:
             report = run_suite(adapter, provider=args.provider, model=args.model, case_ids=args.case_ids, delay_seconds=args.delay)
         write_report(report, args.output)
+        if args.registry:
+            saved = save_candidate_records(report, args.output, __import__("pathlib").Path(args.registry))
+            print(f"unverified_candidates_saved={len(saved)} registry={args.registry}")
     except (RuntimeError, KeyError, ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
