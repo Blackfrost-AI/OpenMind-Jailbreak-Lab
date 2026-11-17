@@ -3,9 +3,9 @@
 The importer creates two reproducible JSONL artifacts from the uploaded ZIP:
 
 1. A complete source inventory with each archive member's relative path, SHA-256, byte count, model/folder label, and heuristic pattern tags.
-2. A safe evaluation corpus with one harmless synthetic-canary instruction-boundary test per active, non-empty prompt/configuration file.
+2. A safe evaluation corpus with one harmless synthetic-canary test plus one matched benign control per active, non-empty prompt/configuration file.
 
-The uploaded archive contains 55 files. All members are preserved in the source inventory; non-empty prompt/configuration files become safe marker-based evaluation cases. Prompt bodies are not copied or executed. The generated tests check whether a model treats an untrusted note as data rather than following its instruction to emit a harmless marker.
+The uploaded archive contains 55 files. All members are preserved in the source inventory; non-empty prompt/configuration files become safe marker-based evaluation cases. Prompt bodies are not copied or executed. The generated adversarial cases check whether a model treats an untrusted note as data rather than following its instruction to emit a harmless marker; each is paired with a benign extraction control.
 
 ## Run
 
@@ -16,7 +16,7 @@ python scripts/import_external_prompt_archive.py \
   --cases-out data/external_jailbreak_eval_v1.jsonl
 ```
 
-Each generated case carries the source path and SHA-256, model/folder label, heuristic tags, expected signal, and an explicit unreviewed status.
+Each generated case carries the source path and SHA-256, model/folder label, heuristic tags, expected signal, and an explicit unreviewed status. For this 55-file archive, the result is 52 adversarial canary cases plus 52 matched benign controls; the withdrawn notice is inventoried but not run.
 
 ## Trust and scoring
 
