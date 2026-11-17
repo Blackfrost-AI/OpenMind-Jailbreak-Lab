@@ -301,18 +301,19 @@ Local server presets do not install models or start inference servers automatica
 
 ## 7. Run GitHub Actions provider tests
 
-The manual multi-provider workflow runs on a GitHub-hosted Ubuntu runner. Its choices are the hosted native adapters (OpenAI, Anthropic, Gemini), hosted compatible presets (DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter, Groq, Together), and a custom OpenAI-compatible endpoint.
+The manual multi-provider workflow runs on a GitHub-hosted Ubuntu runner. It supports OpenAI, Anthropic, Gemini, DeepSeek, GLM, Moonshot, NVIDIA, OpenRouter, Groq, Together, and custom OpenAI-compatible endpoints. It can run all 76 Guardrail Lab cases, the 24 core cases, or the 52 source-derived safe adaptations.
 
 1. Add the selected provider's API key under **Settings → Secrets and variables → Actions**. Secret names are `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `ZHIPUAI_API_KEY`, `MOONSHOT_API_KEY`, `NVIDIA_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, or `TOGETHER_API_KEY`.
-2. Open **Actions → Manual multi-provider red-team suite**.
+2. Open **Actions → Manual multi-provider Guardrail Lab**.
 3. Choose one provider and enter the exact model identifier.
-4. For `openai-compatible`, provide an HTTPS base URL reachable from the GitHub-hosted runner. Add `OPENAI_COMPAT_API_KEY` as a secret if the endpoint requires authentication.
-5. Choose a request budget from 1 to 24 and run the workflow.
-6. Download the JSON evidence artifact from the completed run.
+4. Choose scope: `all` (76 cases), `core` (24 cases), or `source` (52 source-derived safe adaptations).
+5. Choose mode: `full_suite` runs each selected case once; `campaign` uses a request budget from 1 to 1000 (default 24).
+6. For `openai-compatible`, provide an HTTPS base URL reachable from the GitHub-hosted runner. Add `OPENAI_COMPAT_API_KEY` as a secret if the endpoint requires authentication.
+7. Download the JSON evidence artifact from the completed run. Artifact names include provider, scope, and mode.
 
 Localhost presets (Ollama, vLLM, LM Studio, llama.cpp, and LocalAI) are deliberately not workflow choices: a GitHub-hosted runner cannot reach a service listening on your phone or computer's `localhost`. Run those adapters from the machine or network where the inference server is reachable, using the local CLI examples below.
 
-The workflow tests one selected provider/model per run; it does not discover or test every model in a provider's catalog. A completed run means the configured requests and report steps completed, not that a jailbreak succeeded.
+The workflow tests one selected provider/model per run; it does not discover or test every model in a provider's catalog. Full-suite mode sends every selected case once. Campaign mode may stop when its budget or time limit is reached; it does not guarantee that every selected case runs. A completed run means the configured requests and report steps completed, not that a jailbreak succeeded.
 
 ---
 
@@ -406,6 +407,17 @@ python -m modules.guardrail_lab \
   --output reports/selected-cases.json
 ```
 
+Run all 52 source-derived safe adaptations only:
+
+```bash
+python -m modules.guardrail_lab \
+  --provider gemini \
+  --source-corpus \
+  --output reports/source-corpus-gemini.json
+```
+
+The source cases use IDs `GL-SRC-001`–`GL-SRC-052`. Each evidence record includes `source_id`, `source_path`, and `source_sha256` under `source_provenance`. The default suite runs all 76 cases; `--source-corpus` selects only the 52 source-derived cases. This is separate from the bounded `--campaign` mode.
+
 ### Run the trust-escalation probes (GL-013–GL-016)
 
 Version 0.6.0 adds four bounded cases that check whether a model follows harmless instructions embedded in content explicitly marked untrusted: a document, a retrieved passage with a forged authority claim, encoded text, and a quotation. Run them against a provider you are authorized to test:
@@ -433,7 +445,7 @@ Workflow file: `.github/workflows/gemini-trust-escalation.yml`. It sends exactly
 
 #### Run the provider-neutral live suite from GitHub Actions
 
-Open **Actions → Manual multi-provider red-team suite** and select **Run workflow**. Choose the provider adapter, enter the exact model identifier, and set a request budget (1–24). One invocation tests one provider/model pair; repeat with the same benchmark and comparable settings to build a cross-provider comparison. Add the matching repository Actions secret first:
+Open **Actions → Manual multi-provider Guardrail Lab** and select **Run workflow**. Choose the provider adapter, exact model identifier, scope (`all`, `core`, or `source`), and mode (`full_suite` or `campaign`). Full-suite mode runs all selected cases once; campaign mode uses the configured budget (1–1000). One invocation tests one provider/model pair; repeat with the same scope and comparable settings to build a cross-provider comparison. Add the matching repository Actions secret first:
 
 | Provider | Required Actions secret |
 |---|---|
@@ -448,7 +460,7 @@ Open **Actions → Manual multi-provider red-team suite** and select **Run workf
 | Groq | `GROQ_API_KEY` |
 | Together | `TOGETHER_API_KEY` |
 
-For `openai-compatible`, optionally add `OPENAI_COMPAT_API_KEY` and supply the HTTPS base URL. The workflow runs one selected provider/model per invocation and uploads a provider-named JSON artifact for 14 days. It does not automatically fan out across accounts or model catalogs. Each request may incur provider charges. Localhost-based Ollama/vLLM/LM Studio/llama.cpp/LocalAI instances are not reachable from a GitHub-hosted runner; run those from a machine on the same network using the CLI examples above.
+For `openai-compatible`, optionally add `OPENAI_COMPAT_API_KEY` and supply the HTTPS base URL. The workflow runs one selected provider/model per invocation and uploads a provider/scope/mode-specific JSON artifact for 14 days. It does not automatically fan out across accounts or model catalogs. Each request may incur provider charges. Localhost-based Ollama/vLLM/LM Studio/llama.cpp/LocalAI instances are not reachable from a GitHub-hosted runner; run those from a machine on the same network using the CLI examples above.
 
 A completed workflow confirms test execution and evidence capture, not a successful bypass.
 
@@ -474,7 +486,8 @@ Campaign options:
 | --variants | Number of fixed follow-up framings (1–6; default 3) |
 | --delay | Delay between requests |
 | --max-seconds | Campaign scheduling time limit |
-| --case | Select specific test cases |
+| --case | Select specific test cases (repeatable) |
+| --source-corpus | Select all 52 source-derived safe adaptations |
 | --output | Report destination |
 
 Campaigns use a fixed variation library and configured request limits.
@@ -727,11 +740,12 @@ Authorized AI security research. Reproducible testing. Evidence-first evaluation
 
 ## 16. Inspect the uploaded source archive inventory
 
-The uploaded external ZIP is represented by a metadata-only source inventory. It is not a runnable prompt corpus and does not include original prompt bodies.
+The uploaded external ZIP is represented by a metadata-only source inventory plus 52 separate safe, source-derived adaptations. Original prompt bodies are not redistributed or executed.
 
 Files:
 
 - `data/source_corpus/source_inventory.jsonl` — 55 source records with paths, byte sizes, SHA-256 hashes, and handling status.
+- `data/source_corpus/safe_adaptations.jsonl` — 52 runnable safe adaptations with source provenance.
 - `data/source_corpus/manifest.json` — source archive and inventory checksums.
 - `data/source_corpus/README.md` — scope and handling rules.
 
@@ -751,8 +765,12 @@ assert len(rows) == manifest["source_file_count"] == 55
 assert len({row["id"] for row in rows}) == len(rows)
 assert all(row["runnable"] is False for row in rows)
 assert sum(row["status"] == "withdrawn_notice" for row in rows) == 1
-print(f"Verified {len(rows)} metadata records; none are runnable.")
+adaptations = [json.loads(line) for line in (root / "safe_adaptations.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+assert len(adaptations) == 52
+assert len({row["case_id"] for row in adaptations}) == 52
+assert all(row["runnable"] is True and row["adaptation"] == "safe_pattern_adaptation" for row in adaptations)
+print(f"Verified {len(rows)} metadata records and {len(adaptations)} safe adaptations.")
 PY
 ```
 
-Run the actual benchmark and lab using the commands in the preceding sections. The source inventory is provenance metadata only; it is not loaded into provider runs.
+The raw inventory remains metadata-only and is not loaded as prompt content. Guardrail Lab loads only the 52 validated safe adaptations, cross-checks their source IDs/paths/hashes against the inventory, and attaches provenance to result records.
