@@ -16,6 +16,18 @@ python -m modules.original_source_corpus --verify-archive /path/to/source_archiv
 
 The browser reads `data/source_corpus/source_inventory.jsonl`. It shows source IDs, paths, sizes, hashes, and status only. It does not display or execute original prompt text. The archive SHA check uses `data/source_corpus/manifest.json`. A blank example of the review template is kept at `manual_reviews/original_source_review_template.json`.
 
+## Inventory validation
+
+The loader validates each non-empty JSONL line before using it:
+
+- Each line must decode to a JSON object; scalar, string, boolean, null, and array values are rejected with a line-numbered `ValueError`.
+- Required fields and their types are checked, including a non-negative integer byte count and a 64-character lowercase SHA-256.
+- Every inventory record must explicitly set `runnable` to `false`.
+- Duplicate source IDs and paths are rejected.
+- Unknown source IDs return a clear error and a non-zero exit code.
+
+Regression tests cover these malformed-input cases. The checked-in review template is also compared with the generated template in the test suite, preventing the example and CLI output from silently drifting apart.
+
 ## Separation and review
 
 - The original archive is the provenance source; inventory entries are not runnable tests.
