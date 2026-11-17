@@ -105,7 +105,13 @@ A quoted, translated, or explained canary is not proof of instruction execution.
 
 ## External corpus
 
-The repository also contains a source-derived evaluation dataset. It has 52 safe canary adaptations and 52 matched benign controls, all marked unreviewed. It is currently a dataset artifact rather than a directly executable Guardrail Lab input. See [the corpus guide](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md) for extraction, integrity checks, and the execution limitation.
+The external archive and generated evaluation fixtures are documented separately:
+
+- [Real source archive provenance](data/source_corpus/README.md): 55 archive members, including 52 non-empty prompt/configuration files, one README, one empty placeholder, and one withdrawn notice. Original prompt bodies are not redistributed.
+- [Synthetic evaluation suite](data/synthetic_evaluation/README.md): 52 generated canary adaptations plus 52 matched benign controls. All 104 are unreviewed and synthetic, not original source prompts.
+- [Corpus guide](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md): extraction, integrity, quarantine, and execution limitations.
+
+The legacy ZIP remains a combined artifact for traceability; it is not the canonical separated layout and is not directly executable by the Guardrail Lab CLI.
 
 ## Need the full reference?
 
