@@ -396,6 +396,7 @@ install imported content, and the generated catalog excludes prompt bodies.
 All entries begin unreviewed; lexical tags are not vulnerability findings.
 
 See [External archive importer](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md)
-and `scripts/import_external_prompt_archive.py`. The uploaded archive contains
-55 files; run the importer against the original ZIP to generate the full
-55-record catalog locally.
+and `scripts/import_external_prompt_archive.py`. The uploaded archive contains 55 files; the importer can generate a SHA-256
+verified source inventory and one safe canary evaluation case per active,
+non-empty prompt/configuration file. See the dedicated import guide for the
+exact command and trust/review requirements.
