@@ -26,5 +26,5 @@ The browser reads `data/source_corpus/source_inventory.jsonl`. It shows source I
 ## Validation
 
 ```bash
-python -m unittest tests.test_original_source_corpus -v
+python -m unittest discover -s tests -p 'test_original_source_corpus.py' -v
 ```
