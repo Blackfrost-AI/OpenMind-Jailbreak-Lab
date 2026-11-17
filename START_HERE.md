@@ -34,11 +34,12 @@ Paste the key into GitHub's secret-value field, not into a workflow input, issue
 3. Select **Run workflow**.
 4. Choose one provider.
 5. Enter the exact model ID supported by your provider account.
-6. Leave the request budget at **24** for the full case set, or lower it for a smaller campaign.
-7. For a custom OpenAI-compatible endpoint, provide its HTTPS base URL. Leave this blank for the named providers.
-8. Select **Run workflow**.
+6. Choose **Scope**: `all` (76 cases), `core` (24 cases), or `source` (52 source-derived safe adaptations).
+7. Choose **Mode**: `full_suite` runs each selected case once; `campaign` uses a bounded request budget (default 24, maximum 1000).
+8. For a custom OpenAI-compatible endpoint, provide its HTTPS base URL. Leave this blank for the named providers.
+9. Select **Run workflow**.
 
-One workflow run tests one provider and one model. To compare models, run it again with a different model. The workflow does not automatically test every model in a provider catalogue.
+One workflow run tests one provider and one model. For the complete source-derived set on any supported provider, select Scope `source` and Mode `full_suite`. For every case, select Scope `all` and Mode `full_suite`. Campaign mode may stop before every selected case when its request budget is reached. To compare models, run the workflow again with a different model.
 
 ### 3. Download and review the report
 
@@ -46,7 +47,7 @@ When the workflow finishes:
 
 1. Open the completed workflow run.
 2. Find **Artifacts** near the bottom of the run page.
-3. Download `openmind-<provider>-red-team-evidence`.
+3. Download `openmind-<provider>-<scope>-<mode>-evidence`.
 4. Open the JSON report and review the full request, response, model, timestamps, errors, and assessment for each case.
 
 A successful workflow means the requests and report completed. It does **not** mean a jailbreak succeeded or that the model is certified secure.
@@ -60,6 +61,7 @@ git clone https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab.git
 cd OpenMind-Jailbreak-Lab
 python -m unittest discover -s tests -v
 python -m modules.guardrail_lab --list
+python -m modules.guardrail_lab --list | grep GL-SRC
 ```
 
 Set the API key in your terminal, then run the suite. Example for Gemini:
@@ -105,13 +107,14 @@ A quoted, translated, or explained canary is not proof of instruction execution.
 
 ## Uploaded source archive inventory
 
-The uploaded archive is represented by a committed, metadata-only inventory:
+The uploaded archive is represented by a committed metadata-only inventory plus a separate safe-adaptations file:
 
 - [Source inventory JSONL](data/source_corpus/source_inventory.jsonl): 55 records with original paths, byte counts, SHA-256 hashes, and handling states.
+- [Safe adaptations](data/source_corpus/safe_adaptations.jsonl): 52 runnable, source-derived safe test cases, with provenance.
 - [Manifest](data/source_corpus/manifest.json): source archive hash and inventory hash.
 - [Handling notes](data/source_corpus/README.md): explains why original bodies are not included and why the withdrawn notice remains excluded.
 
-This is not a runnable jailbreak prompt corpus. The repository's runnable evaluation remains the versioned benchmark and Guardrail Lab cases. No synthetic external corpus or legacy combined ZIP is included.
+The inventory is metadata-only and contains no executable raw prompts. Separately, `safe_adaptations.jsonl` contains 52 safe, source-derived adaptations (`GL-SRC-001`–`GL-SRC-052`) that are runnable in Guardrail Lab. They preserve source IDs, paths, and hashes, and replace operational payloads with inert canaries. The default Guardrail Lab suite contains 76 cases (24 core + 52 adaptations).
 
 ## Need the full reference?
 
