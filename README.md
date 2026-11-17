@@ -402,21 +402,12 @@ non-empty prompt/configuration file, paired with a benign control. See the dedic
 exact command and trust/review requirements.
 
 
-## External jailbreak evaluation corpus
+## Separate source archive and synthetic evaluation data
 
-The source-derived corpus package is committed at
-[`data/external_jailbreak_corpus_v1.zip`](data/external_jailbreak_corpus_v1.zip).
-It contains:
+The uploaded external archive and generated evaluation fixtures are separate dataset classes. **The generated canaries are not real source prompts.**
 
-- `external_prompt_archive_v2.jsonl`: 55 source inventory records with paths, SHA-256 hashes, sizes, heuristic tags, and handling status.
-- `external_jailbreak_eval_v1.jsonl`: 104 source-linked evaluation cases (52 safe adversarial canary adaptations and 52 matched benign controls).
-- `manifest.json`: artifact hashes, counts, and limitations.
+- [Real source archive provenance notes](data/source_corpus/README.md): 55 source files inventoried from the uploaded archive (52 non-empty prompt/config files, one README, one empty placeholder, and one withdrawn notice). Original prompt bodies are not redistributed here; the directory records provenance and handling limits only.
+- [Synthetic evaluation suite notes](data/synthetic_evaluation/README.md): 104 generated records (52 safe canary adaptations and 52 matched benign controls), all unreviewed.
+- [Legacy combined ZIP](data/external_jailbreak_corpus_v1.zip): retained for traceability only. It bundles source metadata and the synthetic suite together; it is not the canonical separated layout and must not be called a real prompt corpus.
 
-Extract the data files:
-
-```bash
-mkdir -p data/external_jailbreak_corpus
-python -m zipfile -e data/external_jailbreak_corpus_v1.zip data/external_jailbreak_corpus
-```
-
-All cases are marked `unreviewed` and require human review and authorized execution. Source prompt bodies are intentionally not bundled or executed; the inventory preserves provenance without turning untrusted or potentially harmful instructions into runnable payloads. One withdrawn source notice is retained in inventory and quarantined from evaluation. Heuristic tags are discovery metadata, not proof of a bypass.
+The withdrawn `grok-fast-v2.md` source entry remains quarantined. No source prompt bodies are copied or executed. A SHA-256 hash proves file integrity, not redistribution permission or safety. See each directory's README before using either dataset.
