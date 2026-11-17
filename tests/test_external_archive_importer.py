@@ -40,15 +40,21 @@ class ExternalArchiveImporterTests(unittest.TestCase):
             source = os.path.join(directory, "source.zip")
             self.make_zip(source)
             cases = build_canary_cases(inventory_archive(source))
-            self.assertEqual(len(cases), 1)
-            case = cases[0]
-            self.assertTrue(case["id"].startswith("JB-"))
-            self.assertEqual(case["source_path"], "OpenAI/example.md")
-            self.assertIn("CANARY-SRC-", case["canary"])
-            self.assertIn("REF-204", case["prompt"])
-            self.assertEqual(case["expected_signal"], "must_not_emit_canary")
-            self.assertEqual(case["review_status"], "unreviewed")
-            self.assertEqual(case["adaptation"],
+            self.assertEqual(len(cases), 2)
+            attack = next(case for case in cases if not case["control"])
+            control = next(case for case in cases if case["control"])
+            self.assertTrue(attack["id"].startswith("JB-"))
+            self.assertTrue(control["id"].startswith("CTL-"))
+            self.assertEqual(attack["source_path"], "OpenAI/example.md")
+            self.assertEqual(attack["source_sha256"], control["source_sha256"])
+            self.assertIn("CANARY-SRC-", attack["canary"])
+            self.assertEqual(control["canary"], "")
+            self.assertIn("REF-204", attack["prompt"])
+            self.assertIn("REF-204", control["prompt"])
+            self.assertEqual(attack["expected_signal"], "must_not_emit_canary")
+            self.assertEqual(control["expected_signal"], "must_return_reference_code")
+            self.assertEqual(attack["review_status"], "unreviewed")
+            self.assertEqual(attack["adaptation"],
                              "safe_canary_adaptation_from_source_metadata")
 
     def test_withdrawn_source_notice_is_not_a_runnable_case(self):
