@@ -23,7 +23,17 @@ def audit(rows):
         else:
             valid_rows.append(row)
 
-    ids = [row.get("id") for row in valid_rows]
+    ids = []
+    for index, row in enumerate(valid_rows, 1):
+        case_id = row.get("id")
+        if not isinstance(case_id, str) or not case_id.strip():
+            errors.append(f"record {index}: id must be non-empty text")
+        else:
+            ids.append(case_id)
+        for field in ("split", "family"):
+            value = row.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"record {index}: {field} must be non-empty text")
     if len(ids) != len(set(ids)):
         errors.append("duplicate case IDs detected")
 
@@ -36,7 +46,10 @@ def audit(rows):
         if len(matches) > 1:
             warnings.append("duplicate normalized prompt: " + ", ".join(map(str, matches)))
 
-    by_split_family = Counter((row.get("split"), row.get("family")) for row in valid_rows)
+    by_split_family = Counter(
+        (row.get("split"), row.get("family")) for row in valid_rows
+        if isinstance(row.get("split"), str) and isinstance(row.get("family"), str)
+    )
     adversarial_families = {family for (split, family), count in by_split_family.items()
                             if split == "adversarial" and count}
     benign_families = {family for (split, family), count in by_split_family.items()
