@@ -93,6 +93,45 @@ class ValidationTests(unittest.TestCase):
         benign_families = {row["family"] for row in rows if row["split"] == "benign"}
         self.assertGreater(len(benign_families), 1)
 
+    def test_shipped_v080_dataset(self):
+        dataset = Path("data/benchmark_v0.8.0.jsonl")
+        if not dataset.exists():
+            self.skipTest("benchmark data file is not included in this source-only patch bundle")
+        rows, errors = validate(dataset)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(rows), 81)
+        self.assertEqual(sum(row["split"] == "adversarial" for row in rows), 44)
+        self.assertEqual(sum(row["split"] == "benign" for row in rows), 37)
+        self.assertEqual(rows[-1]["id"], "OM-081")
+
+    def test_shipped_checksums_are_current(self):
+        import hashlib
+        path = Path("data/CHECKSUMS.txt")
+        if not path.exists():
+            self.skipTest("checksums file is not included in this source-only patch bundle")
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            expected, name = line.split()
+            target = Path("data") / name
+            if not target.exists():
+                continue
+            self.assertEqual(hashlib.sha256(target.read_bytes()).hexdigest(), expected, name)
+
+    def test_matched_twin_sidecar_is_consistent(self):
+        import json
+        pairs_path = Path("data/benchmark_v0.8.0-pairs.json")
+        dataset = Path("data/benchmark_v0.8.0.jsonl")
+        if not pairs_path.exists() or not dataset.exists():
+            self.skipTest("benchmark files are not included in this source-only patch bundle")
+        rows = {r["id"]: r for r in (json.loads(line) for line in dataset.read_text(encoding="utf-8").splitlines() if line.strip())}
+        pairs = json.loads(pairs_path.read_text(encoding="utf-8"))["pairs"]
+        self.assertEqual(len(pairs), 6)
+        for pair in pairs:
+            self.assertEqual(rows[pair["twin_id"]]["split"], "benign")
+            self.assertIsNone(rows[pair["twin_id"]]["synthetic_secret"])
+            self.assertEqual(rows[pair["source_id"]]["split"], "adversarial")
+
     def test_duplicate_id_rejected(self):
         _, errors = self.run_rows([
             case(case_id="OM-001"),
