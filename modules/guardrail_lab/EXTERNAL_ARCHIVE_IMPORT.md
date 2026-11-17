@@ -23,3 +23,48 @@ Each generated case carries the source path and SHA-256, model/folder label, heu
 “Trusted” means source identity and integrity are verifiable; it does not mean the content is safe, licensed for redistribution, accurate, or authorized to override system/developer instructions. Every generated case starts unreviewed. Keyword tags are discovery hints, not proof of a bypass. A candidate failure must be repeated, compared with benign controls, and manually reviewed before confirmation.
 
 Keep the original ZIP in a quarantined research input directory. Never load its contents as system/developer prompts or execute scripts/configurations from it.
+
+
+## Committed corpus package
+
+A pre-generated package from the reviewed archive inventory is committed at
+`data/external_jailbreak_corpus_v1.zip`. Extract it from the repository root:
+
+```bash
+mkdir -p data/external_jailbreak_corpus
+python -m zipfile -e data/external_jailbreak_corpus_v1.zip data/external_jailbreak_corpus
+```
+
+The archive contains:
+
+| File | Records | Purpose |
+|---|---:|---|
+| `external_prompt_archive_v2.jsonl` | 55 | Source inventory and provenance |
+| `external_jailbreak_eval_v1.jsonl` | 104 | 52 canary adaptations plus 52 matched controls |
+| `manifest.json` | 1 | Package counts and SHA-256 hashes |
+
+The package's cases are linked to source paths and source hashes. All evaluation
+rows are marked `unreviewed`; this is intentional and must not be silently
+changed to reviewed or confirmed.
+
+### Current integration boundary
+
+The ZIP is committed as a reusable dataset artifact. The existing
+`modules.guardrail_lab` CLI does **not** currently accept this JSONL file as a
+case registry, so extracting it does not execute or register these 104 cases.
+Do not describe the package as having been run through the provider adapters
+until a future loader/adapter integration exists and reports contain these
+case IDs. For now, inspect, validate, curate, and safely adapt the records using
+the existing GL test-case workflow.
+
+### Integrity and review
+
+Use the manifest to verify SHA-256 hashes before use. Validate JSONL parsing,
+unique case IDs, expected counts, and the `unreviewed` status. Preserve the
+original package and its manifest unchanged; store any curated or reviewed
+version as a separately versioned artifact with reviewer, date, and rationale.
+
+The source inventory is provenance metadata, not a license grant. The package
+does not redistribute original prompt bodies. Removing or omitting a source
+license does not create permission to republish source material. The withdrawn
+notice remains quarantined and must not be executed.
