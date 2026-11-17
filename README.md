@@ -8,15 +8,19 @@
 
 OpenMind combines bounded adversarial tests, provider-backed scanning, benchmark evaluation, and evidence reporting. It supports repeatable assessment; a test run is not proof of a vulnerability or a guarantee of a successful jailbreak.
 
+**[Open the live Hugging Face Space](https://huggingface.co/spaces/Grimxlock/OpenMind-Jailbreak-Lab)** · [Manual review workspace](manual_reviews/README.md)
+
 ## Get started
 
 - [Start Here](START_HERE.md) — quick setup, GitHub Actions, and mobile use.
 - [Installation](INSTALLATION.md) — providers, credentials, and advanced setup.
-- [Guardrail Lab guide](modules/guardrail_lab/README.md) — cases, campaigns, and reports.
+- [Guardrail Lab guide](modules/guardrail_lab/README.md) — defensive cases, campaigns, and reports.
+- [Original Source Corpus](modules/original_source_corpus/README.md) — separate provenance browser and review workflow.
 
 ## Components
 
 - **Guardrail Lab:** 76 runnable cases (24 core and 52 source-derived safe adaptations), provider adapters, bounded campaigns, JSON reports, and a findings registry.
+- **Original Source Corpus:** separate metadata-only browser for authentic archive records, source paths, sizes, hashes, and manual review. Original raw prompts are not sent to the Guardrail Lab runner.
 - **AI Scanner:** [provider-backed checks and response evidence](modules/ai_scanner/README.md).
 - **OpenMind Benchmark:** [versioned evaluation set](SCORING.md); current file: [benchmark_v0.8.0.jsonl](data/benchmark_v0.8.0.jsonl) (81 cases, incl. 6 matched benign twins).
 - **JB-002:** [manual finding records and validation](modules/jb002/README.md).
@@ -33,6 +37,7 @@ cd OpenMind-Jailbreak-Lab
 python -m unittest discover -s tests -v
 python -m src.validate
 python -m modules.guardrail_lab --list
+python -m modules.original_source_corpus --search gemini
 ```
 
 Example Gemini campaign:
@@ -47,9 +52,11 @@ python -m modules.guardrail_lab --provider gemini --research-mode \
 
 Use the environment variable for your provider and keep API keys out of source files and commits. See the [provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md) for supported configurations.
 
-## Source corpus
+## Source collections
 
-The 52 source-derived cases retain source IDs, paths, and hashes, but replace risky instructions with inert markers. They are **not verbatim source prompts**. The raw archive inventory is metadata-only. Details: [source corpus](data/source_corpus/README.md).
+The 52 source-derived Guardrail Lab cases retain source IDs, paths, and hashes, but replace risky instructions with inert markers. They are **not verbatim source prompts** and remain in the defensive benchmark.
+
+The **Original Source Corpus** is separate. Its inventory preserves authentic archive provenance without copying raw prompt bodies into the public repository or executing them. Browse records with `python -m modules.original_source_corpus`; create a human-review template with `--id SRC-### --export-review-template PATH`. The inventory loader validates JSONL records, rejects non-object values and malformed fields with a clear error, and enforces that every original-source record remains non-runnable. The checked-in review template is regression-tested against the generator. Details: [Original Source Corpus guide](modules/original_source_corpus/README.md).
 
 ## Providers and automation
 
@@ -73,7 +80,7 @@ Add keys under **Settings → Secrets and variables → Actions**, then run **Ac
 | `manual_review` | Automated assessment inconclusive |
 | `partial_run` | Run did not complete |
 
-Reports include case IDs, provider/model metadata, prompts, responses, errors, and available assessment labels. A canary quoted in an explanation or warning is not proof of a bypass. Rate limits, authentication failures, and proxy errors are infrastructure outcomes. Treat candidate findings as unverified until manually reviewed and reproduced.
+Reports include case IDs, provider/model metadata, prompts, responses, errors, and available assessment labels. A canary quoted in an explanation or warning is not proof of a bypass. Rate limits, authentication failures, and proxy errors are infrastructure outcomes. Treat candidate findings as unverified until manually reviewed and reproduced. Use the [manual review workspace](manual_reviews/README.md) and copy its JSON template once per case; keep original run reports unchanged.
 
 ## Evaluation snapshot — 16 November 2026
 
@@ -92,11 +99,12 @@ Test only systems you own or are authorized to assess. Follow provider terms, ra
 
 ## Documentation
 
-[Installation](INSTALLATION.md) · [Guardrail Lab](modules/guardrail_lab/README.md) · [Provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md) · [Discovery engine](modules/guardrail_lab/DISCOVERY_ENGINE.md) · [Registry](modules/guardrail_lab/REGISTRY.md) · [Archive import](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md) · [Research contributions](RESEARCH_CONTRIBUTIONS.md) · [Methodology](METHODOLOGY.md) · [Release checklist](RELEASE_CHECKLIST.md) · [Release status](RELEASE_STATUS.md)
+[Installation](INSTALLATION.md) · [Guardrail Lab](modules/guardrail_lab/README.md) · [Original Source Corpus](modules/original_source_corpus/README.md) · [Provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md) · [Discovery engine](modules/guardrail_lab/DISCOVERY_ENGINE.md) · [Registry](modules/guardrail_lab/REGISTRY.md) · [Archive import](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md) · [Research contributions](RESEARCH_CONTRIBUTIONS.md) · [Methodology](METHODOLOGY.md) · [Release checklist](RELEASE_CHECKLIST.md) · [Release status](RELEASE_STATUS.md)
 
 ## Quality checks
 
 ```bash
+python -m unittest discover -s tests -v
 python -m src.quality_audit data/benchmark_v0.8.0.jsonl
 python -m modules.guardrail_lab.compare \
   reports/gemini.json reports/openai.json \

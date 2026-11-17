@@ -5,7 +5,8 @@
   "source_archive_sha256": "4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918",
   "source_file_count": 55,
   "nonempty_file_count": 54,
-  "empty_file_count": 1,
+  "empty_file_count": 0,
+  "one_byte_placeholder_count": 1,
   "withdrawn_notice_count": 1,
   "prompt_bodies_included": false,
   "runnable_records": 0,
@@ -13,5 +14,5 @@
   "inventory_sha256": "124507ca8e692822cf23c374e0b3a6ea134b26d8fbe41c22e6aeeeeee37a9c14",
   "adaptations_file": "safe_adaptations.jsonl",
   "adaptations_sha256": "1b01aeee0a93e1f2f7893c121b2af4bd5935b95509beb7e4d7237275cc0d914e",
-  "note": "Metadata-only; original prompt bodies are excluded. One-byte placeholder counted as empty."
+  "note": "Metadata-only; original prompt bodies are excluded. One archive member is a one-byte placeholder; it is counted separately as one_byte_placeholder_count and not as an empty file (empty_file_count counts true zero-byte files only). Safe adaptations are pinned by adaptations_sha256."
 }

@@ -1,0 +1,12 @@
+{
+  "source_id": "SRC-000",
+  "source_path": "",
+  "source_sha256": "",
+  "reviewer": "",
+  "reviewed_at": "",
+  "disposition": "unreviewed",
+  "runnable_approval": false,
+  "scope_and_rationale": "",
+  "review_notes": "",
+  "warning": "This record is not an executable test. Approval here does not add it to any automated runner."
+}

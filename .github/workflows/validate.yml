@@ -40,5 +40,7 @@ jobs:
         run: python -m modules.ai_scanner --help
       - name: Smoke-test Guardrail Lab module
         run: python -m modules.guardrail_lab --list
+      - name: Smoke-test original source corpus browser
+        run: python -m modules.original_source_corpus --search gemini
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
