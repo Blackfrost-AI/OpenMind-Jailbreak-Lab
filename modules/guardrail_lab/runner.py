@@ -6,6 +6,9 @@ from datetime import datetime, timezone
 from typing import Callable, Dict, List, Optional
 from . import __version__
 from .cases import CASES, CASE_BY_ID, Case
+from .measurement import (
+    RunConfig, case_set_hashes, default_not_measured, fingerprint_endpoint,
+)
 
 TRUSTED_SYSTEM_INSTRUCTION = (
     "You are participating in an authorized instruction-boundary evaluation. "
@@ -64,6 +67,9 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
         "started_at": datetime.now(timezone.utc).isoformat(),
         "request_messages": messages, "response": None,
         "assessment": "not_run", "error": None, "duration_seconds": None,
+        "provider_response_status": None, "finish_reason": None,
+        "content_tokens": None, "thinking_parse_status": None,
+        "truncated": False,
     }
     if case.source_id:
         record["source_provenance"] = {
@@ -84,6 +90,14 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
             if metadata is not None and not isinstance(metadata, dict):
                 raise TypeError("provider metadata must be a dict or None")
             record["provider_metadata"] = metadata
+            _finish = (metadata or {}).get("finish_reason")
+            record["provider_response_status"] = (metadata or {}).get("provider_response_status")
+            record["finish_reason"] = _finish
+            record["content_tokens"] = (metadata or {}).get("content_tokens")
+            record["thinking_parse_status"] = (metadata or {}).get("thinking_parse_status")
+            record["truncated"] = bool(
+                _finish == "length" or (metadata or {}).get("truncated") is True
+            )
         else:
             response = provider_result
         if not isinstance(response, str):
@@ -114,11 +128,22 @@ def _select_cases(case_ids: Optional[List[str]]) -> List[Case]:
             raise ValueError("GL-010 requires GL-009 immediately before it")
     return [CASE_BY_ID[cid] for cid in case_ids]
 
-def run_suite(call: Callable[[List[Dict[str, str]]], str], *, provider: str, model: Optional[str] = None, case_ids: Optional[List[str]] = None, delay_seconds: float = 0.0) -> Dict:
+def run_suite(call: Callable[[List[Dict[str, str]]], str], *, provider: str, model: Optional[str] = None, case_ids: Optional[List[str]] = None, delay_seconds: float = 0.0, run_config: Optional[RunConfig] = None, benchmark_path: Optional[str] = None, base_url: Optional[str] = None) -> Dict:
     if (isinstance(delay_seconds, bool)
             or not isinstance(delay_seconds, (int, float))
             or not math.isfinite(delay_seconds) or delay_seconds < 0):
         raise ValueError("delay_seconds must be a finite non-negative number")
+    from dataclasses import replace
+    cfg = run_config or RunConfig(
+        provider=provider, model=model,
+        base_url_fingerprint=fingerprint_endpoint(base_url),
+        case_set_hashes=case_set_hashes(benchmark_path),
+    )
+    known = {e["item"] for e in cfg.not_measured}
+    cfg = replace(cfg, not_measured=list(cfg.not_measured) + [
+        entry for entry in default_not_measured(cfg, benchmark_path=benchmark_path)
+        if entry["item"] not in known
+    ])
     selected = _select_cases(case_ids)
     results = []
     conversation: List[Dict[str, str]] = []
@@ -140,9 +165,15 @@ def run_suite(call: Callable[[List[Dict[str, str]]], str], *, provider: str, mod
         elif case.case_id == "GL-010":
             conversation = []
     return {
-        "schema_version": "1.0", "tool": "guardrail-lab", "tool_version": __version__,
+        "schema_version": "1.2", "tool": "guardrail-lab", "tool_version": __version__,
         "provider": provider, "model": model,
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "provenance": {
+            **cfg.evidence_block(),
+            "provider": provider,
+            "model": model,
+            "adapter": "guardrail_lab.run_suite",
+        },
         "summary": _summary(results), "results": results,
     }
 
