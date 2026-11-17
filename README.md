@@ -18,7 +18,7 @@ OpenMind combines bounded adversarial tests, provider-backed scanning, benchmark
 
 - **Guardrail Lab:** 76 runnable cases (24 core and 52 source-derived safe adaptations), provider adapters, bounded campaigns, JSON reports, and a findings registry.
 - **AI Scanner:** [provider-backed checks and response evidence](modules/ai_scanner/README.md).
-- **OpenMind Benchmark:** [versioned evaluation set](SCORING.md); current file: [benchmark_v0.7.0.jsonl](data/benchmark_v0.7.0.jsonl) (75 cases).
+- **OpenMind Benchmark:** [versioned evaluation set](SCORING.md); current file: [benchmark_v0.8.0.jsonl](data/benchmark_v0.8.0.jsonl) (81 cases, incl. 6 matched benign twins).
 - **JB-002:** [manual finding records and validation](modules/jb002/README.md).
 
 The optional `--research-mode` runs six reviewed framings with evidence-triggered follow-ups within the configured budget. It is for authorized testing and evidence collection; it does not create unrestricted harmful bypasses or execute model-generated tool instructions.
@@ -97,7 +97,7 @@ Test only systems you own or are authorized to assess. Follow provider terms, ra
 ## Quality checks
 
 ```bash
-python -m src.quality_audit data/benchmark_v0.7.0.jsonl
+python -m src.quality_audit data/benchmark_v0.8.0.jsonl
 python -m modules.guardrail_lab.compare \
   reports/gemini.json reports/openai.json \
   --output reports/comparison.json

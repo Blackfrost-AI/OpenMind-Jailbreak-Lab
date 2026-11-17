@@ -5,10 +5,11 @@ from .cases import CASES
 from .source_cases import SOURCE_CASES
 from .runner import run_suite, write_report
 from .measurement import (
-    RunConfig, case_set_hashes, not_measured_entry,
+    RunConfig, case_set_hashes, fingerprint_endpoint, not_measured_entry,
 )
 from .campaign import run_campaign
 from .registry import save_candidate_records
+from .preflight import preflight
 from .openai_compatible import (
     PRESET_BASE_URLS,
     PRESET_API_KEY_ENVS,
@@ -66,6 +67,12 @@ def main(argv=None):
     parser.add_argument("--max-tokens", type=int, default=None, help="Cap the model's maximum output tokens per request (OpenAI-compatible providers only; omit to leave unset)")
     parser.add_argument("--judge-id", default=None, help="Identity of the review judge attached to this run (recorded in reproduction attributes)")
     parser.add_argument("--judge-hash", default=None, help="SHA-256 of the review judge command/config (recorded in reproduction attributes)")
+    parser.add_argument("--require-ready", action="store_true",
+                        help="Fail closed unless a benign real-forward smoke confirms readiness")
+    parser.add_argument("--preflight-only", action="store_true",
+                        help="Run the typed preflight and write its receipt without running cases")
+    parser.add_argument("--preflight-output", default=None,
+                        help="Optional JSON path for the preflight receipt (evidence)")
     args = parser.parse_args(argv)
     if args.list:
         for case in CASES:
@@ -120,6 +127,25 @@ def main(argv=None):
             ))
         run_config = RunConfig(**measured, not_measured=not_measured)
         adapter = _adapter(args.provider, args.model, args.base_url, args.api_key_env, max_tokens=args.max_tokens)
+        if args.require_ready or args.preflight_only:
+            receipt = preflight(
+                adapter, provider=args.provider, model=args.model,
+                base_url=args.base_url,
+                config={"provider": args.provider, "model": args.model,
+                        "base_url_fingerprint": fingerprint_endpoint(args.base_url),
+                        "max_tokens": args.max_tokens},
+            )
+            if args.preflight_output:
+                dest = Path(args.preflight_output)
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(json.dumps(receipt, indent=2, ensure_ascii=False) + "\n",
+                                encoding="utf-8")
+            print(json.dumps(receipt, indent=2, ensure_ascii=False))
+            if args.preflight_only:
+                return 0 if receipt["state"] == "ready" else 2
+            if receipt["state"] != "ready":
+                print(f"preflight blocked the run: state={receipt['state']}", file=sys.stderr)
+                return 2
         if args.campaign:
             report = run_campaign(
                 adapter, provider=args.provider, model=args.model,
