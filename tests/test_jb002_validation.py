@@ -254,6 +254,10 @@ class Jb002ValidateFileTests(unittest.TestCase):
 
 
 class Jb002FreeTextRepromptTests(unittest.TestCase):
+    def test_url_is_treated_as_a_transcript_reference(self):
+        self.assertFalse(cli.looks_like_path("https://example.org/research/transcript.txt"))
+        self.assertTrue(cli.looks_like_path("notes/transcript.txt"))
+
     def _run_record(self, answers, files=None):
         answers = iter(answers)
         with tempfile.TemporaryDirectory() as tmp:
@@ -346,6 +350,12 @@ class Jb002FreeTextRepromptTests(unittest.TestCase):
         self.assertEqual(rows[0]["transcript"], contents)
         self.assertNotIn("transcript_reference", rows[0])
         self.assertNotIn("Transcript reference", rows[0]["input_transcript"])
+
+    def test_record_accepts_url_transcript_reference(self):
+        url = "https://example.org/research/transcript.txt"
+        rows, output = self._run_record(self._answers(transcript=url))
+        self.assertEqual(rows[0]["transcript_reference"], url)
+        self.assertNotIn("No such file", output)
 
     def test_record_stores_reference_when_not_a_path(self):
         rows, _ = self._run_record(self._answers())
