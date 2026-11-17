@@ -48,3 +48,14 @@ necessary, but it does not replace live evidence review or human adjudication.
 - [ ] Include test matrix results and live-evaluation scope without overstating coverage.
 - [ ] Clearly label simulated/demo material and exclude it from live-result totals.
 - [ ] Record reviewer sign-off and unresolved issues.
+
+## Bounded adversarial research mode
+
+- [ ] Verify `--research-mode` enables campaign execution, six reviewed framings,
+      and evidence-triggered follow-ups.
+- [ ] Verify `--case` and `--source-corpus` selection, request-budget handling,
+      JSON report output, and optional unverified registry output.
+- [ ] Verify `--no-adaptive` is rejected with `--research-mode`.
+- [ ] Confirm candidate records remain unverified until manual transcript review
+      and repeatability checks.
+- [ ] Confirm offline CI is not described as a live-provider security result.
