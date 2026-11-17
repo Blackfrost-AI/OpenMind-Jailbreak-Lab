@@ -529,3 +529,8 @@ metadata, labels, or errors. It is not a digital signature, does not establish
 who produced a report, and cannot prove that a provider generated the recorded
 response. Preserve the original artifact and use trusted storage or signed
 releases when authenticity is required.
+
+
+## Source-derived prompt adaptations
+
+The lab includes 52 runnable, safe pattern adaptations derived from eligible, non-withdrawn documents in the supplied source archive. They are loaded alongside the core cases automatically. These are **not verbatim copies** of source prompts: they preserve testable patterns (authority escalation, policy-boundary narrowing, persona reassignment, and agent/tool authority confusion) while replacing risky payloads with inert markers. Provenance is retained in `data/source_corpus/safe_adaptations.jsonl` through source paths and SHA-256 hashes. Run an individual case with `--case-id GL-SRC-001`, or omit case filters to run the complete set.
