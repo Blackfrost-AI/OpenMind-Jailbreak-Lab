@@ -387,12 +387,3 @@ The exact uploaded ZIP is represented by a verified metadata-only inventory at [
 
 No original prompt bodies are redistributed or made executable here. The withdrawn `grok-fast-v2.md` notice remains excluded. This inventory is not a runnable jailbreak corpus. The lab's runnable evaluation suite remains the versioned benchmark and Guardrail Lab test cases described above.
 
-## Separate source archive and synthetic evaluation data
-
-The uploaded external archive and generated evaluation fixtures are separate dataset classes. **The generated canaries are not real source prompts.**
-
-- [Real source archive provenance notes](data/source_corpus/README.md): 55 source files inventoried from the uploaded archive (52 non-empty prompt/config files, one README, one empty placeholder, and one withdrawn notice). Original prompt bodies are not redistributed here; the directory records provenance and handling limits only.
-- [Synthetic evaluation suite notes](data/synthetic_evaluation/README.md): 104 generated records (52 safe canary adaptations and 52 matched benign controls), all unreviewed.
-- [Legacy combined ZIP](data/external_jailbreak_corpus_v1.zip): retained for traceability only. It bundles source metadata and the synthetic suite together; it is not the canonical separated layout and must not be called a real prompt corpus.
-
-The withdrawn `grok-fast-v2.md` source entry remains quarantined. No source prompt bodies are copied or executed. A SHA-256 hash proves file integrity, not redistribution permission or safety. See each directory's README before using either dataset.
