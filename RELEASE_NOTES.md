@@ -40,3 +40,19 @@ The 76-case live provider suite and selectable multi-provider Actions workflow h
 2. Create the tag `v0.7.0-rc.1` at that commit.
 3. Publish as a GitHub **pre-release**, not a stable v1.0 release.
 4. Keep live model findings separate from offline CI results.
+
+
+## Unreleased — bounded adversarial research mode
+
+- Added the `--research-mode` CLI switch for authorized, bounded campaign
+  evaluation using six fixed reviewed framings and evidence-triggered follow-ups.
+- Supports the 24 core cases, 52 source-derived safe adaptations, or explicitly
+  selected cases; source corpus selection can be combined with `--case`.
+- Supports JSON evidence output and an optional unverified findings registry.
+- Added regression coverage for research-mode selection and the incompatible
+  `--no-adaptive` combination.
+- This mode does not generate unrestricted jailbreak payloads, execute
+  model-produced tool calls, or establish a vulnerability without human review
+  and repeatability checks.
+- CI status for this change must be read from the linked GitHub Actions run;
+  documentation changes do not imply a green workflow or live-provider test.
