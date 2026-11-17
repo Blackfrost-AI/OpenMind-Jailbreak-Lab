@@ -251,6 +251,9 @@ PATH_LIKE_SUFFIXES = (".txt", ".md", ".json", ".jsonl", ".log")
 
 
 def looks_like_path(text):
+    # URLs are valid transcript references, not local filesystem paths.
+    if "://" in text:
+        return False
     return "/" in text or "\\" in text or text.lower().endswith(PATH_LIKE_SUFFIXES)
 
 
