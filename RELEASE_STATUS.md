@@ -4,24 +4,29 @@
 
 This file records what has been verified on the current repository revision and what remains before a public release claim.
 
-## Verified on 2026-11-16
+## Verified on 2026-11-17
 
 Repository branch: `main`
 
-Validated commit before this status document: `c8d71b69cebdd9acc8fcf007722f2446dd174e33`
+Code and workflow verification commit:
+`d5a51354f16f988cbab7890cbff6e2a8a7b8eb34`
 
-GitHub Actions results for that commit:
+GitHub Actions results:
 
 | Workflow | Run | Result |
 |---|---:|---|
-| Validate benchmark | [43945377667](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/43945377667) | Success |
-| Provider adapter regression matrix | [43945377818](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/43945377818) | Success |
+| Validate benchmark | [44129447193](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44129447193) | Success |
+| Provider adapter regression matrix | [44129447206](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44129447206) | Success |
 
-The validation workflow passed on Python 3.10, 3.11, and 3.12. Each job ran benchmark schema validation, the benchmark quality audit, JB-002 and AI Scanner smoke tests, Guardrail Lab listing, and the unit test suite.
+Both workflows passed on Python 3.10, 3.11, and 3.12. Validation compiled all Python source and test files, validated benchmark versions 0.3 through 0.6.1, ran the benchmark quality audit, smoke-tested JB-002, AI Scanner, and Guardrail Lab, and ran the full unit-test suite. The provider matrix passed its complete offline regression suite on all three Python versions.
 
-The provider adapter regression workflow passed its complete offline unit test suite on Python 3.10, 3.11, and 3.12. These are offline software/contract tests; they are not live tests of every hosted provider or model.
+## Guardrail Lab source-corpus integration
 
-The latest benchmark tracked by the README is `data/benchmark_v0.6.1.jsonl` (66 cases: 38 adversarial and 28 benign). The quality audit found no duplicate normalized prompts. It reports coverage warnings: all benign controls currently share the `benign_utility` family, and three adversarial families are singletons (`history_edit`, `cross_model_pipeline`, and `hypothetical_framing`). These warnings are visible coverage limitations, not automatic validation failures.
+The Guardrail Lab now contains 76 registered cases: 24 core cases and 52 source-derived safe adaptations (`GL-SRC-001`–`GL-SRC-052`). The raw uploaded archive remains a metadata-only inventory; original prompt bodies are not redistributed or executed.
+
+The adaptation loader validates JSONL structure, safe framing, unique IDs and canaries, the inventory checksum, and every source ID/path/SHA-256 relationship. Per-case evidence reports include `source_provenance`. The CLI supports `--source-corpus`; the multi-provider Actions workflow supports `all` (76), `core` (24), and `source` (52) scopes in `full_suite` or bounded `campaign` mode. The dedicated Gemini full-suite workflow now validates all 76 cases.
+
+The verification above is offline CI, not a live provider run. The updated manual multi-provider workflow and 52/76-case live suites still require an authorized, credentialed dispatch before any live-compatibility claim. Documentation-only commits followed the code-verification commit; the final branch CI runs should be checked before release tagging.
 
 ## Remaining before v1.0
 
