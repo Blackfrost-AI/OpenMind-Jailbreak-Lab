@@ -1,0 +1,15 @@
+{
+  "package": "OpenMind source corpus inventory",
+  "schema_version": "1.1",
+  "source_archive": "jailbreaks-main (1)(1).zip",
+  "source_archive_sha256": "4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918",
+  "source_file_count": 55,
+  "nonempty_file_count": 54,
+  "empty_file_count": 1,
+  "withdrawn_notice_count": 1,
+  "prompt_bodies_included": false,
+  "runnable_records": 0,
+  "inventory_file": "source_inventory.jsonl",
+  "inventory_sha256": "005fc6968044bf54e4b30dc96dff5464c374a886048462beb9c773b4c8779657",
+  "note": "Metadata-only; original prompt bodies are excluded. One-byte placeholder counted as empty."
+}
