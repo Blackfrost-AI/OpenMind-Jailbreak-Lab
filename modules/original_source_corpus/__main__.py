@@ -67,7 +67,7 @@ def main(argv=None) -> int:
             if len(matches) != 1:
                 parser.error("--export-review-template requires --id matching exactly one source record")
             args.export_review_template.parent.mkdir(parents=True, exist_ok=True)
-            args.export_review_template.write_text(json.dumps(review_template(matches[0]), indent=2) + "\\n", encoding="utf-8")
+            args.export_review_template.write_text(json.dumps(review_template(matches[0]), indent=2) + "\n", encoding="utf-8")
             print(f"Wrote review template: {args.export_review_template}")
             return 0
         if args.json:
