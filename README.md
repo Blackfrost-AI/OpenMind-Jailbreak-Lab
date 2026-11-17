@@ -95,6 +95,15 @@ See [Discovery Engine documentation](modules/guardrail_lab/DISCOVERY_ENGINE.md)
 and [Registry documentation](modules/guardrail_lab/REGISTRY.md) for generation,
 review, export, and evidence-handling details.
 
+A new **external prompt-pattern corpus** adapts high-level themes from
+[togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks) into
+12 independently authored synthetic-canary cases and 3 benign controls. It
+covers priority inversion, persona framing, task-routing claims, fake authority,
+policy-replacement claims, refusal suppression, workspace instructions, and
+configuration wrappers. It does not install third-party prompts as system
+instructions or reproduce their prompt text. See
+[corpus notes](modules/guardrail_lab/EXTERNAL_PATTERN_CORPUS.md).
+
 ## AI Scanner
 
 A separate provider-backed scanner for running supported checks and saving response evidence.
