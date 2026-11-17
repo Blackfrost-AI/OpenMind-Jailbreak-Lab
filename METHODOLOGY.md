@@ -18,3 +18,23 @@
 - [ ] No real secrets, private data, or live targets appear.
 - [ ] Dataset provenance and license are documented.
 - [ ] Model versions and test conditions accompany every result.
+
+## Source-derived Guardrail Lab cases
+
+The Guardrail Lab currently contains 76 cases: 24 core instruction-boundary
+tests and 52 source-derived safe adaptations. The latter are separately
+rewritten test scenarios, not verbatim source prompts. They preserve source ID,
+relative path, and SHA-256 provenance while replacing risky instructions with
+inert canary markers.
+
+The raw uploaded archive is represented only by a 55-record metadata inventory.
+The withdrawn notice, one-byte placeholder, and archive README are not adapted.
+At import time, the loader checks the inventory checksum, adaptation schema,
+unique case/source/canary IDs, safe test framing, and source ID/path/hash
+consistency. Live evidence records include `source_provenance`.
+
+Use `--source-corpus` to run the 52 source-derived cases once. The default
+Guardrail Lab suite runs all 76 cases once. Campaign mode is a separate
+budget-limited scheduler and may not reach every selected case. Benchmark
+metrics, Guardrail Lab outcomes, synthetic demonstrations, and human-confirmed
+findings remain separate evidence types.
