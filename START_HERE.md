@@ -30,7 +30,7 @@ Paste the key into GitHub's secret-value field, not into a workflow input, issue
 ### 2. Start one provider/model run
 
 1. Open the repository's **Actions** tab.
-2. Select **Manual multi-provider red-team suite**.
+2. Select **Manual multi-provider Guardrail Lab**.
 3. Select **Run workflow**.
 4. Choose one provider.
 5. Enter the exact model ID supported by your provider account.
