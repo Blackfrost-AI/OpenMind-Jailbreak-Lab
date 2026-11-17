@@ -55,7 +55,10 @@ def generate_cases(cases: Iterable[Dict], *, variants: int = 6, seed: int = 0) -
                 "id": f"{row['id']}-D{index:02d}",
                 "source_case_id": row["id"],
                 "category": f"{row.get('category', 'unspecified')}:discovery:{name}",
-                "prompt": template.format(prompt=row["prompt"]),
+                "prompt": template.format(
+                    prompt=(json.dumps(row["prompt"], ensure_ascii=False)
+                            if name == "json_field" else row["prompt"])
+                ),
                 "discovery_variant": name,
             })
             output.append(item)
@@ -77,10 +80,31 @@ def run_discovery(cases: Iterable[Dict], call: Callable[[Dict], Dict], *,
             raise ValueError(f"generated request count {len(generated)} exceeds budget {request_budget}")
     results = []
     for case in generated:
-        result = call(case)
-        if not isinstance(result, dict):
-            raise TypeError("provider adapter must return a dictionary")
-        results.append({"case": case, "response": result})
+        started = datetime.now(timezone.utc)
+        started_clock = __import__("time").monotonic()
+        try:
+            result = call(case)
+            if not isinstance(result, dict):
+                raise TypeError("provider adapter must return a dictionary")
+            outcome = {"response": result, "error": None}
+        except Exception as exc:
+            # Preserve a failed attempt and continue the bounded run. Never
+            # silently convert provider errors into successful test outcomes.
+            outcome = {
+                "response": None,
+                "error": {"type": type(exc).__name__, "message": str(exc)},
+            }
+        record = {
+            "case": case,
+            "started_at": started.isoformat(),
+            "duration_seconds": round(__import__("time").monotonic() - started_clock, 3),
+            **outcome,
+        }
+        canonical = json.dumps(record, sort_keys=True, separators=(",", ":"),
+                               ensure_ascii=False).encode("utf-8")
+        import hashlib
+        record["evidence_sha256"] = hashlib.sha256(canonical).hexdigest()
+        results.append(record)
     return {
         "schema_version": "1.0",
         "tool": "openmind-bounded-discovery",
