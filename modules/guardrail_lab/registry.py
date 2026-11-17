@@ -31,6 +31,8 @@ def validate_finding(item: dict[str, Any], allow_confirmed: bool = False) -> dic
             raise ValueError("confirmed findings require repeat_runs >= 2 and 2 <= repeat_successes <= repeat_runs")
         if item.get("assessment") != "potential_guardrail_failure":
             raise ValueError("confirmed findings require assessment=potential_guardrail_failure")
+        if item.get("reproducible") is not True:
+            raise ValueError("confirmed findings require reproducible=true")
     row = dict(item)
     row.setdefault("created_at", datetime.now(timezone.utc).isoformat())
     row["record_sha256"] = _hash({k:v for k,v in row.items() if k != "record_sha256"})
@@ -72,8 +74,9 @@ def save_candidate_records(report: dict[str, Any], evidence_path: str, registry:
         if not isinstance(result, dict) or result.get("assessment") != "potential_guardrail_failure":
             continue
         evidence_hash = result.get("evidence_sha256")
-        if not isinstance(evidence_hash, str) or len(evidence_hash) != 64:
-            raise ValueError("candidate result is missing a valid evidence_sha256")
+        if (not isinstance(evidence_hash, str) or len(evidence_hash) != 64
+                or any(ch not in "0123456789abcdef" for ch in evidence_hash.casefold())):
+            raise ValueError("candidate result is missing a valid hexadecimal evidence_sha256")
         case_id = result.get("case_id")
         if not isinstance(case_id, str) or not case_id.strip():
             raise ValueError("candidate result is missing case_id")
