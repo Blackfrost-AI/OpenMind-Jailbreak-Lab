@@ -95,14 +95,8 @@ See [Discovery Engine documentation](modules/guardrail_lab/DISCOVERY_ENGINE.md)
 and [Registry documentation](modules/guardrail_lab/REGISTRY.md) for generation,
 review, export, and evidence-handling details.
 
-A new **external prompt-pattern corpus** adapts high-level themes from
-[togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks) into
-12 independently authored synthetic-canary cases and 3 benign controls. It
-covers priority inversion, persona framing, task-routing claims, fake authority,
-policy-replacement claims, refusal suppression, workspace instructions, and
-configuration wrappers. It does not install third-party prompts as system
-instructions or reproduce their prompt text. See
-[corpus notes](modules/guardrail_lab/EXTERNAL_PATTERN_CORPUS.md).
+A separate **external prompt-pattern evaluation set** contains 12 independently authored synthetic-canary cases and 3 benign controls inspired by high-level themes from [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks). It is not the uploaded archive's original prompt text and is distinct from the 104-case legacy synthetic suite described below. See [pattern corpus notes](modules/guardrail_lab/EXTERNAL_PATTERN_CORPUS.md).
+
 
 ## AI Scanner
 
@@ -389,18 +383,9 @@ rank model security or replace manual review of full transcripts.
 
 ## External prompt archive inventory
 
-The uploaded external collection is integrated through a reproducible importer.
-It inventories every file in the ZIP and records source path, model/folder,
-SHA-256, size, and heuristic attack-pattern labels. It does not execute or
-install imported content, and the generated catalog excludes prompt bodies.
-All entries begin unreviewed; lexical tags are not vulnerability findings.
+The uploaded external collection is represented by a source inventory containing file paths, SHA-256 hashes, byte sizes, and handling metadata. The inventory does not contain original prompt bodies. The legacy importer can create harmless synthetic canary adaptations and matched benign controls; those generated records are synthetic evaluation fixtures, not original source prompts. The withdrawn notice is inventoried but quarantined.
 
-See [External archive importer](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md)
-and `scripts/import_external_prompt_archive.py`. The uploaded archive contains 55 files; the importer can generate a SHA-256
-verified source inventory and one safe canary evaluation case per active,
-non-empty prompt/configuration file, paired with a benign control. See the dedicated import guide for the
-exact command and trust/review requirements.
-
+See [External archive importer](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md) and `scripts/import_external_prompt_archive.py`. The canonical separation and current limitations are documented in the source and synthetic dataset READMEs.
 
 ## Separate source archive and synthetic evaluation data
 
