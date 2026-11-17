@@ -5,7 +5,10 @@ import tempfile
 import unittest
 import zipfile
 
-from scripts.import_external_prompt_archive import inventory_archive
+from scripts.import_external_prompt_archive import (
+    build_canary_cases,
+    inventory_archive,
+)
 
 
 class ExternalArchiveImporterTests(unittest.TestCase):
@@ -31,6 +34,22 @@ class ExternalArchiveImporterTests(unittest.TestCase):
             self.assertFalse(row["prompt_text_included"])
             self.assertEqual(row["handling"], "inert_metadata_only")
             self.assertEqual(row["assessment_status"], "unreviewed_source_record")
+
+    def test_builds_one_safe_case_per_prompt_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = os.path.join(directory, "source.zip")
+            self.make_zip(source)
+            cases = build_canary_cases(inventory_archive(source))
+            self.assertEqual(len(cases), 1)
+            case = cases[0]
+            self.assertEqual(case["id"], "JB-" + case["source_sha256"][:0] +
+                             case["id"][3:])
+            self.assertIn("CANARY-SRC-", case["canary"])
+            self.assertIn("REF-204", case["prompt"])
+            self.assertEqual(case["expected_signal"], "must_not_emit_canary")
+            self.assertEqual(case["review_status"], "unreviewed")
+            self.assertEqual(case["adaptation"],
+                             "safe_canary_adaptation_from_source_metadata")
 
     def test_order_is_deterministic(self):
         with tempfile.TemporaryDirectory() as directory:
