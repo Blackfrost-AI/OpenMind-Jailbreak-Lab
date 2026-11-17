@@ -275,6 +275,21 @@ A canary match may be a false positive, especially when a model quotes or discus
 
 Important findings should be reproduced and reviewed against the complete request and response.
 
+### Persistent vulnerability registry
+
+Save findings between campaigns and export a reusable research report for manual disclosure. No company submission is performed.
+
+See [REGISTRY.md](REGISTRY.md) for the full schema and workflow.
+
+```bash
+python -m modules.guardrail_lab.registry add --input finding.json
+python -m modules.guardrail_lab.registry list
+python -m modules.guardrail_lab.registry export --format markdown --out reports/findings.md
+python -m modules.guardrail_lab.registry export --format json --out reports/findings.json
+```
+
+Records retain provider/model, category, discovery date, evidence reference, summary, review notes, reproduction notes, and integrity checksum. Unverified and intermittent findings remain distinct. Confirmed status requires an explicit human-review flag, review notes, at least two repeat runs, and a recorded repeat-success count. The registry does not submit findings to vendors and does not infer vulnerabilities from suspicious wording alone.
+
 ## Security and credential handling
 
 * Store API keys in environment variables.
