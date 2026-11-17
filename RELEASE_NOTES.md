@@ -21,9 +21,9 @@
 
 ## Verification
 
-The source-corpus code and workflow changes were validated on commit `d5a51354f16f988cbab7890cbff6e2a8a7b8eb34`. The [Validate benchmark run](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44129447193) and [Provider adapter regression matrix](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44129447206) both passed on Python 3.10, 3.11, and 3.12. The validation workflow compiled all Python sources, validated all benchmark versions, ran the quality audit and module smoke tests, and executed the complete unit-test suite. The provider matrix ran the complete offline regression suite.
+Verified on the final `main` commit. The [Validate benchmark run](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44133376932) passed on Python 3.10, 3.11, and 3.12. The validation workflow compiled all Python sources, validated all benchmark versions, ran the quality audit and module smoke tests, and executed the complete unit-test suite (324 tests). The [Provider adapter regression matrix](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44131938645) passed on commit `dc055cb`, which contains all Python changes in this release; commits after it are documentation-only. The provider matrix ran the complete offline regression suite. The full unit-test suite (324 tests) and benchmark validation were also run locally on the release commit and passed.
 
-The 76-case live provider suite and selectable multi-provider Actions workflow have not been live-executed as part of this offline CI verification. Documentation commits after `d5a5135` do not change the tested Python implementation; final-head CI should be checked before tagging.
+The 76-case live provider suite and selectable multi-provider Actions workflow have not been live-executed as part of this offline CI verification.
 
 ## Known limitations
 

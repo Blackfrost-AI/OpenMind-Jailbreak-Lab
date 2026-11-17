@@ -8,15 +8,15 @@ This file records what has been verified on the current repository revision and 
 
 Repository branch: `main`
 
-Code and workflow verification commit:
-`d5a51354f16f988cbab7890cbff6e2a8a7b8eb34`
+Code and workflow verification commits:
+Validate benchmark on `0415619`; provider matrix on `dc055cb` (contains all Python changes in this release; later commits are documentation-only).
 
 GitHub Actions results:
 
 | Workflow | Run | Result |
 |---|---:|---|
-| Validate benchmark | [44129447193](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44129447193) | Success |
-| Provider adapter regression matrix | [44129447206](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44129447206) | Success |
+| Validate benchmark | [44133376932](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44133376932) | Success |
+| Provider adapter regression matrix | [44131938645](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44131938645) | Success |
 
 Both workflows passed on Python 3.10, 3.11, and 3.12. Validation compiled all Python source and test files, validated benchmark versions 0.3 through 0.6.1, ran the benchmark quality audit, smoke-tested JB-002, AI Scanner, and Guardrail Lab, and ran the full unit-test suite. The provider matrix passed its complete offline regression suite on all three Python versions.
 
@@ -26,7 +26,7 @@ The Guardrail Lab now contains 76 registered cases: 24 core cases and 52 source-
 
 The adaptation loader validates JSONL structure, safe framing, unique IDs and canaries, the inventory checksum, and every source ID/path/SHA-256 relationship. Per-case evidence reports include `source_provenance`. The CLI supports `--source-corpus`; the multi-provider Actions workflow supports `all` (76), `core` (24), and `source` (52) scopes in `full_suite` or bounded `campaign` mode. The dedicated Gemini full-suite workflow now validates all 76 cases.
 
-The verification above is offline CI, not a live provider run. The updated manual multi-provider workflow and 52/76-case live suites still require an authorized, credentialed dispatch before any live-compatibility claim. Documentation-only commits followed the code-verification commit; the final branch CI runs should be checked before release tagging.
+The verification above is offline CI, not a live provider run. The updated manual multi-provider workflow and 52/76-case live suites still require an authorized, credentialed dispatch before any live-compatibility claim. Verification was re-done on the final head: the earlier draft cited commit `d5a5135`, which predates the research-mode CLI and source-template code changes.
 
 ## Remaining before v1.0
 
