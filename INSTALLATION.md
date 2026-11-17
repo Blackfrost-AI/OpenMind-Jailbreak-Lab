@@ -389,7 +389,7 @@ Reports are written to the paths specified by --output.
 
 ## 10. Run Guardrail Lab
 
-Run the default test suite:
+Run the default 76-case Guardrail Lab suite (24 core + 52 source-derived safe adaptations):
 
 ```bash
 python -m modules.guardrail_lab \
@@ -769,7 +769,9 @@ adaptations = [json.loads(line) for line in (root / "safe_adaptations.jsonl").re
 assert len(adaptations) == 52
 assert len({row["case_id"] for row in adaptations}) == 52
 assert all(row["runnable"] is True and row["adaptation"] == "safe_pattern_adaptation" for row in adaptations)
-print(f"Verified {len(rows)} metadata records and {len(adaptations)} safe adaptations.")
+assert len({row["source_id"] for row in adaptations}) == 52
+assert all(row["source_id"] in {item["id"] for item in rows} for row in adaptations)
+print(f"Verified {len(rows)} metadata records and {len(adaptations)} source-linked safe adaptations.")
 PY
 ```
 
