@@ -9,16 +9,16 @@ This file records what has been verified on the current repository revision and 
 Repository branch: `main`
 
 Code and workflow verification commits:
-Validate benchmark on `0415619`; provider matrix on `dc055cb` (contains all Python changes in this release; later commits are documentation-only).
+Validate benchmark on `5ac4cc4`; provider matrix on `ea23356` (contains all Python changes in this release; later commits are documentation-only).
 
 GitHub Actions results:
 
 | Workflow | Run | Result |
 |---|---:|---|
-| Validate benchmark | [44133376932](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44133376932) | Success |
-| Provider adapter regression matrix | [44131938645](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44131938645) | Success |
+| Validate benchmark | [44165854106](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44165854106) | Success |
+| Provider adapter regression matrix | [44164686055](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44164686055) | Success |
 
-Both workflows passed on Python 3.10, 3.11, and 3.12. Validation compiled all Python source and test files, validated benchmark versions 0.3 through 0.6.1, ran the benchmark quality audit, smoke-tested JB-002, AI Scanner, and Guardrail Lab, and ran the full unit-test suite. The provider matrix passed its complete offline regression suite on all three Python versions.
+Both workflows passed on Python 3.10, 3.11, and 3.12. Validation compiled all Python source and test files, validated benchmark versions 0.3 through 0.6.1, ran the benchmark quality audit, smoke-tested JB-002, AI Scanner, Guardrail Lab, and the original source corpus browser, and ran the full unit-test suite (334 tests). The provider matrix passed its complete offline regression suite on all three Python versions.
 
 ## Guardrail Lab source-corpus integration
 
@@ -49,11 +49,11 @@ Until the remaining items are completed, describe this repository as a validated
 
 ## Current main revision — 2026-11-17
 
-Latest observed main commit: `70fdf9e5c6798aeeccd6ca9298bd45115d4313f2` (README shortening; documentation-only).
+Latest observed main commit: `5ac4cc4` (source-corpus validation and review-template hardening docs; documentation-only).
 
-- [Validate benchmark — run 44132621422](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44132621422): **success** on the current main commit.
-- The release-notes and release-status documentation now records the bounded `--research-mode` feature and its verification boundary.
-- This successful documentation workflow does not establish live provider compatibility, does not certify model security, and does not independently rerun the full code regression matrix on the current head.
+- [Validate benchmark — run 44165854106](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44165854106): **success** on the current main commit.
+- [Provider adapter regression matrix — run 44164686055](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44164686055): **success** on commit `ea23356`, which holds all Python changes in this release; commits after it are documentation-only.
+- The release-notes and release-status documentation now records the original source corpus browser, its loader hardening, and the manual review workspace.
 
 The earlier code/workflow verification results listed above remain tied to their exact commit. Re-run the complete release validation workflow on the final release candidate before tagging.
 
