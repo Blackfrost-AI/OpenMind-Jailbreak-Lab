@@ -7,6 +7,11 @@
 ## Included
 
 - Provider-neutral Guardrail Lab runner and provider adapters.
+- 52 source-derived safe adaptations, bringing the runnable Guardrail Lab inventory to 76 cases (24 core + 52 source-derived).
+- Strict source-adaptation loader checks for JSONL schema, safe framing, unique case/source/canary IDs, inventory checksum, and source ID/path/SHA-256 consistency.
+- Source provenance (`source_id`, `source_path`, `source_sha256`) embedded in per-case evidence records.
+- `--source-corpus` CLI selection and GitHub Actions scope/mode controls for all/core/source sets and full-suite/campaign execution.
+- Gemini full-suite evidence validation updated from 24 to 76 cases.
 - Structured provider error reporting and report schema 1.3.
 - Per-case evidence SHA-256 checksums.
 - Benchmark quality audit for duplicate IDs/prompts, family distribution, and synthetic-secret placement.
@@ -16,9 +21,9 @@
 
 ## Verification
 
-The validation workflow passed on target commit `b07d398` (Python 3.10, 3.11, 3.12), including benchmark validation, benchmark quality audit, module smoke tests, and unit tests.
+The source-corpus code and workflow changes were validated on commit `d5a51354f16f988cbab7890cbff6e2a8a7b8eb34`. The [Validate benchmark run](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44129447193) and [Provider adapter regression matrix](https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab/actions/runs/44129447206) both passed on Python 3.10, 3.11, and 3.12. The validation workflow compiled all Python sources, validated all benchmark versions, ran the quality audit and module smoke tests, and executed the complete unit-test suite. The provider matrix ran the complete offline regression suite.
 
-The provider adapter regression matrix passed on commit `c8d71b6` (Python 3.10, 3.11, 3.12). Later commits in this candidate changed documentation only.
+The 76-case live provider suite and selectable multi-provider Actions workflow have not been live-executed as part of this offline CI verification. Documentation commits after `d5a5135` do not change the tested Python implementation; final-head CI should be checked before tagging.
 
 ## Known limitations
 
@@ -26,6 +31,7 @@ The provider adapter regression matrix passed on commit `c8d71b6` (Python 3.10, 
 - All benign controls currently share the `benign_utility` family.
 - Three adversarial families currently have one case each: `history_edit`, `cross_model_pipeline`, and `hypothetical_framing`.
 - Live cross-provider comparisons against Gemini, Claude, and OpenAI remain outstanding.
+- Full-suite GitHub Actions runs can send 52 or 76 live requests depending on selected scope and may incur provider charges; no live model results are implied by CI.
 - A green workflow validates software paths; it does not prove a jailbreak, certify a model, or establish universal security.
 
 ## Before publishing this candidate
