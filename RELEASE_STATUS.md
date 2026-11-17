@@ -44,3 +44,18 @@ A green CI run verifies the tested repository code paths and offline fixtures. I
 Do not combine simulated demo fixtures with live results. Do not count API errors or incomplete cases as model passes. Do not publish secrets or sensitive transcripts in reports.
 
 Until the remaining items are completed, describe this repository as a validated development build, not as a completed v1.0 release or a universal guardrail-bypass tool.
+
+
+## Bounded adversarial research mode
+
+The CLI now includes `--research-mode`, which selects the bounded campaign
+runner, six fixed reviewed framings, and evidence-triggered follow-ups. It
+supports source-corpus and individual-case selection, JSON evidence output,
+and an optional registry for unverified candidates. The mode is documented in
+the root README, installation guide, Guardrail Lab README, integration notes,
+and discovery-engine guide.
+
+Release gate: verify the latest GitHub Actions run for the exact commit before
+marking this feature validated. No live provider evaluation is implied by
+offline CI; candidate findings still require transcript review and repeatability
+checks.
