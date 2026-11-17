@@ -45,6 +45,8 @@ def generate_cases(cases: Iterable[Dict], *, variants: int = 6, seed: int = 0) -
     if len(ids) != len(set(ids)):
         raise ValueError("duplicate case IDs are not allowed")
     for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("every case must be a JSON object")
         if not isinstance(row.get("prompt"), str) or not row["prompt"].strip():
             raise ValueError(f"case {row['id']}: prompt must be non-empty text")
     selected = list(enumerate(VARIANTS[:variants], 1))
