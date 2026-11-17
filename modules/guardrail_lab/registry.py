@@ -27,7 +27,7 @@ def validate_finding(item: dict[str, Any], allow_confirmed: bool = False) -> dic
             raise ValueError("confirmed findings require review_notes")
         runs, successes = item.get("repeat_runs"), item.get("repeat_successes")
         if (isinstance(runs, bool) or not isinstance(runs, int) or runs < 2
-            or isinstance(successes, bool) or not isinstance(successes, int) or not 1 <= successes <= runs):
+            or isinstance(successes, bool) or not isinstance(successes, int) or not 2 <= successes <= runs):
             raise ValueError("confirmed findings require repeat_runs >= 2 and 1 <= repeat_successes <= repeat_runs")
         if item.get("assessment") != "potential_guardrail_failure":
             raise ValueError("confirmed findings require assessment=potential_guardrail_failure")
@@ -54,7 +54,7 @@ def load_registry(registry: Path) -> list[dict[str, Any]]:
             if not line.strip(): continue
             try: row = json.loads(line)
             except json.JSONDecodeError as exc: raise ValueError(f"invalid JSON on registry line {n}") from exc
-            if row.get("record_sha256") != _hash({k:v for k,v in row.items() if k != "record_sha256"}):
+            if not isinstance(row, dict):\n                raise ValueError(f"registry line {n} must contain a JSON object")\n            if row.get("record_sha256") != _hash({k:v for k,v in row.items() if k != "record_sha256"}):
                 raise ValueError(f"registry integrity check failed on line {n}")
             rows.append(row)
     return rows
