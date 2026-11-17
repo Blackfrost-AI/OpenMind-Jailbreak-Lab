@@ -385,3 +385,17 @@ python -m modules.guardrail_lab.compare reports/gemini.json reports/openai.json 
 The comparison reports common coverage, missing cases, per-case label
 agreement, and disagreements. It compares automated labels only; it does not
 rank model security or replace manual review of full transcripts.
+
+
+## External prompt archive inventory
+
+The uploaded external collection is integrated through a reproducible importer.
+It inventories every file in the ZIP and records source path, model/folder,
+SHA-256, size, and heuristic attack-pattern labels. It does not execute or
+install imported content, and the generated catalog excludes prompt bodies.
+All entries begin unreviewed; lexical tags are not vulnerability findings.
+
+See [External archive importer](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md)
+and `scripts/import_external_prompt_archive.py`. The uploaded archive contains
+55 files; run the importer against the original ZIP to generate the full
+55-record catalog locally.
