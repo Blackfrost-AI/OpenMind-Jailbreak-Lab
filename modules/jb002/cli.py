@@ -115,7 +115,12 @@ def read_observations(path):
     row is None when the line is not valid JSON; errors lists every
     problem with that line, each naming the line number.
     """
-    for n, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
+    try:
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError) as exc:
+        yield 0, None, [f"could not read {path}: {exc}"]
+        return
+    for n, line in enumerate(lines, 1):
         if not line.strip():
             continue
         try:
