@@ -44,7 +44,7 @@ A low-budget live baseline can be started from GitHub Actions → **Manual Gemin
 
 ## Multi-provider GitHub Actions workflow
 
-Use [the manual multi-provider workflow](../../.github/workflows/multi-provider-red-team.yml) to select one provider adapter and exact model ID per run. It supports the native OpenAI, Anthropic, and Gemini adapters plus the hosted presets DeepSeek, GLM, Moonshot, NVIDIA NIM, OpenRouter, Groq, and Together, and a custom OpenAI-compatible endpoint. Add the corresponding repository Actions secret before dispatch. The workflow runs a bounded campaign and uploads a provider-specific evidence artifact. It does not automatically enumerate every model sold by a provider. Localhost-only model servers must be tested from a host that can reach them, not from a GitHub-hosted runner.
+Use [the manual multi-provider workflow](../../.github/workflows/multi-provider-red-team.yml) to select one provider adapter and exact model ID per run. It supports the native OpenAI, Anthropic, and Gemini adapters plus the hosted presets DeepSeek, GLM, Moonshot, NVIDIA NIM, OpenRouter, Groq, and Together, and a custom OpenAI-compatible endpoint. Add the corresponding repository Actions secret before dispatch. Choose `all` (76 cases), `core` (24 cases), or `source` (52 source-derived adaptations). Full-suite mode runs each selected case once; campaign mode is bounded by a configurable request budget (1–1000). Evidence artifacts are named by provider, scope, and mode. It does not automatically enumerate every model sold by a provider. Localhost-only model servers must be tested from a host that can reach them, not from a GitHub-hosted runner.
 
 ## Interpreting results
 
