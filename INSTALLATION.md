@@ -721,3 +721,86 @@ https://github.com/tjcrims0nx/OpenMind-Jailbreak-Lab
 OpenMind Jailbreak Lab
 
 Authorized AI security research. Reproducible testing. Evidence-first evaluation.
+
+
+---
+
+## 16. Use the external jailbreak evaluation corpus
+
+The repository includes a source-derived, provenance-tracked corpus package at
+`data/external_jailbreak_corpus_v1.zip`. It contains a 55-record source
+inventory, 104 evaluation rows (52 harmless adversarial canary adaptations and
+52 matched benign controls), and a manifest with SHA-256 hashes.
+
+### Extract the package
+
+Run from the repository root:
+
+```bash
+mkdir -p data/external_jailbreak_corpus
+python -m zipfile -e data/external_jailbreak_corpus_v1.zip data/external_jailbreak_corpus
+```
+
+On Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force data/external_jailbreak_corpus
+py -m zipfile -e data/external_jailbreak_corpus_v1.zip data/external_jailbreak_corpus
+```
+
+Expected extracted files:
+
+- `external_prompt_archive_v2.jsonl` — source paths, hashes, sizes, labels,
+  heuristic tags, and handling status.
+- `external_jailbreak_eval_v1.jsonl` — source-linked canary and benign-control
+  records.
+- `manifest.json` — package counts and file hashes.
+
+### Check package integrity and record structure
+
+The package manifest records the expected SHA-256 values. Verify the extracted
+files before relying on them. Example Python check:
+
+```bash
+python - <<'PY'
+import hashlib, json
+from pathlib import Path
+
+root = Path("data/external_jailbreak_corpus")
+manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+for name, expected in manifest["files"].items():
+    actual = hashlib.sha256((root / name).read_bytes()).hexdigest()
+    if actual != expected:
+        raise SystemExit(f"SHA-256 mismatch: {name}")
+    print(f"OK {name}")
+
+inventory = [json.loads(line) for line in
+             (root / "external_prompt_archive_v2.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+cases = [json.loads(line) for line in
+         (root / "external_jailbreak_eval_v1.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+ids = [row["case_id"] for row in cases]
+assert len(ids) == len(set(ids)), "duplicate case IDs"
+assert len(inventory) == 55, f"unexpected inventory count: {len(inventory)}"
+assert len(cases) == 104, f"unexpected evaluation count: {len(cases)}"
+assert all(row.get("review_status") == "unreviewed" for row in cases)
+print(f"Validated {len(inventory)} inventory records and {len(cases)} unreviewed cases.")
+PY
+```
+
+### Important execution limitation
+
+This archive is currently a **data package**, not a direct input option for
+`python -m modules.guardrail_lab`. The standard Guardrail Lab CLI runs its
+registered GL cases; extracting these JSONL files does not automatically
+register or execute the 104 external cases. Review and adapt cases through the
+documented test-case workflow before live execution. Do not claim a corpus run
+unless a provider report actually records those case IDs.
+
+All 104 rows are marked unreviewed. The adversarial records are safe synthetic
+canary adaptations, not the original prompt bodies. The source archive itself
+is not bundled as runnable content. A withdrawn source notice is inventoried
+but quarantined from evaluation. Heuristic labels are not proof of a bypass.
+Use only authorized endpoints, synthetic data, bounded request budgets, and
+human review. Live API requests may incur charges.
+
+See [External archive import and corpus handling](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md).
