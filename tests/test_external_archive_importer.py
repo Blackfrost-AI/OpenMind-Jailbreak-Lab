@@ -42,8 +42,8 @@ class ExternalArchiveImporterTests(unittest.TestCase):
             cases = build_canary_cases(inventory_archive(source))
             self.assertEqual(len(cases), 1)
             case = cases[0]
-            self.assertEqual(case["id"], "JB-" + case["source_sha256"][:0] +
-                             case["id"][3:])
+            self.assertTrue(case["id"].startswith("JB-"))
+            self.assertEqual(case["source_path"], "OpenAI/example.md")
             self.assertIn("CANARY-SRC-", case["canary"])
             self.assertIn("REF-204", case["prompt"])
             self.assertEqual(case["expected_signal"], "must_not_emit_canary")
