@@ -240,6 +240,28 @@ class ReportAndCliTests(unittest.TestCase):
         self.assertEqual(selected[0], "GL-SRC-001")
         self.assertEqual(selected[-1], "GL-SRC-052")
 
+    def test_research_mode_selects_six_variant_bounded_campaign(self):
+        import os
+        from unittest import mock
+        from modules.guardrail_lab.cli import main
+
+        with mock.patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=True), \\
+             mock.patch("modules.guardrail_lab.cli._adapter", return_value=lambda messages: "safe"), \\
+             mock.patch("modules.guardrail_lab.cli.run_campaign", return_value={"summary": {"total": 1}, "results": []}) as run:
+            code = main(["--provider", "gemini", "--research-mode", "--case", "GL-001",
+                         "--budget", "12", "--output", "/tmp/research-mode.json"])
+        self.assertEqual(code, 0)
+        self.assertEqual(run.call_args.kwargs["variants"], 6)
+        self.assertTrue(run.call_args.kwargs["adaptive"])
+        self.assertEqual(run.call_args.kwargs["budget"], 12)
+        self.assertEqual(run.call_args.kwargs["case_ids"], ["GL-001"])
+
+    def test_research_mode_rejects_no_adaptive(self):
+        from modules.guardrail_lab.cli import main
+        with self.assertRaises(SystemExit) as ctx:
+            main(["--provider", "gemini", "--research-mode", "--no-adaptive"])
+        self.assertEqual(ctx.exception.code, 2)
+
     def test_hosted_preset_fails_fast_without_its_key(self):
         import os
         from unittest import mock
