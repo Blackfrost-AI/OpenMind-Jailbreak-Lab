@@ -11,5 +11,7 @@
   "runnable_records": 0,
   "inventory_file": "source_inventory.jsonl",
   "inventory_sha256": "124507ca8e692822cf23c374e0b3a6ea134b26d8fbe41c22e6aeeeeee37a9c14",
+  "adaptations_file": "safe_adaptations.jsonl",
+  "adaptations_sha256": "1b01aeee0a93e1f2f7893c121b2af4bd5935b95509beb7e4d7237275cc0d914e",
   "note": "Metadata-only; original prompt bodies are excluded. One-byte placeholder counted as empty."
 }

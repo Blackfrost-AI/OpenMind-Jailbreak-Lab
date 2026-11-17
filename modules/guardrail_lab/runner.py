@@ -71,6 +71,7 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
             "source_path": case.source_path,
             "source_sha256": case.source_sha256,
             "adaptation": "safe_pattern_adaptation",
+            "variant": case.variant,
         }
     try:
         provider_result = call(messages)
