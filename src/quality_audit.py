@@ -73,9 +73,14 @@ def audit(rows):
     return {
         "schema_version": "1.0",
         "record_count": len(valid_rows),
-        "split_counts": dict(Counter(row.get("split") for row in valid_rows)),
-        "family_counts": {split: dict(Counter(row.get("family") for row in valid_rows if row.get("split") == split))
-                          for split in ("adversarial", "benign")},
+        "split_counts": dict(Counter(row.get("split") for row in valid_rows
+                                      if isinstance(row.get("split"), str))),
+        "family_counts": {
+            split: dict(Counter(row.get("family") for row in valid_rows
+                                if row.get("split") == split
+                                and isinstance(row.get("family"), str)))
+            for split in ("adversarial", "benign")
+        },
         "errors": errors,
         "warnings": warnings,
         "status": "fail" if errors else ("review" if warnings else "pass"),
