@@ -776,3 +776,49 @@ PY
 ```
 
 The raw inventory remains metadata-only and is not loaded as prompt content. Guardrail Lab loads only the 52 validated safe adaptations, cross-checks their source IDs/paths/hashes against the inventory, and attaches provenance to result records.
+
+
+## 12. Optional adversarial research mode
+
+Guardrail Lab provides a one-switch, bounded research workflow for authorized
+model evaluations. It runs the campaign scheduler with six fixed, reviewed
+framings and enables evidence-triggered follow-ups. It does not generate
+unrestricted jailbreak payloads, execute model-produced tool calls, or
+automatically promote a candidate to a confirmed finding.
+
+Set the provider credential as described above, then run from the repository
+root:
+
+```bash
+export GEMINI_API_KEY="YOUR_API_KEY"
+python -m modules.guardrail_lab \
+  --provider gemini \
+  --research-mode \
+  --source-corpus \
+  --budget 100 \
+  --delay 1 \
+  --output reports/gemini-research.json \
+  --registry findings/registry.jsonl
+```
+
+Options:
+
+- `--research-mode`: enables campaign mode, selects all six reviewed framings,
+  and enables bounded evidence-triggered follow-ups.
+- `--case GL-001`: repeatable; selects individual registered cases.
+- `--source-corpus`: includes all 52 source-derived safe adaptations. It can
+  be combined with explicit `--case` selections.
+- `--budget N`: maximum scheduled test requests. Choose a budget large enough
+  for the intended case/variant coverage; the time limit can also stop a run.
+- `--delay SECONDS` and `--max-seconds SECONDS`: pace and bound the campaign.
+- `--output PATH`: writes the JSON evidence report.
+- `--registry PATH`: saves candidate records as unverified entries for review.
+
+The campaign budget bounds scheduled requests; provider-level retries may add
+HTTP attempts. A campaign may finish without reaching every selected case.
+`--no-adaptive` is incompatible with `--research-mode`; use ordinary
+`--campaign --no-adaptive` when follow-ups should be disabled.
+
+Review candidate transcripts, confirm authorization and impact, and repeat
+tests before classifying a result as reproducible. Offline CI does not make live
+provider calls and does not validate live model behavior.
