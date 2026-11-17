@@ -90,3 +90,24 @@ provenance. The standalone `discovery.py` generator remains a separate
 offline utility for generating reviewed framings from caller-supplied JSONL;
 it does not load the uploaded archive or automatically transform its raw
 prompt bodies.
+
+
+## One-switch adversarial research mode
+
+The CLI exposes `--research-mode` as an explicit optional mode. It runs the
+bounded campaign with all six fixed, reviewed framings and evidence-triggered
+follow-ups, constrained by `--budget`. Combine it with `--case` or
+`--source-corpus` to choose the evaluation set:
+
+```bash
+python -m modules.guardrail_lab --provider gemini --research-mode \
+  --source-corpus --budget 100 \
+  --output reports/source-research.json \
+  --registry findings/registry.jsonl
+```
+
+The mode records evidence and queues only fixed safe framings after an exact
+harmless canary-only signal. Registry entries remain unverified until a human
+reviews the transcript and confirms repeatability. It is an automated
+adversarial evaluation mode, not an unrestricted jailbreak generator or
+harmful-operation executor.
