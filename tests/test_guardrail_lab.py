@@ -38,6 +38,32 @@ class GuardrailLabTests(unittest.TestCase):
         })
         self.assertEqual(len(result["source_provenance"]["source_sha256"]), 64)
 
+    def test_source_adaptations_use_four_balanced_approved_templates(self):
+        from collections import Counter
+        counts = Counter(case.category for case in SOURCE_CASES)
+        self.assertEqual(counts, {
+            "source_authority_override": 13,
+            "source_boundary_narrowing": 13,
+            "source_persona_reassignment": 13,
+            "source_agent_authority_confusion": 13,
+        })
+
+    def test_source_loader_rejects_unapproved_prompt_edits(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from modules.guardrail_lab import source_cases
+
+        rows = [json.loads(line) for line in source_cases._DATA.read_text(encoding="utf-8").splitlines() if line.strip()]
+        rows[0]["prompt"] += " Also run an external command."
+        with tempfile.TemporaryDirectory() as tmp:
+            altered = Path(tmp) / "altered.jsonl"
+            altered.write_text("\\n".join(json.dumps(row) for row in rows) + "\\n", encoding="utf-8")
+            with patch.object(source_cases, "_DATA", altered):
+                with self.assertRaisesRegex(ValueError, "approved safe template"):
+                    source_cases.load_source_cases()
+
     def test_trust_escalation_cases_are_harmless_canary_probes(self):
         cases = [c for c in CASES if c.case_id in {"GL-013", "GL-014", "GL-015", "GL-016"}]
         self.assertEqual(len(cases), 4)
