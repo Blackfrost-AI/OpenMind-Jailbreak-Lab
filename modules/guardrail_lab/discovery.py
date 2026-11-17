@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import time
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional
@@ -81,7 +83,7 @@ def run_discovery(cases: Iterable[Dict], call: Callable[[Dict], Dict], *,
     results = []
     for case in generated:
         started = datetime.now(timezone.utc)
-        started_clock = __import__("time").monotonic()
+        started_clock = time.monotonic()
         try:
             result = call(case)
             if not isinstance(result, dict):
@@ -97,12 +99,11 @@ def run_discovery(cases: Iterable[Dict], call: Callable[[Dict], Dict], *,
         record = {
             "case": case,
             "started_at": started.isoformat(),
-            "duration_seconds": round(__import__("time").monotonic() - started_clock, 3),
+            "duration_seconds": round(time.monotonic() - started_clock, 3),
             **outcome,
         }
         canonical = json.dumps(record, sort_keys=True, separators=(",", ":"),
                                ensure_ascii=False).encode("utf-8")
-        import hashlib
         record["evidence_sha256"] = hashlib.sha256(canonical).hexdigest()
         results.append(record)
     return {
