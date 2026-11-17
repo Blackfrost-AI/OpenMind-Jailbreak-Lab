@@ -103,6 +103,10 @@ A quoted, translated, or explained canary is not proof of instruction execution.
 - Review reports before sharing; they contain prompts and model responses.
 - If an API key has been exposed, revoke it and create a replacement.
 
+## External corpus
+
+The repository also contains a source-derived evaluation dataset. It has 52 safe canary adaptations and 52 matched benign controls, all marked unreviewed. It is currently a dataset artifact rather than a directly executable Guardrail Lab input. See [the corpus guide](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md) for extraction, integrity checks, and the execution limitation.
+
 ## Need the full reference?
 
 See [Installation](INSTALLATION.md), [Guardrail Lab documentation](modules/guardrail_lab/README.md), and the [provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md).
