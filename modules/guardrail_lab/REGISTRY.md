@@ -24,10 +24,10 @@ Example:
 
 Add it with:
 ```bash
-python -m modules.guardrail_lab.registry add --input finding.json
+python -m modules.guardrail_lab.registry add --input finding.json\n# For a custom registry path, place --registry before the subcommand:\npython -m modules.guardrail_lab.registry --registry findings/research.jsonl list
 ```
 
-Confirmed status requires an explicit --confirm-review flag, assessment=potential_guardrail_failure, reviewer notes, at least two repeat runs, and a repeat-success count. The registry never promotes a model response automatically.
+Confirmed status requires an explicit --confirm-review flag, assessment=potential_guardrail_failure, reviewer notes, at least two repeat runs and at least two successful reproductions. The registry never promotes a model response automatically.
 
 ## Review and export
 
