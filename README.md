@@ -199,17 +199,17 @@ For other providers and custom endpoints, see [Installation and provider configu
 
 ## Run the multi-provider GitHub Actions workflow
 
-The repository includes a manually triggered [multi-provider red-team workflow](.github/workflows/multi-provider-red-team.yml).
-It runs a bounded campaign of up to 24 requests with up to six fixed, reviewed framings. Adaptive follow-ups require an exact canary-only response; ambiguous mentions are reserved for human review and are not called bypasses.
+The repository includes a manually triggered [multi-provider Guardrail Lab workflow](.github/workflows/multi-provider-red-team.yml). It supports three scopes (`all` = 76 cases, `core` = 24 cases, `source` = 52 source-derived safe adaptations) and two modes: `full_suite` runs each selected case once; `campaign` runs a bounded request budget (1–1000) with up to six fixed, reviewed framings. Adaptive follow-ups require an exact canary-only response; ambiguous mentions remain in human review.
 
 1. Add the provider credential under **Settings → Secrets and variables → Actions**.
-2. Open **Actions → Manual multi-provider red-team suite**.
+2. Open **Actions → Manual multi-provider Guardrail Lab**.
 3. Select the provider adapter and enter the exact model ID supported by your account.
-4. Set the request budget and, when applicable, a custom compatible base URL.
-5. Start the workflow and inspect its run summary.
-6. Download the provider-specific JSON evidence artifact.
+4. Choose scope and mode. Use `source` + `full_suite` to run all 52 source-derived adaptations, or `all` + `full_suite` for all 76 cases.
+5. For campaign mode, set the request budget and, when applicable, a custom compatible base URL.
+6. Start the workflow and inspect its run summary.
+7. Download the provider/scope/mode-specific JSON evidence artifact.
 
-The dedicated Gemini full-suite workflow also runs all 24 Guardrail Lab cases with a conservative 13-second request interval. It is manually triggered and requires the `GEMINI_API_KEY` Actions secret. Other provider workflows remain one provider/model per invocation. The workflow supports hosted provider choices and compatible endpoints defined in its dispatch inputs. Localhost-only model servers are not reachable from a GitHub-hosted runner; run those tests from a host that can reach the local server.
+The dedicated Gemini full-suite workflow runs all 76 Guardrail Lab cases (24 core + 52 source-derived) with a conservative 13-second request interval. It is manually triggered and requires the `GEMINI_API_KEY` Actions secret. Other provider workflows remain one provider/model per invocation. The workflow supports hosted provider choices and compatible endpoints defined in its dispatch inputs. Localhost-only model servers are not reachable from a GitHub-hosted runner; run those tests from a host that can reach the local server.
 
 A successful workflow indicates that the workflow completed its configured execution and report steps. It is not a successful-bypass indicator. API requests may incur charges and remain subject to provider quotas.
 
