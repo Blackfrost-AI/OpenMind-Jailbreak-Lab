@@ -235,9 +235,12 @@ Artifacts: `compare.py`, `tests/test_measurement_contract.py`,
 
 ## Verification
 
-All contributions pass the full local gate set on 2026-11-17:
+All contributions pass the full local gate set on 2026-11-17, after
+merging upstream `main` (which added its own source-corpus browser and
+loader tests):
 
-- **407 unit tests, all passing** (335 at the previous PR revision)
+- **417 unit tests, all passing** (407 contribution tests + 10 upstream
+  tests; 335 at the previous PR revision)
 - `python -m compileall` on every changed module
 - `src.validate` passes on all seven benchmark versions (v0.3–v0.8.0)
 - `src.quality_audit data/benchmark_v0.8.0.jsonl` → `pass`, 0 warnings
