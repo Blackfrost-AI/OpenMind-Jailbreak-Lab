@@ -1,6 +1,7 @@
 """Load validated, source-attributed safe adaptations into Guardrail Lab."""
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -10,6 +11,7 @@ from .cases import Case
 _ROOT = Path(__file__).resolve().parents[2]
 _DATA = _ROOT / "data" / "source_corpus" / "safe_adaptations.jsonl"
 _INVENTORY = _ROOT / "data" / "source_corpus" / "source_inventory.jsonl"
+_MANIFEST = _ROOT / "data" / "source_corpus" / "manifest.json"
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _REQUIRED_TEXT = (
     "case_id", "source_id", "source_path", "source_sha256",
@@ -34,6 +36,10 @@ def _read_jsonl(path: Path):
 
 
 def load_source_cases():
+    manifest = json.loads(_MANIFEST.read_text(encoding="utf-8"))
+    inventory_bytes = _INVENTORY.read_bytes()
+    if hashlib.sha256(inventory_bytes).hexdigest() != manifest.get("inventory_sha256"):
+        raise ValueError("source inventory SHA-256 does not match manifest")
     inventory = {}
     for line_no, row in _read_jsonl(_INVENTORY):
         source_id = row.get("id")
