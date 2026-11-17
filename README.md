@@ -45,7 +45,7 @@ Each Guardrail Lab case is evaluated beneath a fixed lab-owned system instructio
 
 The main API-backed evaluation module. It runs individual cases or bounded campaigns, captures request/response evidence, and assigns conservative result labels for follow-up review.
 
-- 24 case-based tests (GL-001–GL-024)
+- 76 runnable evaluation cases: 24 core cases (GL-001–GL-024) plus 52 source-derived safe adaptations (GL-SRC-001–GL-SRC-052)
 - Fixed-framing campaign variants and request/time limits
 - Provider-specific configuration and compatible endpoints
 - JSON evidence reports
@@ -95,7 +95,7 @@ See [Discovery Engine documentation](modules/guardrail_lab/DISCOVERY_ENGINE.md)
 and [Registry documentation](modules/guardrail_lab/REGISTRY.md) for generation,
 review, export, and evidence-handling details.
 
-A separate **external prompt-pattern evaluation set** contains 12 independently authored synthetic-canary cases and 3 benign controls inspired by high-level themes from [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks). It is not the uploaded archive's original prompt text and is distinct from the 104-case legacy synthetic suite described below. See [pattern corpus notes](modules/guardrail_lab/EXTERNAL_PATTERN_CORPUS.md).
+The uploaded archive contributes 52 **source-derived safe pattern adaptations** to the runnable Guardrail Lab. They preserve provenance (source ID, path, and SHA-256) while replacing risky instructions with inert markers; they are not verbatim source prompts. The raw archive inventory remains metadata-only. Run the source set with `--source-corpus`, or the complete 76-case suite with the default CLI selection. See [source corpus handling](data/source_corpus/README.md) and [Guardrail Lab documentation](modules/guardrail_lab/README.md).
 
 
 ## AI Scanner
@@ -383,7 +383,7 @@ rank model security or replace manual review of full transcripts.
 
 ## Uploaded source archive inventory
 
-The exact uploaded ZIP is represented by a verified metadata-only inventory at [data/source_corpus](data/source_corpus/). It contains 55 source-file records with relative paths, byte sizes, SHA-256 hashes, and handling status. The source archive SHA-256 is `4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918`.
+The exact uploaded ZIP is represented by a metadata-only inventory at [data/source_corpus/source_inventory.jsonl](data/source_corpus/source_inventory.jsonl): 55 source-file records with paths, byte sizes, SHA-256 hashes, and handling status. The separate [safe adaptations file](data/source_corpus/safe_adaptations.jsonl) contains 52 runnable, source-attributed test cases. All 52 IDs are cross-checked against the inventory at load time. The archive SHA-256 is `4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918`.
 
 No original prompt bodies are redistributed or made executable here. The withdrawn `grok-fast-v2.md` notice remains excluded. This inventory is not a runnable jailbreak corpus. The lab's runnable evaluation suite remains the versioned benchmark and Guardrail Lab test cases described above.
 
