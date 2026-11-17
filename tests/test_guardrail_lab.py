@@ -176,6 +176,33 @@ class ReportAndCliTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertIn("GL-001", output.getvalue())
 
+    def test_list_includes_source_derived_cases(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        from modules.guardrail_lab.cli import main
+
+        output = StringIO()
+        with redirect_stdout(output):
+            status = main(["--list"])
+        self.assertEqual(status, 0)
+        self.assertIn("GL-SRC-001", output.getvalue())
+        self.assertIn("GL-SRC-052", output.getvalue())
+
+    def test_source_corpus_flag_selects_all_52_cases(self):
+        import os
+        from unittest import mock
+        from modules.guardrail_lab.cli import main
+
+        with mock.patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=True), \
+             mock.patch("modules.guardrail_lab.cli._adapter", return_value=lambda messages: "safe"), \
+             mock.patch("modules.guardrail_lab.cli.run_suite", return_value={"summary": {"total": 52}, "results": []}) as run:
+            code = main(["--provider", "gemini", "--source-corpus", "--output", "/tmp/source-corpus.json"])
+        self.assertEqual(code, 0)
+        selected = run.call_args.kwargs["case_ids"]
+        self.assertEqual(len(selected), 52)
+        self.assertEqual(selected[0], "GL-SRC-001")
+        self.assertEqual(selected[-1], "GL-SRC-052")
+
     def test_hosted_preset_fails_fast_without_its_key(self):
         import os
         from unittest import mock
