@@ -1,4 +1,4 @@
-name: Manual multi-provider red-team suite
+name: Manual multi-provider Guardrail Lab
 
 on:
   workflow_dispatch:
@@ -27,8 +27,25 @@ on:
         description: "HTTPS base URL reachable by the GitHub-hosted runner (required for openai-compatible)"
         required: false
         type: string
+      scope:
+        description: "Case set: all 76, core 24, or source-derived 52"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - core
+          - source
+      mode:
+        description: "Full suite runs every selected case once; campaign uses a request budget"
+        required: true
+        default: "campaign"
+        type: choice
+        options:
+          - campaign
+          - full_suite
       budget:
-        description: "Maximum requests for this run (1-24)"
+        description: "Campaign request budget only (1-1000; ignored for full_suite)"
         required: true
         default: "24"
         type: string
@@ -37,27 +54,33 @@ permissions:
   contents: read
 
 concurrency:
-  group: openmind-multi-provider-${{ inputs.provider }}
+  group: openmind-multi-provider-${{ inputs.provider }}-${{ inputs.scope }}-${{ inputs.mode }}
   cancel-in-progress: false
 
 jobs:
   red-team:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Validate request budget
+      - name: Validate run configuration
         env:
           BUDGET: ${{ inputs.budget }}
+          MODE: ${{ inputs.mode }}
+          SCOPE: ${{ inputs.scope }}
         run: |
-          case "$BUDGET" in
-            ''|*[!0-9]*) echo "Budget must be an integer from 1 to 24"; exit 2 ;;
-          esac
-          if [ "$BUDGET" -lt 1 ] || [ "$BUDGET" -gt 24 ]; then
-            echo "Budget must be an integer from 1 to 24"; exit 2
+          case "$SCOPE" in all|core|source) ;; *) echo "Invalid scope"; exit 2 ;; esac
+          case "$MODE" in campaign|full_suite) ;; *) echo "Invalid mode"; exit 2 ;; esac
+          if [ "$MODE" = "campaign" ]; then
+            case "$BUDGET" in
+              ''|*[!0-9]*) echo "Budget must be an integer from 1 to 1000"; exit 2 ;;
+            esac
+            if [ "$BUDGET" -lt 1 ] || [ "$BUDGET" -gt 1000 ]; then
+              echo "Budget must be an integer from 1 to 1000"; exit 2
+            fi
           fi
       - name: Validate endpoint configuration
         env:
@@ -97,15 +120,17 @@ jobs:
             moonshot) test -n "$MOONSHOT_KEY" || { echo "Missing MOONSHOT_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$MOONSHOT_KEY"; echo "MOONSHOT_API_KEY=$MOONSHOT_KEY" >> "$GITHUB_ENV" ;;
             nvidia) test -n "$NVIDIA_KEY" || { echo "Missing NVIDIA_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$NVIDIA_KEY"; echo "NVIDIA_API_KEY=$NVIDIA_KEY" >> "$GITHUB_ENV" ;;
             openrouter) test -n "$OPENROUTER_KEY" || { echo "Missing OPENROUTER_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$OPENROUTER_KEY"; echo "OPENROUTER_API_KEY=$OPENROUTER_KEY" >> "$GITHUB_ENV" ;;
-            groq) test -n "$GROQ_KEY" || { echo "Missing GROQ_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$GROQ_KEY"; echo "GROQ_API_KEY=$GROQ_KEY" >> "$GITHUB_ENV" ;;
+            groq) test -n "$GROQ_KEY" || { echo "Missing GROQ_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$GROQ_KEY"; echo "GROQ_API_KEY=$TOGETHER_KEY" >> "$GITHUB_ENV" ;;
             together) test -n "$TOGETHER_KEY" || { echo "Missing TOGETHER_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$TOGETHER_KEY"; echo "TOGETHER_API_KEY=$TOGETHER_KEY" >> "$GITHUB_ENV" ;;
             openai-compatible) echo "OpenAI-compatible endpoint selected; OPENAI_COMPAT_API_KEY is optional for unauthenticated endpoints." ;;
           esac
-      - name: Run selected provider suite
+      - name: Run selected provider and case set
         env:
           PROVIDER: ${{ inputs.provider }}
           MODEL: ${{ inputs.model }}
           BASE_URL: ${{ inputs.base_url }}
+          SCOPE: ${{ inputs.scope }}
+          MODE: ${{ inputs.mode }}
           BUDGET: ${{ inputs.budget }}
           OPENAI_COMPAT_API_KEY: ${{ secrets.OPENAI_COMPAT_API_KEY }}
         run: |
@@ -114,13 +139,26 @@ jobs:
             echo "::add-mask::$OPENAI_COMPAT_API_KEY"
             export OPENAI_COMPAT_API_KEY
           fi
-          ARGS=(--provider "$PROVIDER" --model "$MODEL" --campaign --budget "$BUDGET" --variants 6 --delay 1 --max-seconds 1200 --output "reports/$PROVIDER-red-team.json")
+          ARGS=(--provider "$PROVIDER" --model "$MODEL" --output "reports/$PROVIDER-red-team.json" --delay 1)
+          case "$SCOPE" in
+            source) ARGS+=(--source-corpus) ;;
+            core)
+              for n in $(seq -w 1 24); do ARGS+=(--case "GL-$n"); done
+              ;;
+            all) ;;
+          esac
+          if [ "$MODE" = "campaign" ]; then
+            ARGS+=(--campaign --budget "$BUDGET" --variants 6 --max-seconds 2400)
+          fi
           if [ -n "$BASE_URL" ]; then ARGS+=(--base-url "$BASE_URL"); fi
           python -m modules.guardrail_lab "${ARGS[@]}"
-      - name: Validate and summarize evidence
+      - name: Validate evidence and source provenance
         if: success()
         env:
           PROVIDER: ${{ inputs.provider }}
+          SCOPE: ${{ inputs.scope }}
+          MODE: ${{ inputs.mode }}
+          BUDGET: ${{ inputs.budget }}
         run: |
           python - <<'PY'
           import json, os
@@ -130,15 +168,34 @@ jobs:
           results = report.get("results", [])
           if not results:
               raise SystemExit("Evidence report contains no results")
-          if any(not item.get("case_id") for item in results):
-              raise SystemExit("A result is missing its case ID")
-          print(json.dumps({"provider": report.get("provider"), "model": report.get("model"), "result_count": len(results), "summary": report.get("summary", {})}, indent=2))
+          expected = (
+              {f"GL-{n:03d}" for n in range(1, 25)} if os.environ["SCOPE"] == "core"
+              else {f"GL-SRC-{n:03d}" for n in range(1, 53)} if os.environ["SCOPE"] == "source"
+              else ({f"GL-{n:03d}" for n in range(1, 25)} |
+                    {f"GL-SRC-{n:03d}" for n in range(1, 53)})
+          )
+          actual = {item.get("case_id") for item in results}
+          if not actual.issubset(expected):
+              raise SystemExit(f"Unexpected case IDs: {sorted(actual - expected)}")
+          if os.environ["MODE"] == "full_suite":
+              if actual != expected or len(results) != len(expected):
+                  raise SystemExit(f"Expected all {len(expected)} cases once; got {len(results)}")
+          elif len(results) > int(os.environ["BUDGET"]):
+              raise SystemExit("Campaign exceeded its configured request budget")
+          for item in results:
+              if not item.get("case_id"):
+                  raise SystemExit("A result is missing its case ID")
+              if item["case_id"].startswith("GL-SRC-"):
+                  provenance = item.get("source_provenance", {})
+                  if not provenance.get("source_id") or len(provenance.get("source_sha256", "")) != 64:
+                      raise SystemExit(f"Missing source provenance for {item['case_id']}")
+          print(json.dumps({"provider": report.get("provider"), "model": report.get("model"), "result_count": len(results), "scope": os.environ["SCOPE"], "mode": os.environ["MODE"], "summary": report.get("summary", {})}, indent=2))
           PY
       - name: Upload evidence artifact
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: openmind-${{ inputs.provider }}-red-team-evidence
+          name: openmind-${{ inputs.provider }}-${{ inputs.scope }}-${{ inputs.mode }}-evidence
           path: reports/*-red-team.json
           if-no-files-found: ignore
           retention-days: 14
