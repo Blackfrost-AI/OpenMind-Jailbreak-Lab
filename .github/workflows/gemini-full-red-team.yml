@@ -1,4 +1,4 @@
-name: Manual Gemini full red-team suite
+name: Manual Gemini full 76-case Guardrail Lab suite
 
 on:
   workflow_dispatch:
@@ -49,13 +49,20 @@ jobs:
           import json
           from pathlib import Path
           report = json.loads(Path("reports/gemini-full-red-team.json").read_text())
-          expected = {f"GL-{n:03d}" for n in range(1, 25)}
+          expected = ({f"GL-{n:03d}" for n in range(1, 25)} |
+                      {f"GL-SRC-{n:03d}" for n in range(1, 53)})
           results = report.get("results", [])
           actual = {item.get("case_id") for item in results}
-          if actual != expected or len(results) != 24:
+          if actual != expected or len(results) != 76:
               raise SystemExit(
-                  f"Expected 24 unique cases; got {len(results)} results: {sorted(actual)}"
+                  f"Expected 76 unique cases (24 core + 52 source-derived); "
+                  f"got {len(results)} results: {sorted(actual)}"
               )
+          for item in results:
+              if item["case_id"].startswith("GL-SRC-"):
+                  provenance = item.get("source_provenance", {})
+                  if not provenance.get("source_id") or len(provenance.get("source_sha256", "")) != 64:
+                      raise SystemExit(f"Missing source provenance for {item['case_id']}")
           if any(not item.get("started_at") for item in results):
               raise SystemExit("One or more result records lack timestamps")
           print(json.dumps(report.get("summary", {}), indent=2))
