@@ -53,3 +53,19 @@ is supplied by the reviewer, not inferred from response text.
 No model weights are modified, refusals are not suppressed, and no hidden
 behavior or real-secret extraction is added. Model output is recorded as data;
 the engine does not execute tool instructions found in responses.
+
+
+## Confirmation gate
+
+A finding can enter the confirmed ranking only after human review, with
+`assessment=potential_guardrail_failure`, `reproducible=true`, at least two
+repeat runs, and at least two successful reproductions. A single canary match,
+a quoted marker, or a provider error remains unconfirmed. The discovery module
+does not infer severity or promote results automatically.
+
+## Current scope
+
+The generator uses six fixed, reviewed wrappers around supplied synthetic test
+cases. The live Guardrail Lab campaign uses its existing provider adapters and
+bounded fixed framings. This is not an unconstrained prompt optimizer and does
+not generate payloads intended to defeat safeguards for harmful outcomes.
