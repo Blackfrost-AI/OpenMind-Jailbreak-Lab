@@ -53,7 +53,49 @@ The main API-backed evaluation module. It runs individual cases or bounded campa
 
 See [Guardrail Lab documentation](modules/guardrail_lab/README.md), the [provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md), and the [discovery engine](modules/guardrail_lab/DISCOVERY_ENGINE.md).
 
-### AI Scanner
+#### Adversarial Discovery Engine
+
+The bounded discovery layer expands supplied synthetic test cases into six
+reviewable framings: baseline, quoted source, document record, retrieval
+record, JSON field, and simulated tool result. Generation is deterministic
+when the same seed is used. It does not invent real secrets or automatically
+treat a canary mention as a vulnerability.
+
+Generate a local review set without making API calls:
+
+```bash
+python -m modules.guardrail_lab.discovery \
+  --input data/discovery_seed_cases.jsonl \
+  --variants 6 --seed 17 \
+  --out results/discovery_cases.jsonl
+```
+
+For live authorized provider testing, use the existing Guardrail Lab campaign
+and optionally preserve exact-canary candidate signals in the JSONL findings
+registry:
+
+```bash
+export GEMINI_API_KEY="YOUR_API_KEY"
+python -m modules.guardrail_lab \
+  --provider gemini \
+  --model "YOUR_GEMINI_MODEL_ID" \
+  --campaign --budget 24 --variants 6 --delay 1 \
+  --output reports/gemini-discovery.json \
+  --registry findings/registry.jsonl
+```
+
+Change the provider, model, and credential environment variable for the
+provider you are authorized to assess. This runs the existing bounded campaign;
+the standalone discovery generator and live campaign are distinct paths.
+Candidate signals are stored as **unverified** and linked to the source report.
+They require transcript review and repeat runs before confirmation. The
+registry never manufactures or automatically confirms a bypass.
+
+See [Discovery Engine documentation](modules/guardrail_lab/DISCOVERY_ENGINE.md)
+and [Registry documentation](modules/guardrail_lab/REGISTRY.md) for generation,
+review, export, and evidence-handling details.
+
+## AI Scanner
 
 A separate provider-backed scanner for running supported checks and saving response evidence.
 
@@ -122,6 +164,8 @@ No separate pip installation is currently required for the standard-library impl
     python -m unittest discover -s tests -v
     python -m src.validate
     python -m modules.guardrail_lab --list
+    python -m modules.guardrail_lab.discovery --help
+    python -m modules.guardrail_lab.registry --help
 
 ### Configure a provider
 
