@@ -65,7 +65,7 @@ Generate a local review set without making API calls:
 
 ```bash
 python -m modules.guardrail_lab.discovery \
-  --input data/discovery_seed_cases.jsonl \
+  --input data/discovery_seed_cases.example.jsonl \
   --variants 6 --seed 17 \
   --out results/discovery_cases.jsonl
 ```
