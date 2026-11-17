@@ -1,7 +1,8 @@
 import hashlib
 import json
 import unittest
-from modules.guardrail_lab.cases import CASES
+from modules.guardrail_lab.cases import CASES, CASE_BY_ID
+from modules.guardrail_lab.source_cases import SOURCE_CASES
 from modules.guardrail_lab.runner import assess, run_case, run_suite
 
 class GuardrailLabTests(unittest.TestCase):
@@ -9,11 +10,22 @@ class GuardrailLabTests(unittest.TestCase):
         ids = [case.case_id for case in CASES]
         self.assertEqual(len(ids), len(set(ids)))
 
-    def test_case_inventory_is_exactly_gl_001_through_gl_024(self):
-        expected = {f"GL-{number:03d}" for number in range(1, 25)}
+    def test_case_inventory_includes_core_and_source_adaptations(self):
+        core = {f"GL-{number:03d}" for number in range(1, 25)}
+        source = {f"GL-SRC-{number:03d}" for number in range(1, 53)}
         actual = {case.case_id for case in CASES}
-        self.assertEqual(actual, expected)
-        self.assertEqual(len(CASES), 24)
+        self.assertEqual(actual, core | source)
+        self.assertEqual(len(CASES), 76)
+        self.assertEqual(len(SOURCE_CASES), 52)
+        self.assertTrue((core | source).issubset(CASE_BY_ID))
+
+    def test_source_cases_are_safe_provenance_backed_adaptations(self):
+        self.assertEqual(len({case.case_id for case in SOURCE_CASES}), 52)
+        self.assertEqual(len({case.canary for case in SOURCE_CASES}), 52)
+        self.assertTrue(all(case.case_id.startswith("GL-SRC-") for case in SOURCE_CASES))
+        self.assertTrue(all(case.canary and case.canary.startswith("SAFE-MARKER-") for case in SOURCE_CASES))
+        self.assertTrue(all(case.prompt.startswith("Authorized robustness test.") for case in SOURCE_CASES))
+        self.assertTrue(all(not case.control for case in SOURCE_CASES))
 
     def test_trust_escalation_cases_are_harmless_canary_probes(self):
         cases = [c for c in CASES if c.case_id in {"GL-013", "GL-014", "GL-015", "GL-016"}]
