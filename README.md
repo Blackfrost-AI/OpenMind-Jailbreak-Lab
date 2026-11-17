@@ -14,11 +14,13 @@ OpenMind combines bounded adversarial tests, provider-backed scanning, benchmark
 
 - [Start Here](START_HERE.md) — quick setup, GitHub Actions, and mobile use.
 - [Installation](INSTALLATION.md) — providers, credentials, and advanced setup.
-- [Guardrail Lab guide](modules/guardrail_lab/README.md) — cases, campaigns, and reports.
+- [Guardrail Lab guide](modules/guardrail_lab/README.md) — defensive cases, campaigns, and reports.
+- [Original Source Corpus](modules/original_source_corpus/README.md) — separate provenance browser and review workflow.
 
 ## Components
 
 - **Guardrail Lab:** 76 runnable cases (24 core and 52 source-derived safe adaptations), provider adapters, bounded campaigns, JSON reports, and a findings registry.
+- **Original Source Corpus:** separate metadata-only browser for authentic archive records, source paths, sizes, hashes, and manual review. Original raw prompts are not sent to the Guardrail Lab runner.
 - **AI Scanner:** [provider-backed checks and response evidence](modules/ai_scanner/README.md).
 - **OpenMind Benchmark:** [versioned evaluation set](SCORING.md); current file: [benchmark_v0.6.1.jsonl](data/benchmark_v0.6.1.jsonl) (66 cases).
 - **JB-002:** [manual finding records and validation](modules/jb002/README.md).
@@ -35,6 +37,7 @@ cd OpenMind-Jailbreak-Lab
 python -m unittest discover -s tests -v
 python -m src.validate
 python -m modules.guardrail_lab --list
+python -m modules.original_source_corpus --search gemini
 ```
 
 Example Gemini campaign:
@@ -49,9 +52,11 @@ python -m modules.guardrail_lab --provider gemini --research-mode \
 
 Use the environment variable for your provider and keep API keys out of source files and commits. See the [provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md) for supported configurations.
 
-## Source corpus
+## Source collections
 
-The 52 source-derived cases retain source IDs, paths, and hashes, but replace risky instructions with inert markers. They are **not verbatim source prompts**. The raw archive inventory is metadata-only. Details: [source corpus](data/source_corpus/README.md).
+The 52 source-derived Guardrail Lab cases retain source IDs, paths, and hashes, but replace risky instructions with inert markers. They are **not verbatim source prompts** and remain in the defensive benchmark.
+
+The **Original Source Corpus** is separate. Its inventory preserves authentic archive provenance without copying raw prompt bodies into the public repository or executing them. Browse records with `python -m modules.original_source_corpus`; create a human-review template with `--id SRC-### --export-review-template PATH`. Details: [Original Source Corpus guide](modules/original_source_corpus/README.md).
 
 ## Providers and automation
 
@@ -94,11 +99,12 @@ Test only systems you own or are authorized to assess. Follow provider terms, ra
 
 ## Documentation
 
-[Installation](INSTALLATION.md) · [Guardrail Lab](modules/guardrail_lab/README.md) · [Provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md) · [Discovery engine](modules/guardrail_lab/DISCOVERY_ENGINE.md) · [Registry](modules/guardrail_lab/REGISTRY.md) · [Archive import](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md) · [Methodology](METHODOLOGY.md) · [Release checklist](RELEASE_CHECKLIST.md) · [Release status](RELEASE_STATUS.md)
+[Installation](INSTALLATION.md) · [Guardrail Lab](modules/guardrail_lab/README.md) · [Original Source Corpus](modules/original_source_corpus/README.md) · [Provider matrix](modules/guardrail_lab/PROVIDER_MATRIX.md) · [Discovery engine](modules/guardrail_lab/DISCOVERY_ENGINE.md) · [Registry](modules/guardrail_lab/REGISTRY.md) · [Archive import](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md) · [Methodology](METHODOLOGY.md) · [Release checklist](RELEASE_CHECKLIST.md) · [Release status](RELEASE_STATUS.md)
 
 ## Quality checks
 
 ```bash
+python -m unittest discover -s tests -v
 python -m src.quality_audit data/benchmark_v0.6.1.jsonl
 python -m modules.guardrail_lab.compare \
   reports/gemini.json reports/openai.json \
