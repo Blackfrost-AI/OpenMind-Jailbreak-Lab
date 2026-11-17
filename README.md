@@ -8,7 +8,7 @@
 
 OpenMind combines bounded adversarial tests, provider-backed scanning, benchmark evaluation, and evidence reporting. It supports repeatable assessment; a test run is not proof of a vulnerability or a guarantee of a successful jailbreak.
 
-**[Open the live Hugging Face demo](https://huggingface.co/spaces/Grimxlock/OpenMind-Jailbreak-Lab)** · [Manual review workspace](manual_reviews/README.md)
+**[Open the live Hugging Face Space](https://huggingface.co/spaces/Grimxlock/OpenMind-Jailbreak-Lab)** · [Manual review workspace](manual_reviews/README.md)
 
 ## Get started
 
