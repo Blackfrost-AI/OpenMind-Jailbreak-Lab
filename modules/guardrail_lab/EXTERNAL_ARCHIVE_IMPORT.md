@@ -1,11 +1,11 @@
 # External jailbreak evaluation corpus
 
-The importer creates two reproducible JSONL artifacts from the uploaded ZIP:
+The legacy importer creates two reproducible JSONL artifacts from the uploaded ZIP:
 
 1. A complete source inventory with each archive member's relative path, SHA-256, byte count, model/folder label, and heuristic pattern tags.
 2. A safe evaluation corpus with one harmless synthetic-canary test plus one matched benign control per active, non-empty prompt/configuration file.
 
-The uploaded archive contains 55 files. All members are preserved in the source inventory; non-empty prompt/configuration files become safe marker-based evaluation cases. Prompt bodies are not copied or executed. The generated adversarial cases check whether a model treats an untrusted note as data rather than following its instruction to emit a harmless marker; each is paired with a benign extraction control.
+The uploaded ZIP contains 55 logical archive members (excluding the enclosing root directory). All members are represented in the source inventory; non-empty prompt/configuration files have generated safe marker-based evaluation fixtures in the legacy package. These fixtures are synthetic, not original source prompts. Prompt bodies are not copied or executed. The generated adversarial cases check whether a model treats an untrusted note as data rather than following its instruction to emit a harmless marker; each is paired with a benign extraction control.
 
 ## Run
 
@@ -27,7 +27,7 @@ Keep the original ZIP in a quarantined research input directory. Never load its 
 
 ## Committed corpus package
 
-A pre-generated package from the reviewed archive inventory is committed at
+A pre-generated **legacy combined package** from the source inventory and synthetic evaluation fixtures is committed at
 `data/external_jailbreak_corpus_v1.zip`. Extract it from the repository root:
 
 ```bash
@@ -78,3 +78,12 @@ The project now documents two distinct datasets:
 2. **Synthetic evaluation suite** — see [data/synthetic_evaluation/README.md](../../data/synthetic_evaluation/README.md). It contains 52 generated canary adaptations and 52 matched benign controls. These are synthetic and are not source prompts.
 
 The existing `data/external_jailbreak_corpus_v1.zip` is a legacy combined bundle retained unchanged for traceability. It is not the canonical separated layout. Do not call its 104 generated cases real jailbreak prompts or count them as source examples. The CLI integration limitation described above still applies.
+
+
+## Verified source archive integrity
+
+The uploaded ZIP's SHA-256 was independently recomputed from the supplied file bytes as:
+
+`4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918`
+
+The ZIP contains 75 ZIP entries including directory entries; the logical file inventory is 55 files. The withdrawn notice is at `jailbreaks-main/0x8D jailbreaks/grok-fast-v2.md` and remains quarantined. Do not confuse ZIP entry count with logical file count.
