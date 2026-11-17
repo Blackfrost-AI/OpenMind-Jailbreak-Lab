@@ -73,7 +73,7 @@ Add keys under **Settings → Secrets and variables → Actions**, then run **Ac
 | `manual_review` | Automated assessment inconclusive |
 | `partial_run` | Run did not complete |
 
-Reports include case IDs, provider/model metadata, prompts, responses, errors, and available assessment labels. A canary quoted in an explanation or warning is not proof of a bypass. Rate limits, authentication failures, and proxy errors are infrastructure outcomes. Treat candidate findings as unverified until manually reviewed and reproduced.
+Reports include case IDs, provider/model metadata, prompts, responses, errors, and available assessment labels. A canary quoted in an explanation or warning is not proof of a bypass. Rate limits, authentication failures, and proxy errors are infrastructure outcomes. Treat candidate findings as unverified until manually reviewed and reproduced. Use the [manual review workspace](manual_reviews/README.md) and copy its JSON template once per case; keep original run reports unchanged.
 
 ## Evaluation snapshot — 16 November 2026
 
