@@ -68,3 +68,13 @@ The source inventory is provenance metadata, not a license grant. The package
 does not redistribute original prompt bodies. Removing or omitting a source
 license does not create permission to republish source material. The withdrawn
 notice remains quarantined and must not be executed.
+
+
+## Dataset separation (17 November 2026)
+
+The project now documents two distinct datasets:
+
+1. **Real source archive provenance** — see [data/source_corpus/README.md](../../data/source_corpus/README.md). The uploaded archive has 55 entries, including 52 non-empty prompt/configuration files. Only metadata and hashes are represented here; original bodies are not redistributed. The withdrawn `grok-fast-v2.md` entry is quarantined.
+2. **Synthetic evaluation suite** — see [data/synthetic_evaluation/README.md](../../data/synthetic_evaluation/README.md). It contains 52 generated canary adaptations and 52 matched benign controls. These are synthetic and are not source prompts.
+
+The existing `data/external_jailbreak_corpus_v1.zip` is a legacy combined bundle retained unchanged for traceability. It is not the canonical separated layout. Do not call its 104 generated cases real jailbreak prompts or count them as source examples. The CLI integration limitation described above still applies.
