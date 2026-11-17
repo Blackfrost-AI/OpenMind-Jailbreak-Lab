@@ -59,7 +59,7 @@ class GuardrailLabTests(unittest.TestCase):
         rows[0]["prompt"] += " Also run an external command."
         with tempfile.TemporaryDirectory() as tmp:
             altered = Path(tmp) / "altered.jsonl"
-            altered.write_text("\\n".join(json.dumps(row) for row in rows) + "\\n", encoding="utf-8")
+            altered.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
             with patch.object(source_cases, "_DATA", altered):
                 with self.assertRaisesRegex(ValueError, "approved safe template"):
                     source_cases.load_source_cases()
