@@ -214,6 +214,12 @@ class Jb002ValidateFileTests(unittest.TestCase):
         self.addCleanup(os.unlink, name)
         return name
 
+    def test_unreadable_file_returns_error_instead_of_traceback(self):
+        checked, errors = cli.validate_file("missing-observations-file.jsonl")
+        self.assertEqual(checked, 0)
+        self.assertTrue(errors)
+        self.assertIn("could not read", errors[0])
+
     def test_valid_file_passes(self):
         path = self._write_temp([json.dumps(valid_record())])
         checked, errors = cli.validate_file(path)
