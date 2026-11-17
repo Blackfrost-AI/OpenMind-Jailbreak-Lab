@@ -55,6 +55,13 @@ class QualityAuditTests(unittest.TestCase):
         self.assertEqual(result["status"], "fail")
         self.assertTrue(result["errors"][0].startswith("line 2:"))
 
+    def test_unhashable_or_invalid_fields_are_reported_not_crashed(self):
+        result = audit([{"id": ["bad"], "split": ["bad"], "family": None}])
+        self.assertEqual(result["status"], "fail")
+        self.assertTrue(any("id must be non-empty text" in error for error in result["errors"]))
+        self.assertTrue(any("split must be non-empty text" in error for error in result["errors"]))
+        self.assertTrue(any("family must be non-empty text" in error for error in result["errors"]))
+
     def test_empty_dataset_fails(self):
         result = audit([])
         self.assertEqual(result["status"], "fail")
