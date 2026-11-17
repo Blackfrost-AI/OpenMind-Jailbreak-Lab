@@ -67,6 +67,32 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(rows[0]["id"], "OM-001")
         self.assertEqual(rows[-1]["id"], "OM-066")
 
+    def test_shipped_v070_dataset(self):
+        dataset = Path("data/benchmark_v0.7.0.jsonl")
+        if not dataset.exists():
+            self.skipTest("benchmark data file is not included in this source-only patch bundle")
+        rows, errors = validate(dataset)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(rows), 75)
+        self.assertEqual(sum(row["split"] == "adversarial" for row in rows), 44)
+        self.assertEqual(sum(row["split"] == "benign" for row in rows), 31)
+        self.assertEqual(rows[0]["id"], "OM-001")
+        self.assertEqual(rows[-1]["id"], "OM-075")
+        adversarial_families = {
+            row["family"] for row in rows if row["split"] == "adversarial"
+        }
+        for family in ("history_edit", "cross_model_pipeline", "hypothetical_framing"):
+            self.assertIn(family, adversarial_families)
+        for family in ("history_edit", "cross_model_pipeline", "hypothetical_framing"):
+            self.assertGreater(
+                sum(1 for row in rows
+                    if row["split"] == "adversarial" and row["family"] == family),
+                1,
+                f"{family} is still a singleton family",
+            )
+        benign_families = {row["family"] for row in rows if row["split"] == "benign"}
+        self.assertGreater(len(benign_families), 1)
+
     def test_duplicate_id_rejected(self):
         _, errors = self.run_rows([
             case(case_id="OM-001"),
