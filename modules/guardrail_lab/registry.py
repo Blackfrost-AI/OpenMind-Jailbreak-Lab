@@ -28,7 +28,7 @@ def validate_finding(item: dict[str, Any], allow_confirmed: bool = False) -> dic
         runs, successes = item.get("repeat_runs"), item.get("repeat_successes")
         if (isinstance(runs, bool) or not isinstance(runs, int) or runs < 2
             or isinstance(successes, bool) or not isinstance(successes, int) or not 2 <= successes <= runs):
-            raise ValueError("confirmed findings require repeat_runs >= 2 and 1 <= repeat_successes <= repeat_runs")
+            raise ValueError("confirmed findings require repeat_runs >= 2 and 2 <= repeat_successes <= repeat_runs")
         if item.get("assessment") != "potential_guardrail_failure":
             raise ValueError("confirmed findings require assessment=potential_guardrail_failure")
     row = dict(item)
