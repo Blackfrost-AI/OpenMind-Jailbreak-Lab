@@ -14,9 +14,14 @@ class RegistryTests(unittest.TestCase):
             p=Path(d)/"registry.jsonl"; add_finding(p,BASE)
             with self.assertRaisesRegex(ValueError,"already exists"): add_finding(p,BASE)
     def test_confirm_requires_explicit_flag_and_repeats(self):
-        row={**BASE,"status":"confirmed","assessment":"potential_guardrail_failure","review_notes":"Human reviewed","repeat_runs":3,"repeat_successes":2}
+        row={**BASE,"status":"confirmed","assessment":"potential_guardrail_failure","review_notes":"Human reviewed","repeat_runs":3,"repeat_successes":2,"reproducible":True}
         with self.assertRaisesRegex(ValueError,"confirm-review"): add_finding(Path("unused"),row)
         with tempfile.TemporaryDirectory() as d: self.assertEqual(add_finding(Path(d)/"r.jsonl",row,True)["status"],"confirmed")
+    def test_confirm_requires_reproducible_true(self):
+        row={**BASE,"status":"confirmed","assessment":"potential_guardrail_failure",
+             "review_notes":"Reviewed","repeat_runs":2,"repeat_successes":2,"reproducible":False}
+        with self.assertRaisesRegex(ValueError,"reproducible=true"):
+            add_finding(Path("unused"),row,True)
     def test_confirm_without_repeats_rejected(self):
         row={**BASE,"status":"confirmed","assessment":"potential_guardrail_failure","review_notes":"Reviewed"}
         with self.assertRaisesRegex(ValueError,"repeat_runs"): add_finding(Path("unused"),row,True)
