@@ -15,7 +15,7 @@ class OriginalSourceCorpusTests(unittest.TestCase):
     def test_rejects_runnable_raw_record(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "bad.jsonl"
-            path.write_text(json.dumps({"id":"X","path":"x","bytes":1,"sha256":"0"*64,"status":"metadata_only","runnable":True}) + "\\n", encoding="utf-8")
+            path.write_text(json.dumps({"id":"X","path":"x","bytes":1,"sha256":"0"*64,"status":"metadata_only","runnable":True}) + "\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "must remain non-runnable"):
                 load_index(path)
 
