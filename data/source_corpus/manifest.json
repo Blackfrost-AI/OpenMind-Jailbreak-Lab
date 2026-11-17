@@ -10,6 +10,6 @@
   "prompt_bodies_included": false,
   "runnable_records": 0,
   "inventory_file": "source_inventory.jsonl",
-  "inventory_sha256": "005fc6968044bf54e4b30dc96dff5464c374a886048462beb9c773b4c8779657",
+  "inventory_sha256": "124507ca8e692822cf23c374e0b3a6ea134b26d8fbe41c22e6aeeeeee37a9c14",
   "note": "Metadata-only; original prompt bodies are excluded. One-byte placeholder counted as empty."
 }
