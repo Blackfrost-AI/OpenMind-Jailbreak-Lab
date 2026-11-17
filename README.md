@@ -398,5 +398,5 @@ All entries begin unreviewed; lexical tags are not vulnerability findings.
 See [External archive importer](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md)
 and `scripts/import_external_prompt_archive.py`. The uploaded archive contains 55 files; the importer can generate a SHA-256
 verified source inventory and one safe canary evaluation case per active,
-non-empty prompt/configuration file. See the dedicated import guide for the
+non-empty prompt/configuration file, paired with a benign control. See the dedicated import guide for the
 exact command and trust/review requirements.
