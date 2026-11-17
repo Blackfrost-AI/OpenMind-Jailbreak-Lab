@@ -27,7 +27,7 @@ Add it with:
 python -m modules.guardrail_lab.registry add --input finding.json\n# For a custom registry path, place --registry before the subcommand:\npython -m modules.guardrail_lab.registry --registry findings/research.jsonl list
 ```
 
-Confirmed status requires an explicit --confirm-review flag, assessment=potential_guardrail_failure, reviewer notes, at least two repeat runs and at least two successful reproductions. The registry never promotes a model response automatically.
+Confirmed status requires an explicit --confirm-review flag, assessment=potential_guardrail_failure, reviewer notes, at least two repeat runs and at least two successful reproductions. The registry never promotes a model response automatically. The separate discovery ranker applies the same minimum repeatability rule and rejects confirmed entries marked non-reproducible.
 
 ## Review and export
 
