@@ -61,6 +61,48 @@ def load_registry(registry: Path) -> list[dict[str, Any]]:
             rows.append(row)
     return rows
 
+def save_candidate_records(report: dict[str, Any], evidence_path: str, registry: Path) -> list[dict[str, Any]]:
+    """Persist exact canary-only signals as unverified; never auto-confirm them."""
+    if not isinstance(report, dict) or not isinstance(report.get("results"), list):
+        raise ValueError("report must contain a results list")
+    existing = load_registry(registry)
+    known = {row.get("finding_id") for row in existing}
+    saved = []
+    for result in report["results"]:
+        if not isinstance(result, dict) or result.get("assessment") != "potential_guardrail_failure":
+            continue
+        evidence_hash = result.get("evidence_sha256")
+        if not isinstance(evidence_hash, str) or len(evidence_hash) != 64:
+            raise ValueError("candidate result is missing a valid evidence_sha256")
+        case_id = result.get("case_id")
+        if not isinstance(case_id, str) or not case_id.strip():
+            raise ValueError("candidate result is missing case_id")
+        finding_id = "OM-FND-" + hashlib.sha256(
+            (str(report.get("provider")) + "|" + str(report.get("model")) + "|" +
+             case_id + "|" + evidence_hash).encode("utf-8")
+        ).hexdigest()[:12].upper()
+        if finding_id in known:
+            continue
+        row = {
+            "finding_id": finding_id,
+            "title": f"Potential synthetic-canary signal in {case_id}",
+            "provider": str(report.get("provider") or "unknown"),
+            "model": str(result.get("model") or report.get("model") or "unknown"),
+            "category": str(result.get("category") or "instruction_boundary"),
+            "status": "unverified",
+            "discovered_at": str(result.get("started_at") or report.get("generated_at") or
+                                 datetime.now(timezone.utc).isoformat()),
+            "evidence_ref": f"{evidence_path}#{case_id}",
+            "evidence_sha256": evidence_hash,
+            "case_id": case_id,
+            "assessment": "potential_guardrail_failure",
+            "summary": "Automated exact-canary signal saved for human review. This is not a confirmed vulnerability.",
+        }
+        saved.append(add_finding(registry, row))
+        known.add(finding_id)
+    return saved
+
+
 def export_markdown(rows: list[dict[str, Any]], destination: Path) -> None:
     lines = ["# OpenMind Vulnerability Findings", "", "Exported: " + datetime.now(timezone.utc).isoformat(), "",
     "> Researcher-assigned statuses are not vendor acknowledgements. Unverified and intermittent results are not confirmed vulnerabilities.", ""]
