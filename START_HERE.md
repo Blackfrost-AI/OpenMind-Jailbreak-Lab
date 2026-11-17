@@ -103,15 +103,15 @@ A quoted, translated, or explained canary is not proof of instruction execution.
 - Review reports before sharing; they contain prompts and model responses.
 - If an API key has been exposed, revoke it and create a replacement.
 
-## External source corpus (status and handling)
+## Uploaded source archive inventory
 
-The uploaded external archive is a source reference, not a ready-to-run prompt pack.
+The uploaded archive is represented by a committed, metadata-only inventory:
 
-- [Source provenance and review rules](data/source_corpus/README.md): records the inspected archive's 55-member inventory and source SHA-256. Original prompt bodies are not redistributed because permission has not been established and the archive includes potentially harmful material.
-- [Synthetic evaluation suite](data/synthetic_evaluation/README.md): separate, independently authored canary tests and benign controls. These are not original source prompts and must never be counted as such.
-- [Corpus import guide](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md): explains integrity checks, quarantine, and execution limits.
+- [Source inventory JSONL](data/source_corpus/source_inventory.jsonl): 55 records with original paths, byte counts, SHA-256 hashes, and handling states.
+- [Manifest](data/source_corpus/manifest.json): source archive hash and inventory hash.
+- [Handling notes](data/source_corpus/README.md): explains why original bodies are not included and why the withdrawn notice remains excluded.
 
-**Do not execute or treat the legacy combined ZIP as the corpus.** It is retained temporarily for traceability while a separated, metadata-only source inventory is prepared. The withdrawn grok-fast-v2.md notice remains excluded. The separated source inventory is not yet a runnable prompt corpus; this guide will be updated when the replacement files are committed and verified.
+This is not a runnable jailbreak prompt corpus. The repository's runnable evaluation remains the versioned benchmark and Guardrail Lab cases. No synthetic external corpus or legacy combined ZIP is included.
 
 ## Need the full reference?
 
