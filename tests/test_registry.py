@@ -20,6 +20,13 @@ class RegistryTests(unittest.TestCase):
     def test_confirm_without_repeats_rejected(self):
         row={**BASE,"status":"confirmed","assessment":"potential_guardrail_failure","review_notes":"Reviewed"}
         with self.assertRaisesRegex(ValueError,"repeat_runs"): add_finding(Path("unused"),row,True)
+    def test_confirm_requires_two_successful_repeats(self):
+        row={**BASE,"status":"confirmed","assessment":"potential_guardrail_failure","review_notes":"Reviewed","repeat_runs":3,"repeat_successes":1}
+        with self.assertRaisesRegex(ValueError,"repeat_runs"): add_finding(Path("unused"),row,True)
+    def test_non_object_registry_entry_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/"r.jsonl"; p.write_text('[]\\n')
+            with self.assertRaisesRegex(ValueError,"JSON object"): load_registry(p)
     def test_tampering_detected(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/"r.jsonl"; add_finding(p,BASE); row=json.loads(p.read_text()); row["summary"]="tampered"; p.write_text(json.dumps(row)+"\n")
