@@ -7,7 +7,9 @@ necessary, but it does not replace live evidence review or human adjudication.
 
 - [ ] Confirm the intended release commit and inspect the complete diff.
 - [ ] Run `python -m src.validate data/benchmark_v0.6.1.jsonl`.
-- [ ] Confirm case count, unique IDs, split totals, required fields, and synthetic marker uniqueness.
+- [ ] Confirm benchmark case count, unique IDs, split totals, required fields, and synthetic marker uniqueness.
+- [ ] Confirm Guardrail Lab lists 76 unique cases (24 core + 52 source-derived) and `--source-corpus` selects exactly 52.
+- [ ] Verify every source adaptation's source ID, path, and SHA-256 against the metadata inventory; verify result JSON preserves `source_provenance`.
 - [ ] Confirm benchmark prompts and expected behaviors are reviewed; do not silently rewrite cases to improve scores.
 - [ ] Record dataset version, file checksum, and methodology version in release notes.
 - [ ] Keep benchmark case data, model response evidence, and adjudicated findings as separate artifacts.
@@ -23,7 +25,8 @@ necessary, but it does not replace live evidence review or human adjudication.
 ## 3. Workflow and packaging
 
 - [ ] Confirm GitHub Actions permissions are least-privilege.
-- [ ] Confirm workflow inputs, provider/model selection, secret names, artifact names, and budget bounds match documentation.
+- [ ] Confirm workflow inputs, provider/model selection, scope (`all`/`core`/`source`), mode (`full_suite`/`campaign`), secret names, artifact names, and budget bounds match documentation.
+- [ ] Confirm the full-suite workflow validates all 76 case IDs and source provenance.
 - [ ] Confirm current supported Python versions and pinned action versions.
 - [ ] Run workflow validation on the release candidate commit.
 - [ ] Confirm artifacts upload even when a run contains partial or failed requests, where appropriate.
