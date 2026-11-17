@@ -120,7 +120,7 @@ jobs:
             moonshot) test -n "$MOONSHOT_KEY" || { echo "Missing MOONSHOT_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$MOONSHOT_KEY"; echo "MOONSHOT_API_KEY=$MOONSHOT_KEY" >> "$GITHUB_ENV" ;;
             nvidia) test -n "$NVIDIA_KEY" || { echo "Missing NVIDIA_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$NVIDIA_KEY"; echo "NVIDIA_API_KEY=$NVIDIA_KEY" >> "$GITHUB_ENV" ;;
             openrouter) test -n "$OPENROUTER_KEY" || { echo "Missing OPENROUTER_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$OPENROUTER_KEY"; echo "OPENROUTER_API_KEY=$OPENROUTER_KEY" >> "$GITHUB_ENV" ;;
-            groq) test -n "$GROQ_KEY" || { echo "Missing GROQ_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$GROQ_KEY"; echo "GROQ_API_KEY=$TOGETHER_KEY" >> "$GITHUB_ENV" ;;
+            groq) test -n "$GROQ_KEY" || { echo "Missing GROQ_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$GROQ_KEY"; echo "GROQ_API_KEY=$GROQ_KEY" >> "$GITHUB_ENV" ;;
             together) test -n "$TOGETHER_KEY" || { echo "Missing TOGETHER_API_KEY Actions secret"; exit 2; }; echo "::add-mask::$TOGETHER_KEY"; echo "TOGETHER_API_KEY=$TOGETHER_KEY" >> "$GITHUB_ENV" ;;
             openai-compatible) echo "OpenAI-compatible endpoint selected; OPENAI_COMPAT_API_KEY is optional for unauthenticated endpoints." ;;
           esac
@@ -143,7 +143,7 @@ jobs:
           case "$SCOPE" in
             source) ARGS+=(--source-corpus) ;;
             core)
-              for n in $(seq -w 1 24); do ARGS+=(--case "GL-$n"); done
+              for n in $(seq 1 24); do printf -v case_id "GL-%03d" "$n"; ARGS+=(--case "$case_id"); done
               ;;
             all) ;;
           esac
