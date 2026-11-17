@@ -33,6 +33,8 @@ python -m modules.original_source_corpus --verify-archive /path/to/source_archiv
 
 The archive verifier compares the supplied file's SHA-256 with `manifest.json`. It does not execute archive content.
 
+The JSONL inventory loader rejects malformed JSON, non-object JSON values (including arrays, strings, numbers, booleans, and null), missing or incorrectly typed fields, invalid hashes, runnable records, and duplicate IDs or paths. Errors identify the affected line or validation rule rather than failing later with an attribute error. The test suite includes regression coverage for these cases.
+
 ## Adaptation runner
 
 Only the separate safe adaptations are included in Guardrail Lab's `--source-corpus` option. They replace risky instructions with inert canary markers and validate provenance against this inventory. They do not prove the original source was safe or that any model is vulnerable.
