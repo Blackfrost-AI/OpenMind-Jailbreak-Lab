@@ -65,6 +65,13 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
         "request_messages": messages, "response": None,
         "assessment": "not_run", "error": None, "duration_seconds": None,
     }
+    if case.source_id:
+        record["source_provenance"] = {
+            "source_id": case.source_id,
+            "source_path": case.source_path,
+            "source_sha256": case.source_sha256,
+            "adaptation": "safe_pattern_adaptation",
+        }
     try:
         provider_result = call(messages)
         # The repository's provider adapter returns (model, text, metadata).
