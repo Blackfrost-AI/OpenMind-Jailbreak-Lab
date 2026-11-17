@@ -2,6 +2,7 @@
 import argparse, json, os, sys
 from pathlib import Path
 from .cases import CASES
+from .source_cases import SOURCE_CASES
 from .runner import run_suite, write_report
 from .campaign import run_campaign
 from .registry import save_candidate_records
@@ -50,6 +51,7 @@ def main(argv=None):
     parser.add_argument("--registry", default=None,
                         help="Optional JSONL findings registry; exact-canary signals are saved as unverified")
     parser.add_argument("--case", action="append", dest="case_ids", help="Case ID; repeat to select multiple. Default: all cases.")
+    parser.add_argument("--source-corpus", action="store_true", help="Run all 52 source-derived safe adaptations (combine with --case to add individual cases).")
     parser.add_argument("--list", action="store_true", help="List cases without making API calls")
     parser.add_argument("--campaign", action="store_true", help="Run an automated, bounded adaptive campaign")
     parser.add_argument("--budget", type=int, default=36, help="Maximum test requests (1-1000; default: 36); provider retries may add HTTP attempts")
@@ -81,6 +83,13 @@ def main(argv=None):
             parser.error(f"{key_env} is not set")
     if args.max_tokens is not None and args.max_tokens <= 0:
         parser.error("--max-tokens must be a positive integer")
+    selected_case_ids = list(args.case_ids or [])
+    if args.source_corpus:
+        selected_case_ids.extend(case.case_id for case in SOURCE_CASES)
+    if selected_case_ids:
+        selected_case_ids = list(dict.fromkeys(selected_case_ids))
+    else:
+        selected_case_ids = None
     try:
         adapter = _adapter(args.provider, args.model, args.base_url, args.api_key_env, max_tokens=args.max_tokens)
         if args.campaign:
@@ -88,10 +97,10 @@ def main(argv=None):
                 adapter, provider=args.provider, model=args.model,
                 budget=args.budget, variants=args.variants,
                 adaptive=not args.no_adaptive, delay_seconds=args.delay,
-                max_seconds=args.max_seconds, case_ids=args.case_ids,
+                max_seconds=args.max_seconds, case_ids=selected_case_ids,
             )
         else:
-            report = run_suite(adapter, provider=args.provider, model=args.model, case_ids=args.case_ids, delay_seconds=args.delay)
+            report = run_suite(adapter, provider=args.provider, model=args.model, case_ids=selected_case_ids, delay_seconds=args.delay)
         write_report(report, args.output)
         if args.registry:
             saved = save_candidate_records(report, args.output, Path(args.registry))
