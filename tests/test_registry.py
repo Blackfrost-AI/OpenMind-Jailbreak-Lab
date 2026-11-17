@@ -1,6 +1,6 @@
 import json, tempfile, unittest
 from pathlib import Path
-from modules.guardrail_lab.registry import add_finding, load_registry, export_markdown
+from modules.guardrail_lab.registry import add_finding, load_registry, export_markdown, save_candidate_records
 
 BASE = {"finding_id":"OM-FND-0001","title":"Synthetic canary disclosure","provider":"test-provider","model":"test-model","category":"indirect_prompt_injection","status":"unverified","discovered_at":"2026-11-16T12:00:00Z","evidence_ref":"runs/test.json","summary":"Synthetic marker observed; requires review."}
 
@@ -31,6 +31,21 @@ class RegistryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/"r.jsonl"; add_finding(p,BASE); row=json.loads(p.read_text()); row["summary"]="tampered"; p.write_text(json.dumps(row)+"\n")
             with self.assertRaisesRegex(ValueError,"integrity check"): load_registry(p)
+    def test_candidate_signals_are_saved_unverified_and_idempotently(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/"registry.jsonl"
+            report={"provider":"mock","model":"mock-v1","generated_at":"2026-11-16T12:00:00Z",
+                    "results":[{"case_id":"GL-001","category":"quoted_injection",
+                                "assessment":"potential_guardrail_failure","started_at":"2026-11-16T12:00:00Z",
+                                "evidence_sha256":"a"*64},
+                               {"case_id":"GL-002","assessment":"ambiguous_canary_mention"}]}
+            saved=save_candidate_records(report,"reports/run.json",p)
+            self.assertEqual(len(saved),1)
+            self.assertEqual(saved[0]["status"],"unverified")
+            self.assertEqual(saved[0]["case_id"],"GL-001")
+            self.assertEqual(save_candidate_records(report,"reports/run.json",p),[])
+            self.assertEqual(len(load_registry(p)),1)
+
     def test_markdown_export(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/"r.jsonl"; add_finding(p,BASE); out=Path(d)/"out.md"; export_markdown(load_registry(p),out)
