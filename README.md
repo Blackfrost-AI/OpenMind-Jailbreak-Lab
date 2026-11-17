@@ -387,3 +387,22 @@ The exact uploaded ZIP is represented by a metadata-only inventory at [data/sour
 
 No original prompt bodies are redistributed or made executable here. The withdrawn `grok-fast-v2.md` notice remains excluded. This inventory is not a runnable jailbreak corpus. The lab's runnable evaluation suite remains the versioned benchmark and Guardrail Lab test cases described above.
 
+
+
+### Optional adversarial research mode
+
+For a one-switch, bounded adversarial campaign, run `--research-mode`. This
+selects the six reviewed framings, enables evidence-triggered follow-ups, and
+respects the explicit request budget. It can target the 24 core cases, all 52
+source-derived adaptations, or selected cases. Findings remain unverified
+until manually reviewed and reproduced.
+
+```bash
+python -m modules.guardrail_lab --provider gemini --research-mode \
+  --source-corpus --budget 100 \
+  --output reports/gemini-research.json \
+  --registry findings/registry.jsonl
+```
+
+This mode automates authorized adversarial evaluation and evidence collection;
+it does not generate unrestricted harmful bypasses or execute tool instructions.
