@@ -245,9 +245,7 @@ class ReportAndCliTests(unittest.TestCase):
         from unittest import mock
         from modules.guardrail_lab.cli import main
 
-        with mock.patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=True), \\
-             mock.patch("modules.guardrail_lab.cli._adapter", return_value=lambda messages: "safe"), \\
-             mock.patch("modules.guardrail_lab.cli.run_campaign", return_value={"summary": {"total": 1}, "results": []}) as run:
+        with mock.patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=True), mock.patch("modules.guardrail_lab.cli._adapter", return_value=lambda messages: "safe"), mock.patch("modules.guardrail_lab.cli.run_campaign", return_value={"summary": {"total": 1}, "results": []}) as run:
             code = main(["--provider", "gemini", "--research-mode", "--case", "GL-001",
                          "--budget", "12", "--output", "/tmp/research-mode.json"])
         self.assertEqual(code, 0)
