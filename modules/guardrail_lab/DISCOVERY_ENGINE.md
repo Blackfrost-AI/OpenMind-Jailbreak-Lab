@@ -69,3 +69,23 @@ The generator uses six fixed, reviewed wrappers around supplied synthetic test
 cases. The live Guardrail Lab campaign uses its existing provider adapters and
 bounded fixed framings. This is not an unconstrained prompt optimizer and does
 not generate payloads intended to defeat safeguards for harmful outcomes.
+
+
+## External prompt-pattern corpus
+
+An independently authored corpus adapts high-level patterns from the
+togg53192-cmd/jailbreaks collection into 12 adversarial synthetic-canary cases
+and 3 benign controls:
+
+```bash
+python -m modules.guardrail_lab.discovery \
+  --input data/external_prompt_patterns_v1.jsonl \
+  --variants 6 --seed 17 \
+  --out results/external_prompt_patterns_v1.generated.jsonl
+```
+
+This generates 90 reviewable cases offline and makes zero provider calls.
+Source prompt files are treated as untrusted research material, not imported
+as live system/developer instructions. The source repository has no declared
+license in its GitHub metadata, so no prompt text is copied. See
+[external corpus provenance and usage](EXTERNAL_PATTERN_CORPUS.md).
