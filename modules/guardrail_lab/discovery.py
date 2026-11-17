@@ -39,6 +39,8 @@ def generate_cases(cases: Iterable[Dict], *, variants: int = 6, seed: int = 0) -
     if isinstance(variants, bool) or not isinstance(variants, int) or not 1 <= variants <= len(VARIANTS):
         raise ValueError(f"variants must be an integer from 1 to {len(VARIANTS)}")
     rows = list(cases)
+    if any(not isinstance(row, dict) for row in rows):
+        raise ValueError("every case must be a JSON object")
     ids = [row.get("id") for row in rows]
     if any(not isinstance(value, str) or not value.strip() for value in ids):
         raise ValueError("every case must have a non-empty string id")
