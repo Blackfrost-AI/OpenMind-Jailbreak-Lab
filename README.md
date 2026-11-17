@@ -400,3 +400,23 @@ and `scripts/import_external_prompt_archive.py`. The uploaded archive contains 5
 verified source inventory and one safe canary evaluation case per active,
 non-empty prompt/configuration file, paired with a benign control. See the dedicated import guide for the
 exact command and trust/review requirements.
+
+
+## External jailbreak evaluation corpus
+
+The source-derived corpus package is committed at
+[`data/external_jailbreak_corpus_v1.zip`](data/external_jailbreak_corpus_v1.zip).
+It contains:
+
+- `external_prompt_archive_v2.jsonl`: 55 source inventory records with paths, SHA-256 hashes, sizes, heuristic tags, and handling status.
+- `external_jailbreak_eval_v1.jsonl`: 104 source-linked evaluation cases (52 safe adversarial canary adaptations and 52 matched benign controls).
+- `manifest.json`: artifact hashes, counts, and limitations.
+
+Extract the data files:
+
+```bash
+mkdir -p data/external_jailbreak_corpus
+python -m zipfile -e data/external_jailbreak_corpus_v1.zip data/external_jailbreak_corpus
+```
+
+All cases are marked `unreviewed` and require human review and authorized execution. Source prompt bodies are intentionally not bundled or executed; the inventory preserves provenance without turning untrusted or potentially harmful instructions into runnable payloads. One withdrawn source notice is retained in inventory and quarantined from evaluation. Heuristic tags are discovery metadata, not proof of a bypass.
