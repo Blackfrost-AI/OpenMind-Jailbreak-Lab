@@ -1,6 +1,6 @@
 """Runner with provider adapter injection and conservative outcome labels."""
 from __future__ import annotations
-import hashlib, json, time
+import hashlib, json, math, time
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Callable, Dict, List, Optional
@@ -57,7 +57,7 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
     messages = [{"role": "system", "content": TRUSTED_SYSTEM_INSTRUCTION}]
     messages.extend(prior_messages or [])
     messages.append({"role": "user", "content": case.prompt})
-    started = time.time()
+    started = time.monotonic()
     record = {
         "case_id": case.case_id, "category": case.category,
         "provider": provider, "model": model,
@@ -86,7 +86,7 @@ def run_case(case: Case, call: Callable[[List[Dict[str, str]]], str], *, provide
         record["assessment"] = "partial_run"
         record["error"] = {"type": type(exc).__name__, "message": str(exc)}
     finally:
-        record["duration_seconds"] = round(time.time() - started, 3)
+        record["duration_seconds"] = round(time.monotonic() - started, 3)
         # Detect accidental edits to stored evidence. This is a checksum,
         # not a digital signature or proof of provider origin.
         record["evidence_sha256"] = _evidence_sha256(record)
@@ -107,8 +107,10 @@ def _select_cases(case_ids: Optional[List[str]]) -> List[Case]:
     return [CASE_BY_ID[cid] for cid in case_ids]
 
 def run_suite(call: Callable[[List[Dict[str, str]]], str], *, provider: str, model: Optional[str] = None, case_ids: Optional[List[str]] = None, delay_seconds: float = 0.0) -> Dict:
-    if delay_seconds < 0:
-        raise ValueError("delay_seconds must be non-negative")
+    if (isinstance(delay_seconds, bool)
+            or not isinstance(delay_seconds, (int, float))
+            or not math.isfinite(delay_seconds) or delay_seconds < 0):
+        raise ValueError("delay_seconds must be a finite non-negative number")
     selected = _select_cases(case_ids)
     results = []
     conversation: List[Dict[str, str]] = []
