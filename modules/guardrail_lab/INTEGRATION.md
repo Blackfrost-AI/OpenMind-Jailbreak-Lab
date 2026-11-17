@@ -1,6 +1,6 @@
 # Guardrail Lab integration notes
 
-Guardrail Lab is integrated into this repository. It lives in `modules/guardrail_lab/`; its tests are `tests/test_guardrail_lab.py`, `tests/test_campaign.py`, and `tests/test_openai_compatible.py`.
+Guardrail Lab lives in `modules/guardrail_lab/` and exposes 76 cases: 24 core tests plus 52 source-derived safe adaptations. Its implementation and source-corpus integration are covered by `tests/test_guardrail_lab.py`, `tests/test_campaign.py`, `tests/test_openai_compatible.py`, and the full repository test suite.
 
 ## Provider layer
 
@@ -18,9 +18,9 @@ python -m unittest discover -s tests -v
 
 ## Campaigns
 
-The CLI also supports `--campaign`, `--budget`, `--variants`, `--delay`, `--max-seconds`, and `--no-adaptive`. See the module README for an example.
+The CLI supports `--case` (repeatable), `--source-corpus`, `--campaign`, `--budget`, `--variants`, `--delay`, `--max-seconds`, and `--no-adaptive`. The default suite runs all 76 cases once; `--source-corpus` selects the 52 source-derived cases. Campaign mode is separately budget-limited and may not reach every selected case. Source-derived result records carry source ID, path, and SHA-256 provenance.
 
-## Notes (v0.3.2)
+## Runtime and provenance guarantees
 
 - Campaign `--delay` and `--max-seconds` must be finite numbers.
 - OpenAI-compatible remote endpoints must use HTTPS; HTTP is restricted to loopback local servers.
