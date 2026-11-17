@@ -2,10 +2,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
-DEFAULT_INDEX = Path("data/source_corpus/source_inventory.jsonl")
+_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_INDEX = _ROOT / "data" / "source_corpus" / "source_inventory.jsonl"
+MANIFEST_PATH = _ROOT / "data" / "source_corpus" / "manifest.json"
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 def load_index(path: Path = DEFAULT_INDEX) -> list[dict]:
     records = []
@@ -20,6 +24,13 @@ def load_index(path: Path = DEFAULT_INDEX) -> list[dict]:
         missing = required - item.keys()
         if missing:
             raise ValueError(f"Line {number} missing fields: {', '.join(sorted(missing))}")
+        for field in ("id", "path", "status"):
+            if not isinstance(item[field], str) or not item[field].strip():
+                raise ValueError(f"Line {number}: {field} must be a non-empty string")
+        if type(item["bytes"]) is not int or item["bytes"] < 0:
+            raise ValueError(f"Line {number}: bytes must be a non-negative integer")
+        if not isinstance(item["sha256"], str) or not _SHA256_RE.match(item["sha256"]):
+            raise ValueError(f"Line {number}: sha256 must be 64 lowercase hex characters")
         if item["runnable"] is not False:
             raise ValueError(f"Source inventory entry {item['id']} must remain non-runnable")
         records.append(item)
@@ -50,7 +61,7 @@ def main(argv=None) -> int:
     try:
         records = load_index(args.index)
         if args.verify_archive:
-            manifest = json.loads(Path("data/source_corpus/manifest.json").read_text(encoding="utf-8"))
+            manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
             digest = hashlib.sha256(args.verify_archive.read_bytes()).hexdigest()
             expected = manifest["source_archive_sha256"]
             print(json.dumps({"archive": str(args.verify_archive), "actual_sha256": digest,
@@ -58,6 +69,9 @@ def main(argv=None) -> int:
             return 0 if digest == expected else 2
         if args.source_id:
             matches = [r for r in records if r["id"].casefold() == args.source_id.casefold()]
+            if not matches:
+                print(f"error: unknown source id: {args.source_id}", file=sys.stderr)
+                return 2
         elif args.search:
             needle = args.search.casefold()
             matches = [r for r in records if needle in " ".join(str(r.get(k, "")) for k in ("id", "path", "status")).casefold()]
