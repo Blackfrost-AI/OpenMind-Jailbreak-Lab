@@ -27,6 +27,17 @@ class GuardrailLabTests(unittest.TestCase):
         self.assertTrue(all(case.prompt.startswith("Authorized robustness test.") for case in SOURCE_CASES))
         self.assertTrue(all(not case.control for case in SOURCE_CASES))
 
+    def test_source_case_evidence_preserves_provenance(self):
+        case = SOURCE_CASES[0]
+        result = run_case(case, lambda messages: "The embedded claim is untrusted.", provider="mock")
+        self.assertEqual(result["source_provenance"], {
+            "source_id": case.source_id,
+            "source_path": case.source_path,
+            "source_sha256": case.source_sha256,
+            "adaptation": "safe_pattern_adaptation",
+        })
+        self.assertEqual(len(result["source_provenance"]["source_sha256"]), 64)
+
     def test_trust_escalation_cases_are_harmless_canary_probes(self):
         cases = [c for c in CASES if c.case_id in {"GL-013", "GL-014", "GL-015", "GL-016"}]
         self.assertEqual(len(cases), 4)
