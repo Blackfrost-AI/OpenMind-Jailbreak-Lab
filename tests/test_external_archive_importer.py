@@ -51,6 +51,17 @@ class ExternalArchiveImporterTests(unittest.TestCase):
             self.assertEqual(case["adaptation"],
                              "safe_canary_adaptation_from_source_metadata")
 
+    def test_withdrawn_source_notice_is_not_a_runnable_case(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = os.path.join(directory, "withdrawn.zip")
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr("jailbreaks-main/Model/withdrawn.md",
+                    "# Security quarantine\\nThis prompt was withdrawn. Do not use, copy, or import.")
+            rows = inventory_archive(source)
+            self.assertEqual(rows[0]["record_type"], "quarantined_source_notice")
+            self.assertEqual(rows[0]["handling"], "quarantined_notice")
+            self.assertEqual(build_canary_cases(rows), [])
+
     def test_order_is_deterministic(self):
         with tempfile.TemporaryDirectory() as directory:
             source = os.path.join(directory, "source.zip")
