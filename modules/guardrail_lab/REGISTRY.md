@@ -29,6 +29,23 @@ python -m modules.guardrail_lab.registry add --input finding.json\n# For a custo
 
 Confirmed status requires an explicit --confirm-review flag, assessment=potential_guardrail_failure, reviewer notes, at least two repeat runs and at least two successful reproductions. The registry never promotes a model response automatically. The separate discovery ranker applies the same minimum repeatability rule and rejects confirmed entries marked non-reproducible.
 
+## Automatically preserve candidate signals
+
+After a live run, pass `--registry` to save exact-canary-only signals from the
+JSON evidence report as **unverified** records. Ambiguous mentions, clean
+responses, and provider errors are not added. Saving a candidate never confirms
+it; human review and repeat runs remain mandatory.
+
+```bash
+python -m modules.guardrail_lab --provider gemini --campaign \
+  --budget 24 --output reports/gemini.json \
+  --registry findings/registry.jsonl
+```
+
+Each record links back to the original report and case ID. Re-run that case
+using the same provider/model and the recorded report configuration before
+considering confirmation.
+
 ## Review and export
 
 ```bash
