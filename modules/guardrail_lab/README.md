@@ -535,3 +535,29 @@ releases when authenticity is required.
 ## Source-derived prompt adaptations
 
 The lab includes 52 runnable, safe pattern adaptations derived from eligible, non-withdrawn documents in the supplied source archive. They are loaded alongside the 24 core cases automatically, for 76 total cases. These are **not verbatim copies** of source prompts: they preserve testable patterns (authority escalation, policy-boundary narrowing, persona reassignment, and simulated agent/tool authority confusion) while replacing risky payloads with inert markers. At load time, schema, unique IDs/canaries, safe framing, and each source ID/path/SHA-256 link are validated against `source_inventory.jsonl`. Each live evidence record carries `source_provenance` with the original source ID, path, and SHA-256. Run an individual source-derived case with `--case GL-SRC-001` (the CLI option is `--case`, repeatable for multiple IDs), or run the complete source-derived set with `--source-corpus`. This flag selects all 52 source cases and can be combined with `--case` to add specific core cases. The 52 source-derived cases are registered in `CASES`, so they are included automatically in the default full suite and are selectable in bounded campaigns. The default suite runs all 76 cases once. `--source-corpus` runs all 52 source-derived cases once. A campaign is bounded by `--budget` (default 36 requests) and may stop before all selected cases or variants are attempted; use the normal suite for complete one-pass coverage. The withdrawn notice and empty placeholder are excluded. The original archive remains a provenance source; raw operational instructions are not executed by the lab.
+
+## Optional adversarial research mode
+
+Use `--research-mode` to activate the bounded discovery workflow in one switch.
+It selects the campaign runner, enables all six fixed reviewed framings, and
+allows evidence-triggered follow-ups within the request budget. It operates on
+the selected registered cases (including `--source-corpus`) and preserves
+complete request/response evidence for manual triage.
+
+```bash
+export GEMINI_API_KEY="YOUR_API_KEY"
+python -m modules.guardrail_lab --provider gemini --research-mode \
+  --source-corpus --budget 100 --delay 1 \
+  --output reports/gemini-research-mode.json \
+  --registry findings/registry.jsonl
+```
+
+The budget is a hard cap on scheduled test requests (provider retries may add
+HTTP attempts). Only the lab's six fixed, reviewed framings are used; follow-ups
+are triggered by exact harmless canary-only signals. Candidate findings are
+saved as unverified and require human review and repeatability checks. This
+mode does not generate unrestricted jailbreak payloads, optimize harmful
+instructions, execute model-produced tool calls, or test targets without
+authorization. Use `--no-adaptive` only with ordinary `--campaign`; it is
+incompatible with `--research-mode` because adaptive follow-up is the defining
+behavior of that mode.
