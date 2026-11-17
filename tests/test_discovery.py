@@ -55,13 +55,27 @@ class DiscoveryTests(unittest.TestCase):
     def test_only_human_confirmed_failures_are_ranked(self):
         findings = [
             {"review_status": "confirmed", "assessment": "potential_guardrail_failure",
-             "impact": "high", "reproducible": True, "provider": "p", "model": "m", "evidence_ref": "run-1"},
+             "impact": "high", "reproducible": True, "repeat_runs": 3, "repeat_successes": 2, "provider": "p", "model": "m", "evidence_ref": "run-1"},
             {"review_status": "needs_review", "assessment": "manual_review",
              "impact": "low", "reproducible": False, "provider": "p", "model": "m", "evidence_ref": "run-2"},
         ]
         report = rank_findings(findings)
         self.assertEqual(report["confirmed_count"], 1)
         self.assertEqual(report["ranked_confirmed"][0]["severity"], "high")
+
+    def test_ranker_rejects_confirmed_without_repeat_evidence(self):
+        row = {"review_status": "confirmed", "assessment": "potential_guardrail_failure",
+               "impact": "high", "reproducible": True, "provider": "p", "model": "m",
+               "evidence_ref": "x"}
+        with self.assertRaisesRegex(ValueError, "at least two successful repeat runs"):
+            rank_findings([row])
+
+    def test_ranker_rejects_non_reproducible_confirmed_finding(self):
+        row = {"review_status": "confirmed", "assessment": "potential_guardrail_failure",
+               "impact": "high", "reproducible": False, "repeat_runs": 3,
+               "repeat_successes": 2, "provider": "p", "model": "m", "evidence_ref": "x"}
+        with self.assertRaisesRegex(ValueError, "marked reproducible"):
+            rank_findings([row])
 
     def test_ranker_rejects_ambiguous_as_confirmed(self):
         row = {"review_status": "confirmed", "assessment": "ambiguous_canary_mention",
