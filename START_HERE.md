@@ -103,15 +103,15 @@ A quoted, translated, or explained canary is not proof of instruction execution.
 - Review reports before sharing; they contain prompts and model responses.
 - If an API key has been exposed, revoke it and create a replacement.
 
-## External corpus
+## External source corpus (status and handling)
 
-The external archive and generated evaluation fixtures are documented separately:
+The uploaded external archive is a source reference, not a ready-to-run prompt pack.
 
-- [Real source archive provenance](data/source_corpus/README.md): 55 archive members, including 52 non-empty prompt/configuration files, one README, one empty placeholder, and one withdrawn notice. Original prompt bodies are not redistributed.
-- [Synthetic evaluation suite](data/synthetic_evaluation/README.md): 52 generated canary adaptations plus 52 matched benign controls. All 104 are unreviewed and synthetic, not original source prompts.
-- [Corpus guide](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md): extraction, integrity, quarantine, and execution limitations.
+- [Source provenance and review rules](data/source_corpus/README.md): records the inspected archive's 55-member inventory and source SHA-256. Original prompt bodies are not redistributed because permission has not been established and the archive includes potentially harmful material.
+- [Synthetic evaluation suite](data/synthetic_evaluation/README.md): separate, independently authored canary tests and benign controls. These are not original source prompts and must never be counted as such.
+- [Corpus import guide](modules/guardrail_lab/EXTERNAL_ARCHIVE_IMPORT.md): explains integrity checks, quarantine, and execution limits.
 
-The legacy ZIP remains a combined artifact for traceability; it is not the canonical separated layout and is not directly executable by the Guardrail Lab CLI.
+**Do not execute or treat the legacy combined ZIP as the corpus.** It is retained temporarily for traceability while a separated, metadata-only source inventory is prepared. The withdrawn grok-fast-v2.md notice remains excluded. The separated source inventory is not yet a runnable prompt corpus; this guide will be updated when the replacement files are committed and verified.
 
 ## Need the full reference?
 
