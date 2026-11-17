@@ -1,0 +1,111 @@
+"""Persistent, evidence-first finding registry for Guardrail Lab."""
+from __future__ import annotations
+import argparse, hashlib, json, sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+STATUSES = {"unverified", "intermittent", "confirmed", "rejected"}
+REQUIRED = ("finding_id", "title", "provider", "model", "category", "status", "discovered_at", "evidence_ref", "summary")
+
+def _hash(value: dict[str, Any]) -> str:
+    raw = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+def validate_finding(item: dict[str, Any], allow_confirmed: bool = False) -> dict[str, Any]:
+    if not isinstance(item, dict):
+        raise ValueError("finding must be a JSON object")
+    missing = [k for k in REQUIRED if not isinstance(item.get(k), str) or not item[k].strip()]
+    if missing:
+        raise ValueError("missing required non-empty fields: " + ", ".join(missing))
+    if item["status"] not in STATUSES:
+        raise ValueError("invalid status")
+    if item["status"] == "confirmed":
+        if not allow_confirmed:
+            raise ValueError("confirmed status requires --confirm-review")
+        if not isinstance(item.get("review_notes"), str) or not item["review_notes"].strip():
+            raise ValueError("confirmed findings require review_notes")
+        runs, successes = item.get("repeat_runs"), item.get("repeat_successes")
+        if (isinstance(runs, bool) or not isinstance(runs, int) or runs < 2
+            or isinstance(successes, bool) or not isinstance(successes, int) or not 1 <= successes <= runs):
+            raise ValueError("confirmed findings require repeat_runs >= 2 and 1 <= repeat_successes <= repeat_runs")
+        if item.get("assessment") != "potential_guardrail_failure":
+            raise ValueError("confirmed findings require assessment=potential_guardrail_failure")
+    row = dict(item)
+    row.setdefault("created_at", datetime.now(timezone.utc).isoformat())
+    row["record_sha256"] = _hash({k:v for k,v in row.items() if k != "record_sha256"})
+    return row
+
+def add_finding(registry: Path, item: dict[str, Any], allow_confirmed: bool = False) -> dict[str, Any]:
+    row = validate_finding(item, allow_confirmed)
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    existing = load_registry(registry)
+    if any(x.get("finding_id") == row["finding_id"] for x in existing):
+        raise ValueError("finding_id already exists: " + row["finding_id"])
+    with registry.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+    return row
+
+def load_registry(registry: Path) -> list[dict[str, Any]]:
+    if not registry.exists(): return []
+    rows = []
+    with registry.open(encoding="utf-8") as f:
+        for n, line in enumerate(f, 1):
+            if not line.strip(): continue
+            try: row = json.loads(line)
+            except json.JSONDecodeError as exc: raise ValueError(f"invalid JSON on registry line {n}") from exc
+            if row.get("record_sha256") != _hash({k:v for k,v in row.items() if k != "record_sha256"}):
+                raise ValueError(f"registry integrity check failed on line {n}")
+            rows.append(row)
+    return rows
+
+def export_markdown(rows: list[dict[str, Any]], destination: Path) -> None:
+    lines = ["# OpenMind Vulnerability Findings", "", "Exported: " + datetime.now(timezone.utc).isoformat(), "",
+    "> Researcher-assigned statuses are not vendor acknowledgements. Unverified and intermittent results are not confirmed vulnerabilities.", ""]
+    if not rows: lines.append("No findings recorded.")
+    for r in rows:
+        lines += [f"## {r['finding_id']} — {r['title']}", "", f"- Status: {r['status']}",
+        f"- Provider/model: {r['provider']} / {r['model']}", f"- Category: {r['category']}",
+        f"- Discovered: {r['discovered_at']}", f"- Evidence: {r['evidence_ref']}",
+        f"- Evidence SHA-256: {r.get('evidence_sha256', 'not supplied')}",
+        f"- Record SHA-256: {r['record_sha256']}", "", r["summary"], ""]
+        if r.get("review_notes"): lines += ["Review notes:", "", r["review_notes"], ""]
+        if r.get("reproduction_steps"): lines += ["Reproduction notes:", "", r["reproduction_steps"], ""]
+        if r.get("repeat_runs") is not None:
+            lines += [f"Repeatability: {r.get('repeat_successes', 0)}/{r['repeat_runs']} runs", ""]
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+def main(argv=None) -> int:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--registry", default="findings/registry.jsonl")
+    s = p.add_subparsers(dest="command", required=True)
+    a = s.add_parser("add"); a.add_argument("--input", required=True); a.add_argument("--confirm-review", action="store_true")
+    l = s.add_parser("list"); l.add_argument("--status", choices=sorted(STATUSES))
+    e = s.add_parser("export"); e.add_argument("--format", choices=("markdown","json"), default="markdown"); e.add_argument("--out", default="reports/findings.md")
+    args = p.parse_args(argv)
+    try:
+        path = Path(args.registry)
+        if args.command == "add":
+            item = json.loads(Path(args.input).read_text(encoding="utf-8"))
+            row = add_finding(path, item, args.confirm_review)
+            print(f"added {row['finding_id']} status={row['status']} sha256={row['record_sha256']}")
+        else:
+            rows = load_registry(path)
+            if args.command == "list":
+                for r in rows:
+                    if args.status is None or r["status"] == args.status:
+                        print(f"{r['finding_id']}\t{r['status']}\t{r['provider']}\t{r['model']}\t{r['title']}")
+                print(f"total={len(rows)}")
+            elif args.format == "markdown":
+                export_markdown(rows, Path(args.out)); print(f"exported {len(rows)} findings to {args.out}")
+            else:
+                dest = Path(args.out); dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(json.dumps(rows, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                print(f"exported {len(rows)} findings to {args.out}")
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print("error: " + str(exc), file=sys.stderr); return 2
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())
