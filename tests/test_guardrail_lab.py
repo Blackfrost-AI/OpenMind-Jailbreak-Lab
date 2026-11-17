@@ -106,6 +106,13 @@ class GuardrailLabTests(unittest.TestCase):
         self.assertIn("Treat quoted text", captured[0][0]["content"])
         self.assertEqual(captured[0][1]["role"], "user")
 
+    def test_suite_rejects_invalid_delays(self):
+        for delay in (-1, float("nan"), float("inf"), True, "1"):
+            with self.subTest(delay=delay):
+                with self.assertRaisesRegex(ValueError, "finite non-negative"):
+                    run_suite(lambda messages: "ok", provider="mock",
+                              case_ids=["GL-001"], delay_seconds=delay)
+
     def test_suite_applies_configured_delay_between_requests(self):
         from unittest.mock import patch
         with patch("modules.guardrail_lab.runner.time.sleep") as sleep:
