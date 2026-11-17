@@ -14,7 +14,7 @@ python -m modules.original_source_corpus --id SRC-022 --export-review-template m
 python -m modules.original_source_corpus --verify-archive /path/to/source_archive.zip
 ```
 
-The browser reads `data/source_corpus/source_inventory.jsonl`. It shows source IDs, paths, sizes, hashes, and status only. It does not display or execute original prompt text. The archive SHA check uses `data/source_corpus/manifest.json`.
+The browser reads `data/source_corpus/source_inventory.jsonl`. It shows source IDs, paths, sizes, hashes, and status only. It does not display or execute original prompt text. The archive SHA check uses `data/source_corpus/manifest.json`. A blank example of the review template is kept at `manual_reviews/original_source_review_template.json`.
 
 ## Separation and review
 

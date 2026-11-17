@@ -8,5 +8,5 @@
   "runnable_approval": false,
   "scope_and_rationale": "",
   "review_notes": "",
-  "warning": "This is a human-review record only. It does not add raw source content to any automated runner."
+  "warning": "This record is not an executable test. Approval here does not add it to any automated runner."
 }

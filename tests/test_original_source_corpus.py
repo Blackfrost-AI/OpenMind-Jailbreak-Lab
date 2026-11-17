@@ -57,6 +57,14 @@ class OriginalSourceCorpusTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "must be a JSON object", msg=f"accepted line: {line}"):
                     load_index(path)
 
+    def test_checked_in_template_matches_generator(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        checked_in = json.loads((repo_root / "manual_reviews/original_source_review_template.json").read_text(encoding="utf-8"))
+        generated = review_template({"id": "SRC-000", "path": "", "sha256": "a" * 64})
+        self.assertEqual(sorted(checked_in), sorted(generated))
+        self.assertEqual(checked_in["warning"], generated["warning"])
+        self.assertFalse(checked_in["runnable_approval"])
+
     def test_unknown_id_exits_nonzero(self):
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
