@@ -1,21 +1,24 @@
-# Real source archive — provenance inventory
+# Source archive inventory
 
-This directory is reserved for **real, source-derived records** from the uploaded archive at https://github.com/togg53192-cmd/jailbreaks.
+This directory contains a **metadata-only inventory** of the exact user-uploaded archive `jailbreaks-main (1)(1).zip`.
 
-The uploaded ZIP was inspected as 55 files: 52 non-empty prompt/configuration files, one README, one one-byte placeholder, and one withdrawn security-quarantine notice. The source archive SHA-256 is:
+## Files
 
-`4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918`
+- `source_inventory.jsonl`: 55 records, one per non-directory archive member.
+- `manifest.json`: source archive SHA-256, record counts, and inventory SHA-256.
+- Original prompt bodies are not redistributed or executable in this repository.
 
-## Inclusion status
+## Verified source
 
-- Original prompt/configuration bodies are **not copied into this repository**. Redistribution permission was not established, and some content may contain operationally harmful instructions.
-- The source inventory is metadata-only: source path, SHA-256, byte size, record type, and handling status. It must never be represented as a verbatim prompt corpus.
-- `0x8D jailbreaks/grok-fast-v2.md` is a withdrawn notice. It is quarantined and must not be used, restored, or executed.
-- Empty and README entries are not evaluation cases.
-- Hashes establish byte integrity only. They do not establish safety, effectiveness, ownership, or redistribution rights.
+- Archive SHA-256: `4f76bac118fc58eecfe79497a3f7ce42803c222caba665a72d290d41f6824918`
+- Archive members: 55
+- Non-empty files: 54
+- Empty files: 1 (the one-byte placeholder is recorded and treated as empty content)
+- Withdrawn notice: 1 (`0x8D jailbreaks/grok-fast-v2.md`); it remains excluded and must not be restored or used.
+- Runnable records: 0
 
-The previous combined ZIP at `data/external_jailbreak_corpus_v1.zip` is retained as a **legacy bundle** for traceability. It contains synthetic canary adaptations and benign controls as well as source metadata; it is not the real source corpus. Do not count its 104 synthetic cases as real source prompts.
+Each JSONL record preserves its original relative path, byte size, SHA-256, and handling status. Hashes establish integrity only, not safety, ownership, effectiveness, or redistribution permission.
 
-## Status
+## Scope limitation
 
-Source-body inclusion: **not approved / not performed**. Human review and a documented redistribution basis are required before any verbatim source content is added.
+This is a provenance inventory, **not a runnable jailbreak corpus**. Original prompt bodies are excluded pending documented redistribution rights and safety review. No record is marked runnable.
